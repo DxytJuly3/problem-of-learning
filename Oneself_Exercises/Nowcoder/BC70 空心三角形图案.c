@@ -1,20 +1,17 @@
-//KiKi学习了循环，BoBo老师给他出了一系列打印图案的练习，该任务是打印用“*”组成的“空心”三角形图案。
 #include <stdio.h>
-
+//BoBo老师给他出了一系列打印图案的练习，该任务是打印用“*”组成的“空心”三角形图案
 int main()
 {
     int n = 0;
-    int i = 0;
-    int j = 0;
-    while(scanf("%d", &n) != EOF)
+    while (scanf("%d", &n) != EOF)
     {
-        for(i = 0; i < n; i++) //i表示第i行
+        int i = 0;
+        int j = 0;
+        for (i = 1; i <= n; i++)
         {
-            for(j = 0; j < i + 1; j++)  //表示第j个
+            for (j = 1; j <= n; j++)
             {
-                if((j == 0)|| (i == n - 1))    //j为0表示第一列，i为n-1表示最后一行
-                    printf("* ");
-                else if((j == i) && (i != n - 1))//j等于i并且i不等于n-1表示除了最后一行每一行的最后一个，即j==i
+                if (j == i || j == 1 || i == n)
                     printf("* ");
                 else
                     printf("  ");
@@ -22,6 +19,6 @@ int main()
             printf("\n");
         }
     }
-    
+
     return 0;
 }
