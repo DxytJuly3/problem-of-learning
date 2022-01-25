@@ -5,6 +5,7 @@
 #define Sex_Max 8
 #define Tele_Max 15
 #define Addr_Max 30
+#define Rem_Max 10
 
 #include <stdio.h>
 #include <assert.h>
@@ -19,6 +20,7 @@ typedef struct PeoInfo
 	char sex[Sex_Max];
 	char tele[Tele_Max];
 	char addr[Addr_Max];
+	char remark[Rem_Max];
 }PeoInfo;
 // 通讯录结构体
 typedef struct Contact
@@ -37,3 +39,11 @@ void InitCon(Contact* con);
 void AddPeople(Contact* con);
 // 显示通讯录函数
 void ShowContact(const Contact* con);
+// 删除联系人函数
+void DelePeopel(Contact* con);
+// 查找并输出联系人函数
+void SearchPeo(Contact* con);
+// 按名字排序通讯录函数
+//void SortContact(Contact* con);
+// 修改联系人函数
+void ModifyPeo(Contact* con);
