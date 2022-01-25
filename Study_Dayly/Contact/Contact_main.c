@@ -18,12 +18,16 @@ int main()
 			AddPeople(&Con);
 			break;
 		case 2:
+			DelePeopel(&Con);
 			break;
 		case 3:
+			SearchPeo(&Con);
 			break;
 		case 4:
+			ModifyPeo(&Con);
 			break;
 		case 5:
+//			SortContact(&Con);
 			break;
 		case 6:
 			ShowContact(&Con);
