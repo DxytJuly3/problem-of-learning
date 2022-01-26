@@ -44,6 +44,8 @@ void DelePeopel(Contact* con);
 // 查找并输出联系人函数
 void SearchPeo(Contact* con);
 // 按名字排序通讯录函数
-//void SortContact(Contact* con);
+void SortContact_Name(Contact* con);
 // 修改联系人函数
 void ModifyPeo(Contact* con);
+// 清空通讯录函数
+void ClearContact(Contact* con);

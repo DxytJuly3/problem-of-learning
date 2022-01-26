@@ -15,25 +15,28 @@ int main()
 		switch (input)
 		{
 		case 1:
-			AddPeople(&Con);
+			AddPeople(&Con);	//添加联系人
 			break;
 		case 2:
-			DelePeopel(&Con);
+			DelePeopel(&Con);	//删除联系人
 			break;
 		case 3:
-			SearchPeo(&Con);
+			SearchPeo(&Con);	//查找联系人
 			break;
 		case 4:
-			ModifyPeo(&Con);
+			ModifyPeo(&Con);	//修改联系人
 			break;
 		case 5:
-//			SortContact(&Con);
+			SortContact_Name(&Con);	//通讯录排序
 			break;
 		case 6:
-			ShowContact(&Con);
+			ShowContact(&Con);	//显示通讯录
+			break;
+		case 7:
+			ClearContact(&Con);	//清空通讯录
 			break;
 		case 0:
-			exits();
+			exits();			//退出通讯录
 			break;
 		default:
 			printf("选择错误,请重新选择\n");
