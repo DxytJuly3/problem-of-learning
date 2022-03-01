@@ -36,6 +36,7 @@ int main()
 			ClearContact(&Con);	//清空通讯录
 			break;
 		case 0:
+			DestroyContact(&Con);
 			exits();			//退出通讯录
 			break;
 		default:

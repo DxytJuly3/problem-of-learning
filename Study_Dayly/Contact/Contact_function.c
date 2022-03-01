@@ -31,29 +31,57 @@ void exits()
 
 int cmp_name(const void* elem1, const void* elem2)
 {
-	if (strcmp(((Contact*)elem1)->Info->name, ((Contact*)elem2)->Info->name) > 0)
+	if (strcmp(((PeoInfo*)elem1)->name, ((PeoInfo*)elem2)->name ) > 0)
 		return 1;
 	else
-		return 0;;
+		return 0;
 }
 
 // 初始化通讯录函数
 void InitCon(Contact* con)
 {
 	assert(con);
-	memset(con->Info, 0, sizeof(con->Info));
+	PeoInfo* tmp = (PeoInfo*)malloc(Con_Capacity * sizeof(PeoInfo));
+	if (tmp != NULL)
+	{
+		con->Info = tmp;
+	}
+	else
+	{
+		printf("ERROR_InitCon::%s\n", strerror(errno));
+		return;
+	}
 	con->peo_num = 0;
+	con->Contact_capacity = Con_Capacity;
+}
+
+//通讯录增容函数
+void Check_Capacity(Contact* con)
+{
+	assert(con);
+
+	if (con->peo_num == con->Contact_capacity)
+	{
+		PeoInfo* tmp = (PeoInfo*)realloc(con->Info, (con->Contact_capacity + 2) * sizeof(PeoInfo));	//通讯录增容（+2）
+		if (tmp != NULL)
+		{
+			con->Info = tmp;
+			con->Contact_capacity += 2;		//增容成功 则容量 加 2 
+			printf("增容成功\n");
+		}
+		else
+		{
+			printf("ERROR_Check_Capacity()::%s", strerror(errno));
+		}
+	}
 }
 
 // 添加联系人函数
 void AddPeople(Contact* con)
 {
 	assert(con);
-	if (con->peo_num == Peo_Max)
-	{
-		printf("通讯录已满，无法添加\n");
-		return;
-	}
+	Check_Capacity(con);
+
 	printf("请输入联系人姓名:>");
 	scanf("%s", con->Info[con->peo_num].name);
 	printf("请输入联系人备注:>");
@@ -138,7 +166,7 @@ void SearchPeo(Contact* con)
 	else
 	{
 		printf("%-4s\t%-4s\t%-4s\t%-15s\t%s\t\n", "姓名(备注)", "性别", "年龄", "电话", "家庭住址");
-		printf("%-4s(%s)\t%-4s\t%-4d\t%-15s\t%s\t\n\n",
+		printf("%-4s(%s) \t%-4s\t%-4d\t%-15s\t%s\t\n\n",
 			con->Info[peo_n].name, con->Info[peo_n].remark,
 			con->Info[peo_n].sex, con->Info[peo_n].age, 
 			con->Info[peo_n].tele, con->Info[peo_n].addr);
@@ -162,7 +190,7 @@ void ModifyPeo(Contact* con)
 	{
 		char flag = 0;
 		printf("%-4s\t%-4s\t%-4s\t%-15s\t%s\t\n", "姓名(备注)", "性别", "年龄", "电话", "家庭住址");
-		printf("%-4s(%s)\t%-4s\t%-4d\t%-15s\t%s\t\n\n",
+		printf("%-4s(%s) \t%-4s\t%-4d\t%-15s\t%s\t\n\n",
 			con->Info[peo_n].name, con->Info[peo_n].remark,
 			con->Info[peo_n].sex, con->Info[peo_n].age,
 			con->Info[peo_n].tele, con->Info[peo_n].addr);
@@ -200,4 +228,13 @@ void ClearContact(Contact* con)
 {
 	InitCon(con);
 	printf("通讯录已清空\n\n");
+}
+
+void DestroyContact(Contact* con)
+{
+	assert(con);
+
+	free(con->Info);
+	con->Contact_capacity = 0;
+	con->peo_num = 0;
 }
