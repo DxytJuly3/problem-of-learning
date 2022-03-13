@@ -18,6 +18,14 @@ int main()
 	SeqListPrint(&s);
 	SeqListInsert(&s, 5, 7);
 	SeqListPrint(&s);
+	SeqListPopFront(&s);
+	SeqListPrint(&s);
+	SeqListPopBack(&s);
+	SeqListPrint(&s);
+	SeqListErase(&s, 4);
+	SeqListPrint(&s);
+	SeqListErase(&s, 0);
+	SeqListPrint(&s);
 
 	return 0;
 }

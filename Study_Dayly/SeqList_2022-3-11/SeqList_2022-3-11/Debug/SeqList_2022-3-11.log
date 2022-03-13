@@ -1,5 +1,6 @@
 ﻿  SeqList_Functions.c
-f:\microsoft visual studio\project\2013\seqlist_2022-3-11\seqlist_2022-3-11\seqlist_functions.c(109): warning C4018: “>=”: 有符号/无符号不匹配
-  SeqList.c
-  正在生成代码...
+f:\microsoft visual studio\project\2013\seqlist_2022-3-11\seqlist_2022-3-11\seqlist_functions.c(132): warning C4018: “>”: 有符号/无符号不匹配
+f:\microsoft visual studio\project\2013\seqlist_2022-3-11\seqlist_2022-3-11\seqlist_functions.c(163): warning C4018: “>=”: 有符号/无符号不匹配
+f:\microsoft visual studio\project\2013\seqlist_2022-3-11\seqlist_2022-3-11\seqlist_functions.c(170): warning C4018: “<”: 有符号/无符号不匹配
+f:\microsoft visual studio\project\2013\seqlist_2022-3-11\seqlist_2022-3-11\seqlist_functions.c(182): warning C4018: “<”: 有符号/无符号不匹配
   SeqList_2022-3-11.vcxproj -> F:\Microsoft Visual Studio\Project\2013\SeqList_2022-3-11\Debug\SeqList_2022-3-11.exe

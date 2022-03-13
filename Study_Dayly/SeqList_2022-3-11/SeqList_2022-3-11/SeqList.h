@@ -27,5 +27,11 @@ void SeqListPopBack(SeqList *psl);
 void SeqListPushFront(SeqList *psl, SLDateType x);
 // 顺序表前删
 void SeqListPopFront(SeqList *psl);
-// 顺序表插入
+// 顺序表插入 (在 pos 位置插入数据)
 void SeqListInsert(SeqList *psl, size_t pos, SLDateType x);
+// 删除 pos 位置的数据
+void SeqListErase(SeqList *psl, size_t pos);
+// 查找数据 x 的位置
+int SeqListFind(SeqList *psl, SLDateType x);
+// 数据库销毁
+void SeqListDestory(SeqList *psl);
