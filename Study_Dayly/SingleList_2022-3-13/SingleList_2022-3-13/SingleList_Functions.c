@@ -52,6 +52,7 @@ void SListPushBack(SListNode **pphead, SLTDateType x)
 	}
 }
 
+// 单链表头插
 void SListPushFront(SListNode **pphead, SLTDateType x)
 {
 	SListNode* newnode = BuySLTNode(x);
@@ -59,6 +60,7 @@ void SListPushFront(SListNode **pphead, SLTDateType x)
 	*pphead = newnode;
 }
 
+// 单链表头删
 void SListPopFront(SListNode **pphead)
 {
 	assert(pphead);
@@ -79,3 +81,17 @@ void SListPopFront(SListNode **pphead)
 		*pphead = tail;
 	}
 }
+
+// 查找 x 所在位置 pos
+SListNode* SListFind(SListNode *phead, SListNode x)
+{
+	assert(phead);
+
+}
+
+// 在pos位置插入
+void SListInsert(SListNode **pphead, SListNode *pos, SListNode x)
+{
+
+}
+
