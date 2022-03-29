@@ -1,0 +1,30 @@
+C51 COMPILER V8.08   TEST_2022_3_29                                                        03/29/2022 09:47:31 PAGE 1   
+
+
+C51 COMPILER V8.08, COMPILATION OF MODULE TEST_2022_3_29
+OBJECT MODULE PLACED IN Test_2022-3-29.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE Test_2022-3-29.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include <REGX51.H>
+   2          
+   3          int main()
+   4          {
+   5   1              P1 = 0xfe;
+   6   1              return 0;
+   7   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =      7    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
