@@ -1,0 +1,6 @@
+﻿  Test.c
+f:\microsoft visual studio\project\2013\binarytree\binarytree\test.c(7): warning C4101: “hp”: 未引用的局部变量
+  Heap.c
+f:\microsoft visual studio\project\2013\binarytree\binarytree\heap.c(25): warning C4047: “初始化”:“HPDataType”与“HPDataType *”的间接级别不同
+  正在生成代码...
+  BinaryTree.vcxproj -> F:\Microsoft Visual Studio\Project\2013\BinaryTree\Debug\BinaryTree.exe
