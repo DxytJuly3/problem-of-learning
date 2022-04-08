@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef int HPDataType;
 
@@ -23,3 +24,11 @@ void HeapPush(Heap* php, HPDataType x);
 void HeapPop(Heap* php);
 // 堆 数据打印
 void HeapPrint(Heap* php);
+// 判空
+bool HeapEmpty(Heap* php);
+// 堆的根的数据
+HPDataType HeapTop(Heap* php);
+// 堆大小
+size_t HeapSize(Heap* php);
+// 排序
+void HeapSort(int *a, size_t size);
