@@ -1,6 +1,2 @@
-﻿  Test.c
-  Heap.c
-f:\microsoft visual studio\project\2013\binarytree\binarytree\heap.c(10): warning C4018: “<”: 有符号/无符号不匹配
-f:\microsoft visual studio\project\2013\binarytree\binarytree\heap.c(171): warning C4018: “<”: 有符号/无符号不匹配
-  正在生成代码...
+﻿  BinaryTree.c
   BinaryTree.vcxproj -> F:\Microsoft Visual Studio\Project\2013\BinaryTree\Debug\BinaryTree.exe

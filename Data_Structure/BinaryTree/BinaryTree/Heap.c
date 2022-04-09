@@ -161,24 +161,36 @@ size_t HeapSize(Heap* php)
 	return php->size;
 }
 
+//// 排序
+//void HeapSort(int *data, size_t size)
+//{
+//	assert(data);
+//
+//	Heap hp;
+//	HeapInit(&hp);
+//	for (int i = 0; i < size; i++)
+//	{
+//		HeapPush(&hp, data[i]);		// 大根堆就降序，小根堆就升序
+//	}
+//
+//	size_t j = 0;
+//	while (!HeapEmpty(&hp))
+//	{
+//		data[j++] = HeapTop(&hp);
+//		HeapPop(&hp);
+//	}
+//
+//	HeapDestroy(&hp);
+//}
+
 // 排序
-void HeapSort(int *data, size_t size)
-{
-	assert(data);
-
-	Heap hp;
-	HeapInit(&hp);
-	for (int i = 0; i < size; i++)
-	{
-		HeapPush(&hp, data[i]);		// 大根堆就降序，小根堆就升序
-	}
-
-	size_t j = 0;
-	while (!HeapEmpty(&hp))
-	{
-		data[j++] = HeapTop(&hp);
-		HeapPop(&hp);
-	}
-
-	HeapDestroy(&hp);
-}
+//void HeapSort(int *data, size_t size)
+//{
+//	assert(data);
+//
+//	for (int i = 1; i < size; i++)
+//	{
+//		AdjustUp(data, i);
+//	}
+//
+//}
