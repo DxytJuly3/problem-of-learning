@@ -30,5 +30,7 @@ bool HeapEmpty(Heap* php);
 HPDataType HeapTop(Heap* php);
 // 堆大小
 size_t HeapSize(Heap* php);
-// 排序
+// 排序 降序
 void HeapSort(int *a, size_t size);
+// Top-K 问题 思路
+void PrintTopK(int* a, int n, int k);

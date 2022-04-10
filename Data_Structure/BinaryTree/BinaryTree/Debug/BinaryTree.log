@@ -1,2 +1,5 @@
-﻿  BinaryTree.c
+﻿  Test.c
+  BinaryTree.c
+  正在生成代码...
+f:\microsoft visual studio\project\2013\binarytree\binarytree\binarytree.c(145): warning C4716: “BinaryTreeComplete”: 必须返回一个值
   BinaryTree.vcxproj -> F:\Microsoft Visual Studio\Project\2013\BinaryTree\Debug\BinaryTree.exe

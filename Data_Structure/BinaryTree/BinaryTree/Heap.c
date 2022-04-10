@@ -7,7 +7,7 @@ void HeapPrint(Heap* php)
 {
 	assert(php);
 
-	for (int i = 0; i < php->size; i++)
+	for (size_t i = 0; i < php->size; i++)
 	{
 		printf("%d ", php->data[i]);
 	}
@@ -85,6 +85,7 @@ void HeapPush(Heap* php, HPDataType x)
 	AdjustUp(php->data, php->size - 1);
 }
 
+
 void AdjustDown(HPDataType* data, size_t size, size_t root)
 {
 	assert(data);
@@ -102,12 +103,13 @@ void AdjustDown(HPDataType* data, size_t size, size_t root)
 	while (child < size)
 	{
 		// 判断 大的孩子节点是否正确
-		if (child + 1 <= size && data[child] < data[child + 1])
+		// 首先有 右孩子，然后才能判断左右孩子的大小，所以得先判断 child + 1 < size
+		if (child + 1 < size && data[child] < data[child + 1])
 		{
 			++child;
 		}
 
-		// 父亲节点小 就 交换
+		// 父亲节点大 就 交换
 		if (data[parent] < data[child])
 		{
 			swap(&data[parent], &data[child]);
@@ -183,14 +185,65 @@ size_t HeapSize(Heap* php)
 //	HeapDestroy(&hp);
 //}
 
-// 排序
-//void HeapSort(int *data, size_t size)
-//{
-//	assert(data);
-//
-//	for (int i = 1; i < size; i++)
-//	{
-//		AdjustUp(data, i);
-//	}
-//
-//}
+// 排序  时间复杂度 O(N*log N)
+//		空间复杂度 O(1)
+void HeapSort(int *data, size_t size)
+{// 直接对 数组建堆
+	assert(data);
+
+	// 向上调整建堆
+	/*for (int i = 0; i < size; i++)
+	{
+		AdjustUp(data, i);
+	}*/
+
+	// 向下调整建堆
+	// 两种调整方式都有一个共同的前提：除了需要调整的那个节点，二叉树已经是堆
+	// 所以向下调整不能从 整个二叉树的root 开始
+	// 要从 最后一个非叶子节点开始向下调整 （为什么是最后一个非叶子节点：因为叶子节点没有孩子节点不能再向下调整了）
+	// 最后一个非叶子节点的位置是，最后一个节点的父亲节点
+
+	int j = (size - 1 - 1) / 2;	//最后一个非叶子结点的位置
+	for (j; j >= 0; j--)
+	{
+		AdjustDown(data, size, j);
+	}
+
+	// 大根堆建好，排序
+	// 可以用 堆删除数据的思想
+	// 将大根堆的 根 与 最后一个节点 交换位置
+	// 然后从根向下调整
+	// 然后 再将根 与 倒数第二个节点 交换位置
+	// 然后从根向下调整  以此类推
+	size_t end = size - 1;	 // end 先从最后一个节点位置开始
+	while (end > 0)
+	{
+		swap(&data[0], &data[end]);	// 根节点 与 end节点 交换位置
+		AdjustDown(data, end, 0);	// 从根节点向下调整 调整到 最后结束
+		--end;						// end 位置 减一
+	}
+	
+}
+
+void PrintTopK(int* data, int size, int k)
+{
+	// 建立小根堆
+	Heap hp;
+	HeapInit(&hp);
+	for (int i = 0; i < k; i++)
+	{
+		HeapPush(&hp, data[i]);
+	}
+
+	for (int j = k; j < size; j++)
+	{
+		if (data[j] >(&hp)->data[0])
+		{//如果 当前数据 比 根的数据 大，就删除根 并在堆中放入当前数据
+			HeapPop(&hp);
+			HeapPush(&hp, data[j]);
+		}
+	}
+
+	HeapPrint(&hp);
+	printf("\n");
+}
