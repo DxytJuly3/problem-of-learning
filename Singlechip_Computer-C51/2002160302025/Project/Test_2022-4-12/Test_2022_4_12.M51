@@ -1,8 +1,8 @@
-BL51 BANKED LINKER/LOCATER V6.05                                                        04/12/2022  09:44:08  PAGE 1
+BL51 BANKED LINKER/LOCATER V6.05                                                        04/12/2022  20:52:14  PAGE 1
 
 
 BL51 BANKED LINKER/LOCATER V6.05, INVOKED BY:
-C:\KEIL\C51\BIN\BL51.EXE STARTUP.obj, Test_2022_4_12.obj TO Test_2022_4_12
+F:\KEIL_UVISION3\C51\BIN\BL51.EXE STARTUP.obj, Test_2022_4_12.obj TO Test_2022_4_12
 
 
 MEMORY MODEL: SMALL
@@ -26,23 +26,23 @@ LINK MAP OF MODULE:  Test_2022_4_12 (?C_STARTUP)
 
             * * * * * * *   C O D E   M E M O R Y   * * * * * * *
             CODE    0000H     0003H     ABSOLUTE     
-            CODE    0003H     0023H     UNIT         ?PR?DELAY?TEST_2022_4_12
-            CODE    0026H     0015H     UNIT         ?PR?MAIN?TEST_2022_4_12
-            CODE    003BH     000CH     UNIT         ?C_C51STARTUP
+            CODE    0003H     002DH     UNIT         ?PR?_DELAY?TEST_2022_4_12
+            CODE    0030H     001FH     UNIT         ?PR?MAIN?TEST_2022_4_12
+            CODE    004FH     000CH     UNIT         ?C_C51STARTUP
 
 
 
 OVERLAY MAP OF MODULE:   Test_2022_4_12 (?C_STARTUP)
 
 
-SEGMENT                            DATA_GROUP 
-  +--> CALLED SEGMENT            START    LENGTH
-------------------------------------------------
-?C_C51STARTUP                    -----    -----
+SEGMENT                             DATA_GROUP 
+  +--> CALLED SEGMENT             START    LENGTH
+-------------------------------------------------
+?C_C51STARTUP                     -----    -----
   +--> ?PR?MAIN?TEST_2022_4_12
 
-?PR?MAIN?TEST_2022_4_12          0008H    0001H
-  +--> ?PR?DELAY?TEST_2022_4_12
+?PR?MAIN?TEST_2022_4_12           0008H    0001H
+  +--> ?PR?_DELAY?TEST_2022_4_12
 
 
 
@@ -52,20 +52,20 @@ SYMBOL TABLE OF MODULE:  Test_2022_4_12 (?C_STARTUP)
   ----------------------------------
 
   -------         MODULE        ?C_STARTUP
-  C:003BH         SEGMENT       ?C_C51STARTUP
+  C:004FH         SEGMENT       ?C_C51STARTUP
   I:0009H         SEGMENT       ?STACK
   C:0000H         PUBLIC        ?C_STARTUP
   D:00E0H         SYMBOL        ACC
   D:00F0H         SYMBOL        B
   D:0083H         SYMBOL        DPH
   D:0082H         SYMBOL        DPL
-BL51 BANKED LINKER/LOCATER V6.05                                                      04/12/2022  09:44:08  PAGE 2
+BL51 BANKED LINKER/LOCATER V6.05                                                      04/12/2022  20:52:14  PAGE 2
 
 
   N:0000H         SYMBOL        IBPSTACK
   N:0100H         SYMBOL        IBPSTACKTOP
   N:0080H         SYMBOL        IDATALEN
-  C:003EH         SYMBOL        IDATALOOP
+  C:0052H         SYMBOL        IDATALOOP
   N:0000H         SYMBOL        PBPSTACK
   N:0100H         SYMBOL        PBPSTACKTOP
   N:0000H         SYMBOL        PDATALEN
@@ -74,55 +74,59 @@ SYMBOL TABLE OF MODULE:  Test_2022_4_12 (?C_STARTUP)
   N:0000H         SYMBOL        PPAGEENABLE
   D:00A0H         SYMBOL        PPAGE_SFR
   D:0081H         SYMBOL        SP
-  C:003BH         SYMBOL        STARTUP1
+  C:004FH         SYMBOL        STARTUP1
   N:0000H         SYMBOL        XBPSTACK
   N:0000H         SYMBOL        XBPSTACKTOP
   N:0000H         SYMBOL        XDATALEN
   N:0000H         SYMBOL        XDATASTART
   C:0000H         LINE#         126
-  C:003BH         LINE#         133
-  C:003DH         LINE#         134
-  C:003EH         LINE#         135
-  C:003FH         LINE#         136
-  C:0041H         LINE#         185
-  C:0044H         LINE#         196
+  C:004FH         LINE#         133
+  C:0051H         LINE#         134
+  C:0052H         LINE#         135
+  C:0053H         LINE#         136
+  C:0055H         LINE#         185
+  C:0058H         LINE#         196
   -------         ENDMOD        ?C_STARTUP
 
   -------         MODULE        TEST_2022_4_12
   C:0000H         SYMBOL        _ICE_DUMMY_
   D:0090H         PUBLIC        P1
-  C:0003H         PUBLIC        delay
-  C:0026H         PUBLIC        main
-  -------         PROC          DELAY
+  C:0003H         PUBLIC        _delay
+  C:0030H         PUBLIC        main
+  -------         PROC          _DELAY
+  D:0006H         SYMBOL        times
   -------         DO            
   D:0004H         SYMBOL        i
-  D:0006H         SYMBOL        j
+  D:0002H         SYMBOL        j
   -------         ENDDO         
   C:0003H         LINE#         6
   C:0003H         LINE#         7
   C:0003H         LINE#         9
-  C:0011H         LINE#         10
-  C:0025H         LINE#         12
-  -------         ENDPROC       DELAY
+  C:000DH         LINE#         10
+  C:000DH         LINE#         11
+  C:001BH         LINE#         12
+  C:002FH         LINE#         13
+  C:002FH         LINE#         14
+  -------         ENDPROC       _DELAY
   -------         PROC          MAIN
   -------         DO            
-  D:0008H         SYMBOL        tmp
+  D:0008H         SYMBOL        temp
   -------         ENDDO         
-  C:0026H         LINE#         14
-  C:0026H         LINE#         15
-  C:0026H         LINE#         16
-  C:0026H         LINE#         17
-  C:0026H         LINE#         19
-  C:0029H         LINE#         20
-  C:002FH         LINE#         21
-  C:0034H         LINE#         22
-  C:0036H         LINE#         23
-  C:0039H         LINE#         24
+  C:0030H         LINE#         16
+  C:0030H         LINE#         17
+  C:0030H         LINE#         18
+  C:0030H         LINE#         19
+  C:0030H         LINE#         21
+  C:0033H         LINE#         22
+  C:0039H         LINE#         23
+BL51 BANKED LINKER/LOCATER V6.05                                                      04/12/2022  20:52:14  PAGE 3
+
+
+  C:0044H         LINE#         24
+  C:0046H         LINE#         25
+  C:004DH         LINE#         26
   -------         ENDPROC       MAIN
-BL51 BANKED LINKER/LOCATER V6.05                                                      04/12/2022  09:44:08  PAGE 3
-
-
   -------         ENDMOD        TEST_2022_4_12
 
-Program Size: data=10.0 xdata=0 code=71
+Program Size: data=10.0 xdata=0 code=91
 LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

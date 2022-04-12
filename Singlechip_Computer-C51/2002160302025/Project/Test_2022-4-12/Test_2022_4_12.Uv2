@@ -5,8 +5,8 @@ Target (Target 1), 0x0000 // Tools: 'MCS-51'
 
 Group (Source Group 1)
 
-File 1,2,<.\STARTUP.A51><STARTUP.A51> 0x0 
-File 1,1,<.\Test_2022_4_12.c><Test_2022_4_12.c> 0x0 
+File 1,2,<.\STARTUP.A51><STARTUP.A51>
+File 1,1,<.\Test_2022_4_12.c><Test_2022_4_12.c>
 
 
 Options 1,0,0  // Target 'Target 1'
