@@ -1,0 +1,45 @@
+C51 COMPILER V8.08   TEST_2022_4_12_LED_CYCLE                                              04/12/2022 22:38:54 PAGE 1   
+
+
+C51 COMPILER V8.08, COMPILATION OF MODULE TEST_2022_4_12_LED_CYCLE
+OBJECT MODULE PLACED IN Test_2022_4_12_LED_Cycle.OBJ
+COMPILER INVOKED BY: F:\Keil_uVision3\C51\BIN\C51.EXE Test_2022_4_12_LED_Cycle.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include <REGX51.H>
+   2          #include <intrins.h>
+   3          
+   4          void delay(int times)
+   5          {
+   6   1              int i,j;
+   7   1              while(times--)
+   8   1              {
+   9   2                      for(i = 0; i < 130; i++)
+  10   2                              for(j = 0; j < 255; j++);
+  11   2              }
+  12   1      }
+  13          
+  14          int main()
+  15          {
+  16   1              P1 = 0xFE;
+  17   1              while(1)
+  18   1              {
+  19   2                      delay(2);
+  20   2                      P1 = _crol_(P1, 1);
+  21   2              }       
+  22   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     70    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
