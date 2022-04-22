@@ -1,0 +1,6 @@
+﻿  Sort.c
+  Test.c
+Test.c(7): warning C4244: “函数”: 从“time_t”转换到“unsigned int”，可能丢失数据
+  正在生成代码
+  已完成代码的生成
+  Sort.vcxproj -> F:\Microsoft Visual Studio\Project\2013\Sort\Release\Sort.exe

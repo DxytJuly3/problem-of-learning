@@ -2,7 +2,6 @@
 
 #include "Sort.h"
 
-
 void printArr(int *a, int size)
 {
 	for (int i = 0; i < size; i++)
@@ -177,42 +176,90 @@ void selectSort(int* a, int size)
 	}
 }
 
-// hoare快排单趟排序
-int hoarePartSort(int* a, int left, int right)
-{
-	int keyi = left;
-	while (left < right)
-	{
-		// right 找比 key 小的	要控制 right > left 防止越界
-		// right 位置比 key 大就进循环，可以控制当 right 比 key 小的时候，right停止不再移动
-		while (a[right] >= a[keyi] && left < right)
-			right--;
-
-		// left 找比 key 大的		要控制 left < right 防止越界
-		// left 位置比 key 小就进循环，可以控制当 left 比 key 大的时候，left停止不再移动
-		while (a[left] <= a[keyi] && left < right)
-			left++;
-
-		Swap(&a[left], &a[right]);
-	}
-	// 相遇时，相遇位置的值 与 key 交换
-	Swap(&a[left], &a[keyi]);
-	// 为了保证相遇位置的值 恒小于 key，所以控制 right 先移动，因为 right 找小，找到 或者 与left相遇 才会停止 
-	// 排降序同理
-
-	return left;		// 为快排打基础，返回相遇点
-}
-
-// hoare快速排序
-void hoareQuickSort(int* a, int begin, int end)
-{
-	if (begin >= end)
-		return;
-
-	int keyi = hoarePartSort(a, begin, end);
-	hoareQuickSort(a, begin, keyi - 1);
-	hoareQuickSort(a, keyi + 1, end);
-}
+//// hoare快排单趟排序
+//int hoarePartSort(int* a, int left, int right)
+//{
+//	int keyi = left;
+//	while (left < right)
+//	{
+//		// right 找比 key 小的	要控制 right > left 防止越界
+//		// right 位置比 key 大就进循环，可以控制当 right 比 key 小的时候，right停止不再移动
+//		while (a[right] >= a[keyi] && left < right)
+//			right--;
+//
+//		// left 找比 key 大的		要控制 left < right 防止越界
+//		// left 位置比 key 小就进循环，可以控制当 left 比 key 大的时候，left停止不再移动
+//		while (a[left] <= a[keyi] && left < right)
+//			left++;
+//
+//		Swap(&a[left], &a[right]);
+//	}
+//	// 相遇时，相遇位置的值 与 key 交换
+//	Swap(&a[left], &a[keyi]);
+//	// 为了保证相遇位置的值 恒小于 key，所以控制 right 先移动，因为 right 找小，找到 或者 与left相遇 才会停止 
+//	// 排降序同理
+//
+//	return left;		// 为快排打基础，返回相遇点
+//}
+//
+//int pitPartSort(int* a, int left, int right)
+//{
+//	int key = a[left];
+//	int pit = left;
+//	while (left < right)
+//	{
+//		while (left < right && a[right] >= key)
+//		{// right 找小
+//			--right;
+//		}
+//		//换坑操作
+//		a[pit] = a[right];		// 找到小，把这个值放到坑里
+//		pit = right;			// 然后把刚刚那个值的位置作为坑
+//
+//		while (left < right && a[left] <= key)
+//		{// left 找大
+//			++left;
+//		}
+//		//换坑操作
+//		a[pit] = a[left];		// 找到大，把这个值放到坑里
+//		pit = left;			// 然后把刚刚那个值的位置作为坑
+//	}
+//
+//	a[pit] = key;		//退出循环即相遇，相遇位置实际为坑，key放入坑里
+//
+//	return pit;			//为快排返回 当前key位置 
+//}
+//
+//// 前后指针
+//int PartSort3(int* a, int left, int right)
+//{
+//	int key = left;
+//	int prev = left;
+//	int cur = prev + 1;
+//	while (cur <= right)
+//	{
+//		while (a[cur] < a[key] && a[cur] != a[++prev])
+//			Swap(&a[cur], &a[prev]);
+//
+//		++cur;
+//	}
+//	Swap(&a[prev], &a[key]);
+//
+//	return prev;
+//}
+//
+//// 快速排序
+//void quickSort(int* a, int begin, int end)
+//{
+//	if (begin >= end)
+//		return;
+//
+//	//int keyi = hoarePartSort(a, begin, end);		//hoare 法
+//	//int keyi = pikPartSort(a, begin, end);			//挖坑 法
+//	int keyi = PartSort3(a, begin, end);
+//	quickSort(a, begin, keyi - 1);
+//	quickSort(a, keyi + 1, end);
+//}
 
 void AdjustDown(HPDataType* data, size_t size, size_t root)
 {
@@ -292,4 +339,290 @@ void HeapSort(int *data, size_t size)
 		--end;                      // end 位置 减一
 	}
 
+}
+
+
+// hoare快排单趟排序
+int hoarePartSort2(int* a, int left, int right)
+{
+	int keyi = left;
+	while (left < right)
+	{
+		while (a[right] >= a[keyi] && left < right)
+			--right;
+		while (a[left] <= a[keyi] && left < right)
+			++left;
+		Swap(&a[right], &a[left]);
+	}
+	Swap(&a[left], &a[keyi]);
+
+	return left;
+}
+
+int pitPartSort2(int* a, int left, int right)
+{
+	int key = a[left];
+	int pit = left;
+	while (left < right)
+	{
+		while (a[right] >= key && left < right)
+			--right;
+		a[pit] = a[right];
+		pit = right;
+		while (a[left] <= key && left < right)
+			++left;
+		a[pit] = a[left];
+		pit = left;
+	}
+
+	a[left] = key;		// a[pit] = key;
+
+	return left;		// return pit;
+}
+
+// 前后指针
+int prevcurPartSort(int* a, int left, int right)
+{
+	int keyi = left;
+	int prev = left;
+	int cur = left + 1;
+	while (cur <= right)
+	{
+		if (a[cur] < a[keyi])
+			Swap(&a[cur], &a[++prev]);
+
+		++cur;
+	}
+
+	Swap(&a[prev], &a[keyi]);
+
+	return prev;
+}
+
+// 快速排序
+void quickSort2(int* a, int begin, int end)
+{
+	if (begin >= end)
+		return;
+
+	//int keyi = hoarePartSort(a, begin, end);		//hoare 法
+	//int keyi = pikPartSort(a, begin, end);			//挖坑 法
+	int keyi = prevcurPartSort(a, begin, end);
+	quickSort2(a, begin, keyi - 1);
+	quickSort2(a, keyi + 1, end);
+}
+
+// 快排的两种优化方法
+// 1. 三数取中	（首 尾 中，三个位置取 中间大小的作为 key）
+// 不需要在原函数比较三数大小在修改代码什么的
+// 只需要 再写一个函数 取中间大小的位置
+// 然后在快排函数中将其与left 位置换位就可以了
+
+int getMidIndex(int* a, int left, int right)
+{
+	int mid = left + (right - left) / 2;
+	if (a[left] < a[mid])
+	{
+		if (a[right] > a[mid])
+			return mid;
+		else if (a[right] < a[left])
+			return left;
+		else //(a[mid] > a[right] >  a[left])
+			return right;
+	}
+	else // (a[left] > a[mid])
+	{
+		if (a[right] < a[mid])
+			return mid;
+		else if (a[right] > a[left])
+			return left;
+		else //(a[mid] < a[right] <  a[left])
+			return right;
+	}
+}
+
+// 三数取中快速排序
+void midQuickSort(int* a, int begin, int end)
+{
+	if (begin >= end)
+		return;
+
+	int midi = getMidIndex(a, begin, end);
+	Swap(&a[midi], &a[begin]);
+
+	//int keyi = hoarePartSort(a, begin, end);		//hoare 法
+	//int keyi = pikPartSort(a, begin, end);			//挖坑 法
+	int keyi = prevcurPartSort(a, begin, end);
+	midQuickSort(a, begin, keyi - 1);
+	midQuickSort(a, keyi + 1, end);
+}
+
+// 2. 小区间优化(当 left - right 小于一定值的时候，不再使用快排递归，而使用插入排序)
+// 当 left - right 小于一定值时，即代表 需要排序的数据没有那么多
+// 数据少时，再调用递归的话 浪费资源
+// 所以当 left - right 小于一定值时，使用插入排序会更好一些
+
+// 小区间优化 快速排序
+void minQuickSort(int* a, int begin, int end)
+{
+	if (begin >= end)
+		return;
+	if (begin - end >= 30)
+	{	//当 需要排序的数据小于 30 就用插入排序
+		insertSort(a, begin - end);
+	}
+	else
+	{
+		//int keyi = hoarePartSort(a, begin, end);		//hoare 法
+		//int keyi = pikPartSort(a, begin, end);			//挖坑 法
+		int keyi = prevcurPartSort(a, begin, end);
+		minQuickSort(a, begin, keyi - 1);
+		minQuickSort(a, keyi + 1, end);
+	}
+}
+
+// 非递归快排
+// 非递归快排 需要使用栈实现
+// 用栈 存入需要排序数据的首位区间
+// 每排一次序，就将 keyi 的 左、右区间入栈（区间只有一个数不用入）
+// 
+void non_recursive_QuickSort(int* a, int begin, int end)
+{
+	Stack qSortst;
+	StackInit(&qSortst);
+	StackPush(&qSortst, begin);		// 压入需要排序的区间的 首元素位置
+	StackPush(&qSortst, end);		// 压入需要排序的区间的 末元素位置
+
+	while (!StackEmpty(&qSortst))
+	{// 栈为空表示排序完成
+		int right = StackTop(&qSortst);			// 因为后压入末元素位置，所以栈顶为末元素位置，作为 right
+		StackPop(&qSortst);						// 取栈顶后 出栈
+		int left = StackTop(&qSortst);			// 此时栈顶为首元素位置，作为 left
+		StackPop(&qSortst);						// 出栈
+
+		int keyi = prevcurPartSort(a, left, right);		// 对 left ~ right 进行单趟排序
+		if (left < keyi - 1)
+		{// keyi的左区间元素数量 不小于 1，再压入左区间的范围
+			StackPush(&qSortst, left);
+			StackPush(&qSortst, keyi - 1);
+		}
+		if (right > keyi + 1)
+		{// keyi的右区间元素数量 不小于 1，再压入右区间的范围
+			StackPush(&qSortst, keyi + 1);
+			StackPush(&qSortst, right);
+		}
+	}
+}
+
+void _margeSort(int* a, int begin, int end, int* tmp)
+{
+	if (begin >= end)
+		return;
+
+	// 细分，直到 分为一个一个的数据
+	// 然后归并
+	int mid = (begin + end) / 2;
+	_margeSort(a, begin, mid, tmp);
+	_margeSort(a, mid + 1, end, tmp);
+
+	// 归并
+	//printf("归并[%d,%d][%d,%d] \n", begin, mid, mid + 1, end);
+	int begin1 = begin, end1 = mid;
+	int begin2 = mid + 1, end2 = end;
+	int index = begin;
+	while (begin1 <= end1 && begin2 <= end2)
+	{
+		if (a[begin1] < a[begin2])
+		{
+			tmp[index++] = a[begin1++];
+		}
+		else
+		{
+			tmp[index++] = a[begin2++];
+		}
+	}
+
+	while (begin1 <= end1)
+	{
+		tmp[index++] = a[begin1++];
+	}
+	while (begin2 <= end2)
+	{
+		tmp[index++] = a[begin2++];
+	}
+
+	memcpy(a + begin, tmp + begin, sizeof(int)* (end - begin + 1));
+}
+
+void margeSort(int* a, int size)
+{
+	int* tmp = (int*)malloc(sizeof(int)* size);
+	if (tmp == NULL)
+	{
+		printf("margeSort fail\n");
+		exit(-1);
+	}
+
+	_margeSort(a, 0, size - 1, tmp);
+
+	free(tmp);
+}
+
+void MergeSortNonR(int* a, int n)
+{
+	int* tmp = (int*)malloc(sizeof(int)*n);
+	int gap = 1;
+
+	while (gap < n)
+	{
+		// 间距为gap是一组，两两归并
+		for (int i = 0; i < n; i += 2 * gap)
+		{
+			int begin1 = i, end1 = i + gap - 1;
+			int begin2 = i + gap, end2 = i + 2 * gap - 1;
+			// end1 越界，修正
+			if (end1 >= n)
+				end1 = n - 1;
+
+			// begin2 越界，第二个区间不存在
+			if (begin2 >= n)
+			{
+				begin2 = n;
+				end2 = n - 1;
+			}
+
+			// begin2 ok， end2越界，修正end2即可
+			if (begin2 < n && end2 >= n)
+				end2 = n - 1;
+
+			// 条件断点
+			if (begin1 == 8 && end1 == 9 && begin2 == 9 && end2 == 9)
+			{
+				int x = 0;
+			}
+
+			printf("归并[%d,%d][%d,%d]\n", begin1, end1, begin2, end2);
+
+			int index = i;
+			while (begin1 <= end1 && begin2 <= end2)
+			{
+				if (a[begin1] < a[begin2])
+					tmp[index++] = a[begin1++];
+				else
+					tmp[index++] = a[begin2++];
+			}
+
+			while (begin1 <= end1)
+				tmp[index++] = a[begin1++];
+
+			while (begin2 <= end2)
+				tmp[index++] = a[begin2++];
+		}
+		memcpy(a, tmp, n*sizeof(int));
+		//PrintArray(a, n);
+
+		gap *= 2;
+	}
+
+	free(tmp);
 }
