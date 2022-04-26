@@ -19,6 +19,7 @@ void Swap(int* a, int* b)
 }
 
 // 插入排序
+// 从 第二个位置向前对比，比前一位小，就交换位置
 void insertSort(int* a, int size)
 {
 	for (int i = 0; i < size - 1; i++)
@@ -625,4 +626,43 @@ void MergeSortNonR(int* a, int n)
 	}
 
 	free(tmp);
+}
+
+// 计数排序
+void CountSort(int *nums, int numsSize)
+{
+	int max = nums[0];
+	int min = nums[0];
+	for (int i = 0; i < numsSize; i++)
+	{
+		if (nums[i] > max)
+		{
+			max = nums[i];
+		}
+		if (nums[i] < min)
+		{
+			min = nums[i];
+		}
+	}
+
+
+	int *arr = (int*)malloc(sizeof(int)* (max - min + 1));
+	assert(arr);
+	memset(arr, 0, sizeof(int)*(max - min + 1));
+
+
+	for (int i = 0; i < numsSize; i++)
+	{
+		arr[nums[i] - min]++;
+	}
+
+
+	int j = 0;
+	for (int i = 0; i < (max - min + 1); i++)
+	{
+		while (arr[i]--)
+		{
+			nums[j++] = i + min;
+		}
+	}
 }

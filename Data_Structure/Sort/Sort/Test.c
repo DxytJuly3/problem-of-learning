@@ -86,10 +86,18 @@ void TestOP()
 //
 int main()
 {
-
-	int arr[] = { 9, 33, 6, 41, 32, 45, 5, 43, 9, 6, 1, 34, 7, 47, 2, 5, 6 };
-	margeSort(arr, 17);
-	printArr(arr, 17);
+	// 递归归并
+	int arr1[] = { 9, 33, 6, 41, 32, 45, 5, 43, 9, 6, 1, 34, 7, 47, 2, 5, 6 };
+	margeSort(arr1, 17);
+	printArr(arr1, 17);
+	// 非递归归并
+	int arr2[] = { 9, 33, 6, 41, 32, 45, 5, 43, 9, 6, 1, 34, 7, 47, 2, 5, 6 };
+	MergeSortNonR(arr2, 17);
+	printArr(arr2, 17);
+	// 计数
+	int arr3[] = { 9, 33, 6, 41, 32, 45, 5, 43, 9, 6, 1, 34, 7, 47, 2, 5, 6 };
+	CountSort(arr3, 17);
+	printArr(arr3, 17);
 
 	return 0;
 }

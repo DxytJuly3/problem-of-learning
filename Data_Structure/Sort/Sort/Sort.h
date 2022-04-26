@@ -39,3 +39,7 @@ void non_recursive_QuickSort(int* a, int begin, int end);
 void HeapSort(int *data, size_t size);
 
 void margeSort(int* a, int size);
+
+void MergeSortNonR(int* a, int n);
+
+void CountSort(int *nums, int numsSize);
