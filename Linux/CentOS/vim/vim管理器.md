@@ -74,7 +74,6 @@ if has("autocmd")
 ("$") | exe "normal! g'\"" | endif
 endif
 
-
 """""""""""""""""""""""""" airline 彩色状态栏/标签页
 " 这几个是挑选的还不错的几个 airline 主题
 " let g:airline_theme="ravenpower"
@@ -94,11 +93,6 @@ let g:airline#extensions#tabline#buffer_nr_show = 1
 " 关闭状态显示空白符号计数
 let g:airline#extensions#whitespace#enabled = 0
 let g:airline#extensions#whitespace#symbol = '!'
-" 设置consolas字体
-set guifont=Consolas\ for\ Powerline\ FixedD:h11
-if !exists('g:airline_symbols')
-  let g:airline_symbols = {}
-endif
 " unicode symbols
 let g:airline_left_sep = '»'
 let g:airline_left_sep = '▶'
@@ -140,7 +134,6 @@ let g:airline_symbols.branch = '⭠'
 let g:airline_symbols.readonly = '⭤'
 " let g:airline_symbols.linenr = '⭡'
 let g:airline_symbols.linenr = ''
-
 
 """""""""""""""""""""""""" 代码折叠
 set foldenable
