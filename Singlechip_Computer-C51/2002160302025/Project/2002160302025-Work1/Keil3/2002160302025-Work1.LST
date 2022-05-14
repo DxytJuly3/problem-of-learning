@@ -1,0 +1,58 @@
+C51 COMPILER V8.08   2002160302025_WORK1                                                   05/14/2022 14:14:36 PAGE 1   
+
+
+C51 COMPILER V8.08, COMPILATION OF MODULE 2002160302025_WORK1
+OBJECT MODULE PLACED IN 2002160302025-Work1.OBJ
+COMPILER INVOKED BY: F:\Keil_uVision3\C51\BIN\C51.EXE 2002160302025-Work1.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include <reg51.h>
+   2          
+   3          void Delay(unsigned int i)
+   4          {
+   5   1          unsigned int j;
+   6   1          while(i--)
+   7   1          {
+   8   2              for(j = 0; j < 255 ; j++)
+   9   2              {}
+  10   2          }
+  11   1      }
+  12          
+  13          int main()
+  14          {
+  15   1          TMOD = 0x05;                // 0 0 0 0 0 1 0 1
+  16   1          TH0 = 0xff;
+  17   1          TL0 = 0xfc;
+  18   1          EA = 1;
+  19   1          ET0 = 1;
+  20   1          TR0 = 1;
+  21   1          while(1);
+  22   1      
+  23   1          return 0;
+  24   1      }
+  25          
+  26          void T0_int(void)   interrupt 0
+  27          {
+  28   1          while(1)
+  29   1          {
+  30   2              P1 = 0xf0;
+  31   2              Delay(200);
+  32   2              P1 = 0x0f;
+  33   2              Delay(200);
+  34   2          }
+  35   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     86    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
