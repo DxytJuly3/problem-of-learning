@@ -1,0 +1,4 @@
+﻿  TEST.cpp
+f:\microsoft visual studio\project\2013\auto_andsoon_2022-6-2\auto_andsoon_2022-6-2\test.cpp(11): error C3535: 无法推导“auto *”的类型(依据“int”)
+f:\microsoft visual studio\project\2013\auto_andsoon_2022-6-2\auto_andsoon_2022-6-2\test.cpp(11): error C2440: “初始化”: 无法从“int”转换为“int *”
+          从整型转换为指针类型要求 reinterpret_cast、C 样式转换或函数样式转换

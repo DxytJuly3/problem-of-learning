@@ -1,0 +1,3 @@
+﻿  test_2022-7-2.cpp
+F:\Microsoft Visual Studio\Project\2022\test_2022-7-2\test_2022-7-2\test_2022-7-2.cpp(31,21): warning C4244: “return”: 从“__int64”转换到“int”，可能丢失数据
+  test_2022-7-2.vcxproj -> F:\Microsoft Visual Studio\Project\2022\test_2022-7-2\x64\Debug\test_2022-7-2.exe

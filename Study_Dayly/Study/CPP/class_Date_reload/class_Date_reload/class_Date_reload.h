@@ -25,31 +25,6 @@ public:
 	// 月份天数获取
 	int GetMonthDay(int year, int month);
 
-	// 日期 + 天数 ---> 日期
-	Date operator+(int day);
-	Date& operator+=(int day);
-
-	// 日期 - 天数 ---> 日期
-	Date operator-(int day);
-	Date& operator-=(int day);
-
-	// 前置++
-	Date& operator++();
-	// 后置++
-	Date operator++(int);		
-	// 前置--
-	Date& operator--();
-	// 后置--
-	Date operator--(int);
-	// C++ 规定，++、-- 的运算符重载，前置无参、后置有一int类型参数(但是无需手动传参 只是为了区分前后置，编译器传参)
-
-	// 日期 - 日期 ---> 天数
-	int operator-(const Date& d);
-	
-	// 赋值重载
-	Date& operator=(const Date& d);
-
-
 	// 短小 inline使用
 	bool operator==(const Date& d)
 	{
@@ -81,6 +56,30 @@ public:
 	{
 		return *this < d || *this == d;
 	}
+
+	// 日期 + 天数 ---> 日期
+	Date operator+(int day);
+	Date& operator+=(int day);
+
+	// 日期 - 天数 ---> 日期
+	Date operator-(int day);
+	Date& operator-=(int day);
+
+	// 前置++
+	Date& operator++();
+	// 后置++
+	Date operator++(int);		
+	// 前置--
+	Date& operator--();
+	// 后置--
+	Date operator--(int);
+	// C++ 规定，++、-- 的运算符重载，前置无参、后置有一int类型参数(但是无需手动传参 只是为了区分前后置，编译器传参)
+
+	// 日期 - 日期 ---> 天数
+	int operator-(const Date& d);
+	
+	// 赋值重载
+	Date& operator=(const Date& d);
 
 private:
 	int _year;

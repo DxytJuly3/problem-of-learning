@@ -1,0 +1,4 @@
+﻿  Test.c
+f:\microsoft visual studio\project\2013\test_2022-5-11\test_2022-5-11\test.c(12): warning C4047: “函数”:“int”与“void *”的间接级别不同
+f:\microsoft visual studio\project\2013\test_2022-5-11\test_2022-5-11\test.c(12): warning C4024: “f”: 形参和实参 1 的类型不同
+  Test_2022-5-11.vcxproj -> F:\Microsoft Visual Studio\Project\2013\Test_2022-5-11\Debug\Test_2022-5-11.exe

@@ -75,20 +75,16 @@ Date& Date::operator-=(int day)
 	if (day < 0)
 		return *this += -day;
 
-	while (day > _day)
+	while (day >= _day)
 	{
 		day -= _day;
-		if (_month > 1)
-		{
-			_month--;
-			_day = GetMonthDay(_year, _month);
-		}
-		else
+		--_month;
+		if (_month == 0)
 		{
 			_year--;
 			_month = 12;
-			_day = 31;
 		}
+		_day = GetMonthDay(_year, _month);
 	}
 	_day -= day;
 

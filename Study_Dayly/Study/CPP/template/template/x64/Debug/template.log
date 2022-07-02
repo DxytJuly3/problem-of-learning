@@ -1,0 +1,19 @@
+﻿  template.cpp
+  test.cpp
+F:\Microsoft Visual Studio\Project\2022\template\template\template.h(25,11): warning C4244: “return”: 从“T1”转换到“T2”，可能丢失数据
+          with
+          [
+              T1=double
+          ]
+          and
+          [
+              T2=int
+          ]
+F:\Microsoft Visual Studio\Project\2022\template\template\test.cpp(42): message : 查看对正在编译的函数 模板 实例化“T2 add<double,int>(T1 &,T2 &)”的引用
+          with
+          [
+              T2=int,
+              T1=double
+          ]
+  正在生成代码...
+  template.vcxproj -> F:\Microsoft Visual Studio\Project\2022\template\x64\Debug\template.exe

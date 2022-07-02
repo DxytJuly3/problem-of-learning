@@ -1,0 +1,4 @@
+﻿  test.cpp
+F:\Microsoft Visual Studio\Project\2022\class_Date_reload_blog\class_Date_reload_blog\test.cpp(106,8): error C2664: “void test(Date &)”: 无法将参数 1 从“const Date”转换为“Date &”
+F:\Microsoft Visual Studio\Project\2022\class_Date_reload_blog\class_Date_reload_blog\test.cpp(106,7): message : 转换丢失限定符
+F:\Microsoft Visual Studio\Project\2022\class_Date_reload_blog\class_Date_reload_blog\test.cpp(99,6): message : 参见“test”的声明
