@@ -599,3 +599,111 @@ date 用法：**`date [OPTION]... [+FORMAT]`**
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220706235048642.png" alt="image-20220706235048642" style="zoom:67%;" />
 
+## 18. zip、unzip
+
+`zip` 是Linux平台下的一种打包压缩的指令；`unzip` 则是解压缩的指令
+
+语法：**`zip 压缩文件.zip 目录或文件`**
+功能：将目录或文件压缩成 `zip` 格式
+常用选项：
+
+| 选项     | 功能                                             |
+| -------- | ------------------------------------------------ |
+| **`-r`** | 递归处理，将指定目录下的所有文件和子目录一并处理 |
+| **`-d`** | 解压用，用来指定解压目录                         |
+
+`zip` 用来打包压缩文件：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220707120928659.png" alt="image-20220707120928659" style="zoom:67%;" />
+但是 无选项时对目录打包压缩，不会打包目录内的内容：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220707121444684.png" alt="image-20220707121444684" style="zoom:67%;" />
+
+而`zip`如果想要打包目录内的所有内容，要加上选项`-r`：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220707121904184.png" alt="image-20220707121904184" style="zoom:60%;" />
+
+再对使用 `-r`压缩的文件，解压缩：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220707122329494.png" alt="image-20220707122329494" style="zoom:67%;" />
+
+所以 `zip` 压缩目录内所有内容需要选项`-r`递归打包压缩。
+
+## 19. tar
+
+语法：**`tar [-cxtzjvf] 文件与目录 .... 参数`**
+功能：将目录或文件压缩成`tar.gz 或 tgz`格式，或解压 `tar.gz、tgz`文件，或直接查看`tar.gz、tgz`文件内容
+常用选项：
+
+| 选项     | 功能                                                         |
+| -------- | ------------------------------------------------------------ |
+| **`-c`** | 建立一个压缩文件的参数指令(create 的意思)                    |
+| **`-x`** | 解开一个压缩文件的参数指令                                   |
+| **`-t`** | 查看 `tarfile` 里面的文件                                    |
+| **`-z`** | 是否同时具有 `gzip` 的属性？亦即是否需要用 `gzip` 压缩？     |
+| **`-j`** | 是否同时具有 `bzip2` 的属性？亦即是否需要用 `bzip2` 压缩？   |
+| **`-v`** | 压缩的过程中显示文件！这个常用，但不建议用在背景执行过程！   |
+| **`-f`** | 使用档名，请留意，**在 `f` 之后要立即接档名！不要再加参数！** |
+| **`-C`** | 解压到指定目录                                               |
+
+> `tar` 指令可以分离执行 打包、压缩 这两个过程，`zip` 只能合并两个过程打包压缩文件
+>
+> 但是 分离执行 不常用且些许麻烦，所以 只介绍一次性执行
+>
+> 一次性执行后缀为 `.tgz` 是 `.tar.gz` 的合称
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220707123544407.png" alt="image-20220707123544407" style="zoom:67%;" />
+
+`tar` 命令使用选项时，可能需要前加`-` 也可能不需要，与`tar`版本有关
+`-z` 选项可以指定压缩文件的属性为 `gzip`，相应的还有`-j` 可指定压缩文件属性为`bzip2`
+
+`-t` 选项可以直接查看压缩文件的内容：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220707123924349.png" alt="image-20220707123924349" style="zoom:67%;" />
+
+`tar xzvf 档名 -C 目录` 常用来指定目录、显示过程解压缩`gzip`属性的`tar`压缩文件：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220707124405847.png" alt="image-20220707124405847" style="zoom:67%;" />
+
+这基本就是 `tar` 简单的操作的内容
+
+> 问题1：为什么要压缩文件？
+>
+> 压缩文件的目的一般有两个：
+>
+> 1. 节省资源。无论是本地的物理空间资源，还是网络数据传输、存储时的资源占用，独立的压缩文件都会占用更少的资源
+> 2. 方便网络传输。
+>     众所周知，一个项目、软件的文件不可能只有一个，如果不对这些文件进行打包压缩就直接进行传输，很有可能会发生中途部分数据丢失，进而造成看似文件传输成功了但其实并没有完全成功。
+>     使用打包压缩的方法，将一个项目的所有文件打包压缩起来，在网络传输中不会存在部分文件丢失却又无法发觉的情况，因为压缩文件数据丢失 就代表压缩文件的损坏，当一个压缩文件损坏了，根本就无法进行解压。可以很明确的让使用者知道，本次传输失败了。同时，一个文件的传输更胜于多个文件目录的传输。
+>     所以，压缩文件其实还是为了`方便快捷节省资源`
+
+> 问题2：Linux是否支持所有的压缩文件格式？为什么？
+>
+> 是的，Linux 是支持所有的压缩文件格式的。
+> 主要原因是因为，不可能所有的开发者都使用同一个平台进行开发。而不同的开发平台(Mac、Windows、Linux) 如果压缩文件格式都不相互支持，将会是一种巨大的折磨。
+
+## 20. bc
+
+Linux 种 `bc` 其实就是计算器：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/bc_show.gif" alt="bc_show" style="zoom:80%;" />
+
+## 21. uname
+
+语法： **`uname [选项]`**
+功能： `uname`用来获取电脑和操作系统的相关信息。
+补充说明： `uname`可显示`linux`主机所用的**操作系统的版本、硬件的名称等基本信息**。
+常用选项：  
+
+| 选项           | 功能                                                         |
+| -------------- | ------------------------------------------------------------ |
+| **`-a或–all`** | 详细输出所有信息，依次为内核名称，主机名，内核版本号，内核版本，硬件名，处理器类型，硬件平台类型，操作系统名称 |
+| **`-r`**       | 输出操作系统内核版本号                                       |
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220707134800918.png" alt="image-20220707134800918" style="zoom:80%;" />
+
+## 22. 扩展命令
+
+Linux 不仅仅只有上面那些指令，还有许多指令需要学习：
+
+- 安装和登录命令：`login`、`shutdown`、`halt`、`reboot`、`install`、`mount`、`umount`、`chsh`、`exit`、`last`；
+- 文件处理命令：`file`、`dd`、`diff`、`cat`、`ln`；
+- 系统管理相关命令：`df`、`top`、`free`、`quota`、`at`、 `lp`、`adduser`、`groupadd`、`kill`、`crontab`；
+- 网络操作命令：`ifconfig`、`ip`、`ping`、`netstat`、`telnet`、`ftp`、`route`、`rlogin`、`rcp`、`finger`、`mail`、`nslookup`；
+- 系统安全相关命令：`passwd`、`su`、`umask`、`chgrp`、`chmod`、`chown`、`chattr`、`sudo ps`、`who`；
+- 其它命令：`gunzip`、`unarj`、`mtools`、`unendcode`、`uudecode`  
+
+但是这些指令，相比上面的指令 相对没有那么常用罢了
