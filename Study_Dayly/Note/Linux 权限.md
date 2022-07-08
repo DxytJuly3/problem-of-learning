@@ -128,6 +128,23 @@ Linux系统规定：
 并且，**每3位中 读写执行权限的位置是固定的**，顺序必须为 `rwx` 不能为 `wrx` 或 `xrw`，即：
 **每三位中，首位读权限，次位写权限，末尾执行权限**
 
+### file 文件类型显示
+
+`file` 是一个指令，可以辨识指定文件的类型
+
+功能说明：辨识文件类型
+语法：**`file [选项] 文件或目录...`**
+常用选项：
+
+| 选项     | 功能                                                 |
+| -------- | ---------------------------------------------------- |
+| **`-c`** | 详细显示指令执行过程，便于排错或分析程序执行的情形。 |
+| **`-z`** | 尝试去解读压缩文件的内容                             |
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708141939043.png" alt="image-20220708141939043" style="zoom:67%;" />
+
+> `file` 没有` .c` 后缀，也可以识别出它是 *C语言源文件*，因为 Linux不以文件后缀识别文件类型
+
 ## Linux 文件访问权限的相关设置
 
 上面介绍了 *Linux系统中文件的类型和文件访问的权限*，其实**这些属性是可以修改的**
@@ -205,8 +222,6 @@ Linux系统规定：
     用法：
     <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220707234309136.png" alt="image-20220707234309136" style="zoom:80%;" />
 
-> 
-
 ### 访问用户的修改
 
 文件的访问权限可以修改，**其所属用户即组也都可以修改**
@@ -218,6 +233,11 @@ Linux系统规定：
 >
 > 怎么让其被动同意呢？
 > **使用 `root` 修改，或者 `sudo` 临时提升权限**，`root` 就像是上帝，是不受任何限制的，`sudo` 可将此操作提升到同等的地位
+>
+> 如果没有使用 `root用户` 或 `sudo` 就会提示：
+>  <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708100741021.png" alt="image-20220708100741021" style="zoom:67%;" />
+>
+> PS：想要将文件给某个用户，此系统需要有此用户
 
 1. `chown`
 
@@ -229,4 +249,136 @@ Linux系统规定：
     | -------- | -------------------------------------- |
     | **`-R`** | 对目录使用，递归修改目录内所有文件权限 |
 
-    
+    `chown` 可以将文件的所有者，改为其他用户：
+    <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708100923223.png" alt="image-20220708100923223" style="zoom:67%;" />
+
+2. `chgrp`
+
+     功能：修改文件或目录的所属组
+    格式： **`chgrp [参数] 用户组名 文件名`**
+    常用选项：
+
+    | 选项     | 功能                                   |
+    | -------- | -------------------------------------- |
+    | **`-R`** | 对目录使用，递归修改目录内所有文件权限 |
+
+    <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708101302537.png" alt="image-20220708101302537" style="zoom:67%;" />
+
+### 相关问题 *
+
+文件权限、用户对其所属关系的修改，已经介绍过了
+
+但是还有一些问题：
+
+> 1. 问题1：进入目录需要什么权限？
+>
+>     为了得到答案，可以逐权限测试：
+>     **读权限：**<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708094840323.png" alt="image-20220708094840323" style="zoom:67%;" />
+>
+>     **写权限：**<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708095019590.png" alt="image-20220708095019590" style="zoom: 67%;" />
+>
+>     **执行权限：**<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708095253026.png" alt="image-20220708095253026" style="zoom:67%;" />
+>
+>     可以看到，**想要进入目录，访问者需要有执行权限**
+>
+> 2. 问题2：查看文件是怎么样查看的？目录文件又是怎么查看的？
+>
+>     之前指令中提到，查看文本文件可以直接使用 `cat` `more` `less`：
+>     <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708095939616.png" alt="image-20220708095939616" style="zoom:67%;" />
+>
+>     那么，**目录文件的内容是怎么查看的呢？文件内容是什么呢？**
+>
+>     Linux系统中，所有东西都可看作是文件，目录也是文件。**目录是由什么组成的呢？**
+>
+>     目录 = 属性 + 内容，而目录的内容其实就是 **子目录 和 内部文件 的属性**
+>
+>     所以
+>     **读目录的操作就是 `ls` 查看目录内文件列表**，**写目录的操作就是 `mkdir` `touch` 等可创建文件的操作**，**执行目录的操作就是 `cd` 进入目录**
+>
+>     可以验证一下：
+>     **用户对目录只有执行权限：**<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708105023901.png" alt="image-20220708105023901" style="zoom:67%;" />
+>
+>     **用户对目录只没有读权限：**<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708110218588.png" alt="image-20220708110218588" style="zoom:67%;" />
+>
+>     **用户对目录只没有写权限：**<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708110716983.png" alt="image-20220708110716983" style="zoom:67%;" />
+>
+>     > 用户对各个文件的权限是独立的，目录内文件的内容是否可以查看，与目录无关 与 文件本身有关
+>     >
+>     > 假如**用户对一个目录没有读权限，但不能说明用户对目录内的文件没有读权限**
+>     >
+>     > 但是，如果**用户对一个目录没有读权限**，也就没有办法获取目录内容，即**无法获取目录内文件的属性**
+>     >
+>     > 因为 **Linux系统是不根据文件名识别文件的，是根据每个文件在系统中对应的ID**，所以即使知道目录内文件的文件名，**原则上也是无法直接查看目录内文件的内容的**
+>     >
+>     > 但是，实际的测试发现，即使 用户对目录没有读权限，也是可以查看目录内文件的内容的：
+>     > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708112810920.png" alt="image-20220708112810920" style="zoom:67%;" />
+>     >
+>     > 这其实是因为 虽然系统不根据文件名识别文件，但是**文件名与文件的ID 存在一定的映射关系**，如果这个**关系被系统缓存**了，也可以通过文件名来找到文件，就**可以通过文件名查看 没有读权限的目录内的文件**
+
+### umask 权限掩码
+
+**一个文件的默认权限是什么？为什么是这样？**
+
+权限掩码可以解释这两个问题
+
+新创建一个普通文件和目录文件，查看它们的默认权限：<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708124948161.png" alt="image-20220708124948161" style="zoom:80%;" />
+
+**用户刚创建出文件时的权限被称为 最终权限**，`775` 和`664` 即为不同类型文件的最终权限
+
+而 Linux规定，**目录文件的默认权限是从 `777` 开始的，普通文件的默认权限是从 `666` 开始的**
+
+那为什么，创建出来的目录文件是`775`，普通文件是`664`呢？
+
+这一切都与 权限掩码有关
+
+`umask` 可以查看、修改权限掩码：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708130110411.png" alt="image-20220708130110411" style="zoom:67%;" />
+
+**权限掩码是干什么用的？**
+
+默认的权限掩码为 `002`，目录文件的默认权限是从 `777` 开始的，普通文件的默认权限是从 `666` 开始的
+而刚创建出来的 目录文件的权限是 `775` ，普通文件的权限是 `664`
+
+可以看出，这三者像是有一种相减的关系
+
+这三者之间确实存在一定的关系，但并不是相减的关系，而是：`最终权限 = 默认权限 & (~umask)` 
+
+当目录文件的默认权限为 `777`，默认权限掩码为 `002`，则目录文件的最终权限就是 `777 & (~002) -> 775`
+
+> 可以试着验证一下，这三者的关系究竟是`最终权限 = 默认权限 - umask`，还是`最终权限 = 默认权限 & (~umask)`
+
+*当默认权限 设置为 000*：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708131013963.png" alt="image-20220708131013963" style="zoom:80%;" />
+
+### 粘滞位
+
+Linux系统中存在一些，可供不同用户一起存储文件的公共目录，**这些公共目录的所有者和所属组都是 root，其他用户可以 others的身份 对其内容 读、写、删除等**
+
+但是，**不同用户使用同一个目录，如果不加以限制 那么用户各自的文件的安全性就得不到保障**
+
+举个例子：
+
+**`root`**创建一个公共目录`PublicDir`，用户July 和 Julyxx 都可以使用：
+![image-20220708134501470](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708134501470.png)
+
+两个用户都可以在 这个目录里存放属于自己的文件，并加以限制：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708135233024.png" alt="image-20220708135233024" style="zoom:67%;" />
+
+看似已经非常安全了，但是，**由于所有用户都可以对此目录内容进行修改、删除，所以即使设置了其他用户无权限，其他用户依然可以删除此文件 ：**
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708135639211.png" alt="image-20220708135639211" style="zoom:67%;" />
+
+但又**无法避免多用户需要共同使用一个目录的需求**，又得**保证公共目录下各自文件的安全**，所以 **Linux引入了粘滞位**
+
+每个用户可以**对属于自己的目录文件** 使用**`chmod +t 目录文件` 就可以设置粘滞位**：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708140600372.png" alt="image-20220708140600372" style="zoom:67%;" />
+
+> **任何目录文件都可以设置粘滞位**
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708141338551.png" alt="image-20220708141338551" style="zoom:67%;" />
+
+设置了粘滞位的目录，用户就无法在此目录内随意删除文件，该目录内的文件只能由：
+
+1. `root`用户删除
+2. 该目录的所有者删除
+3. 该文件的所有者删除
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220708141549998.png" alt="image-20220708141549998" style="zoom:67%;" />
