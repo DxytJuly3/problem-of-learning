@@ -59,12 +59,27 @@ namespace July
 		// 先分析 拷贝构造的作用是什么？
 		// 由一个已经存在的对象，实例化、初始化一个内容数据完全一样的新对象
 		// 所以其实非常的简单
-		string(const string& s)
+
+		// 拷贝构造传统写法
+		/*string(const string& s)
 			:_size(s._size)
 			, _capacity(s._capacity)
 		{
 			_str = new char[_capacity + 1];
 			strcpy(_str, s._str);
+		}*/
+		void swap(string& s)
+		{
+			std::swap(_str, s._str);
+			std::swap(_size, s._size);
+			std::swap(_capacity, s._capacity);
+		}
+		// 拷贝构造现代写法
+		// 由传入对象的字符串，创建局部对象，再将this与局部对象的内容交换，完成拷贝构造
+		string(const string& s)
+		{
+			string tmp(s._str);
+			swap(tmp);
 		}
 
 		// 关于类对象赋值 还有个赋值重载函数
@@ -74,7 +89,9 @@ namespace July
 		// 再将需要赋值的对象的字符串 delete掉，再将临时字符串赋值给它
 		// 因为，如果直接给原对象的原字符串空间 赋值，如果原字符串空间小，则会发生错误
 		// 如果原字符串空间过大 则会浪费空间
-		string& operator=(const string& s)
+
+		// 赋值重载传统写法
+		/*string& operator=(const string& s)
 		{
 			if (this != &s)
 			{
@@ -87,10 +104,31 @@ namespace July
 			}
 
 			return *this;
-		}
+		}*/
 		// 如果不禁止 自我赋值，则必须将 delete[] _str; 的操作 放在 strcpy(tmp, s._str) 之后
 		// 因为 如果自我赋值，则参数s 即为 自己的引用，delete[] _str 也是 delete s._str，这会导致 strcpy 一堆随机值进而导致复制错误
 		// 所以 要么禁止 自我赋值，要么 delete[] _str 放在 strcpy(tmp, s._str) 之后
+
+		// 赋值重载现代写法
+		// 赋值重载的第一种现代写法，与拷贝构造的现代写法 几乎一样
+		/*string& operator=(const string& s)
+		{
+			if (this != &s)		// 禁止自我赋值
+			{
+				string tmp(s._str);
+				swap(tmp);
+			}
+
+			return *this;
+		}*/
+		// 赋值重载的第二种写法，更加简单
+		// 利用了传值传参 会对实参进行临时拷贝的特性，直接与这个临时拷贝的数据交换
+		string& operator=(string s)
+		{
+			swap(s);
+
+			return *this;
+		}
 
 		// 析构函数就相对比较简单了
 		~string()
