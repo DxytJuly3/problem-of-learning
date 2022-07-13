@@ -1,12 +1,8 @@
-#pragma once
-
 #include <iostream>
 #include <cassert>
 
 namespace July
 {
-
-
 	// 模拟STL-List中的 __list_node类
 	template<class T>
 	struct list_node
@@ -21,6 +17,7 @@ namespace July
 			, _val(val)
 		{}
 	};
+
 
 	template<class T, class Ref, class Ptr>
 	struct __list_iterator
@@ -111,21 +108,116 @@ namespace July
 		// 由于List结构是带头结点的双向循环链表，头节点不需要存数据，所以构造函数不用传参
 		list()
 		{
-			_head = new Node();			// _node 为Node类的实例化对象的指针，new 调用Node构造函数实例化对象 并将其地址赋予_node
+			/*_head = new Node();			// _node 为Node类的实例化对象的指针，new 调用Node构造函数实例化对象 并将其地址赋予_node
+			_head->_next = _head;
+			_head->_prev = _head;*/
+
+			empty_init();
+		}
+
+		void empty_init()				// 此函数的作用在于，对象实例化时对成员变量初始化，因为这个过程用到的次数较多，所以写成函数
+		{
+			_head = new Node();
 			_head->_next = _head;
 			_head->_prev = _head;
 		}
-		// 尾插
+
+		//===== list 传统写法的拷贝构造函数=====
+		/*list(const list<T>& lt)
+		{
+			empty_init();			// 先初始化成员变量
+
+			for(auto VAL : lt)		// 使用迭代器遍历 lt 并尾插至需要拷贝实例化的对象中
+				push_back(VAL);
+		}
+		// 其实list 拷贝构造函数的传统写法(编译器生成的默认拷贝构造不行)，比较简单明了
+		*/
+
+		// ===== STL源码中list的 同样实现了迭代器区间方法的构造函数 =====
+		template <class InputIterator>
+		list(InputIterator first, InputIterator last)
+		{
+			empty_init();
+
+			while (first != last)		// 注意，从list 往后的迭代器就不能使用 > < <= >= 这种逻辑比较了
+			{							// 只能用 == 或 != 
+				push_back(*first);		// 铭记 list迭代器的成员变量是节点类型的，直接解引用就是一个节点
+				++first;
+			}
+		}
+
+		// list 拷贝构造函数的现代写法
+		// list 拷贝构造和赋值的现代写法，还是利用中间变量直接交换数据
+		// ====== 先实现一个专属于list的swap函数=====
+		void swap(list<T>& lt)
+		{
+			std::swap(_head, lt._head);			// 带头结点的链表的数据交换只交换头节点就已经完成了所有数据的交换
+		}
+		//====== 拷贝构造现代写法 ======
+		list(const list<T>& lt)
+		{
+			empty_init();
+
+			list<T> TMP(lt.begin(), lt.end());
+			swap(TMP);
+		}
+
+		// ====== '=' 赋值重载函数 现代写法
+		list<T> operator=(list<T> lt)
+		{
+			swap(lt);
+
+			return *this;
+		}
+
+		// 析构函数
+		// 析构函数是清理资源的函数，在list中就是需要将每个节点的数据清理掉，只能一个一个清理,所以在实现析构之前，先实现一个clear() 函数，清理数据节点
+		void clear()
+		{
+			iterator ltIt = begin();		// 每个数据节点都只是 list_node类实例化的对象，没有动态开辟空间
+			while (ltIt != end())			// 从首数据节点开始erase每个节点 直到迭代器回到头结点
+			{
+				ltIt = erase(ltIt);
+				// erase完之后不用让迭代器++, 而是用迭代器接收erase的返回值, 是因为 erase的返回值就是删除节点的下一节点的迭代器
+				// 这个操作可以有效避免 list中迭代器失效的问题
+			}
+		}
+
+		// ====== 析构函数 ======
+		~list()
+		{
+			clear();				// 先直接clear清理数据节点
+			delete _head;			// 然后delete释放头节点空间, 头节点空间是 new出来的
+			_head = nullptr;		// 再然后再将头节点置空
+
+		}
+		// ===== 尾插=====
 		// 双向带头循环链表尾插其实就是 在头节点的prev插入
 		void push_back(const T& val)
 		{
-			Node* tail = _head->_prev;	// 记录头结点的 prev
+			/*Node* tail = _head->_prev;	// 记录头结点的 prev
 			Node* newNode = new Node(val);
 
 			newNode->_next = tail;
 			_head->_prev = newNode;
 			newNode->_prev = _head;
+			_head->_next = newNode;*/
+
+			insert(--end(), val);		// 复用 insert 尾插(insert可在pos位置之前插入数据)
+										// 切记 insert 和 erase pos参数是 迭代器
+		}
+		// ===== 头插=====
+		void push_front(const T& val)
+		{
+			/*Node* tail = _head->_next;
+			Node* newNode = new Node(val);
+
+			newNode->_next = tail;
+			newNode->_prev = _head;
 			_head->_next = newNode;
+			tail->_prev = newNode;*/
+
+			insert(begin(), val);		// 复用 insert 头插
 		}
 
 		// 实现了尾插，如果想要遍历 list 就需要 iterator迭代器
@@ -149,8 +241,6 @@ namespace July
 		// 接下来就在 list类外 模拟实现一下iterator 类，以及 list的begin和end 函数
 		// 在STL源码中， list的begin 是链表中第一个数据节点的位置而不是头结点的位置
 		//				 list的end 是才是链表头节点的位置
-		//
-		//
 		iterator begin()
 		{
 			return iterator(_head->_next);
@@ -169,7 +259,7 @@ namespace July
 			return const_iterator(_head);
 		}
 
-		// insert 插入操作, 在pos位置之前插入数据
+		// ====== insert 插入操作, 在pos位置之前插入数据 ======
 		// STL源码 中返回的是 新插入的节点的迭代器
 		iterator insert(iterator pos, const T& val)
 		{
@@ -186,7 +276,7 @@ namespace July
 		}
 
 
-		// earse 删除节点，返回值为被删除节点的下一节点的迭代器
+		// ====== earse 删除节点，返回值为被删除节点的下一节点的迭代器======
 		// 由于 list结构为双向带头循环链表，所以 迭代器不能指向pos
 		iterator erase(iterator pos)
 		{
@@ -201,6 +291,17 @@ namespace July
 			delete cur;				// delete pos._node 即为指定节点，因为 pos._node 是由指定节点初始化的
 
 			return iterator(next);
+		}
+
+		// ====== 头删、尾删 直接复用 erase ======
+		void pop_back()
+		{
+			erase(--end());
+		}
+
+		void pop_front()
+		{
+			erase(begin());
 		}
 
 	private:
