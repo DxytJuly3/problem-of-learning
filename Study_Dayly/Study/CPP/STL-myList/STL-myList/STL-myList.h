@@ -1,0 +1,209 @@
+#pragma once
+
+#include <iostream>
+#include <cassert>
+
+namespace July
+{
+
+
+	// 模拟STL-List中的 __list_node类
+	template<class T>
+	struct list_node
+	{
+		list_node<T>* _next;		// C++ 可以在类内直接使用本类名
+		list_node<T>* _prev;
+		T _val;
+
+		list_node(const T& val = T())	// 构造函数
+			:_next(nullptr)
+			, _prev(nullptr)
+			, _val(val)
+		{}
+	};
+
+	template<class T, class Ref, class Ptr>
+	struct __list_iterator
+	{
+		typedef list_node<T> Node;		// 
+		typedef __list_iterator<T, Ref, Ptr> self;
+		// self 有许多作用
+		// self是在迭代器类内 typedef的，所以self 其实是已经知道数据类型的 __list_iterator 类
+		// 1. 所以 self可以作为 ++、-- 重载函数的返回值类型，因为 ++、-- 应该返回 迭代器对象 的类型
+		// 2. self 在 ++、-- 重载函数内，实例化 __list_iterator类的 对象
+
+		Node* _node;		// __list_iterator 的成员变量，其实就是 Node* 类型的变量
+
+		__list_iterator(Node* node)
+			:_node(node)
+		{}
+		// __list_iterator 构造函数的参数为Node*，实际使用的iterator 即为 由传入的数据节点地址 构造的对象
+
+		// 迭代器的重载都有：++、--、*(解引用)、->、!=、==
+		self& operator++()	// 前置++，返回引用类型
+		{
+			_node = _node->_next;
+
+			return *this;
+		}
+		self operator++(int)
+		{
+			self tmp(*this);	// self的运用，使用self 使用此迭代器成员 实例化迭代器对象，即保存迭代器
+			_node = _node->_next;
+
+			return tmp;
+		}
+		self& operator--()
+		{
+			_node = _node->_prev;
+			return *this;
+		}
+		self operator--(int)
+		{
+			self tmp(*this);
+			_node = _node->_prev;
+
+			return *this;
+		}
+
+		Ref operator*()
+		{
+			return _node->_val;
+		}
+
+		Ptr operator->()
+		{
+			return &(_node->_val);
+		}
+
+		bool operator==(const self& it)
+		{
+			return _node == it._node;
+		}
+
+		bool operator!=(const self& it)
+		{
+			return _node != it._node;
+		}
+
+	};
+	// 读STL 关于List的源码
+	// 可以找到list类中的 成员变量只有一个 link_type node;
+	// (link_type 是list_node* 的typedef, 而list_node* 是 __list_node<T>的typedef)
+	// __list_node<T>是一个模板类  (在上面模拟实现)
+	// 此模板类 List中的一个节点的的类型，即 拥有两个指针和一个数据
+	//
+	// 但是只看库中成员变量的实际内容，还不能够完全确定 库中的 List究竟是什么结构的链表
+	// 所以，需要查看库中 List的构造函数，看实例化出的对象初始状态来进行结构的判断
+	// 找到 构造函数List() 可以看到 其调用了另一个函数 empty_initialize();
+	// 在库中 empty_initialize();函数的作用是：从内存池中定义一个node节点，并将node->next 和 node->prev 指向node
+	// 可以看出，库中的 List其实是 双向带头循环结构的 链表
+	// 因为 List类实例化对象的初始状态就是 只有头节点没有数据的 双向循环链表
+	// 下面就可以根据库中的源代码框架 来自己模拟实现List，其实模拟实现的操作与之前的 双向带头循环链表类似
+	template<class T>
+	class list
+	{
+		typedef list_node<T> Node;	// 将节点的类 typedef为 Node 更容易表达含义
+	public:
+		typedef __list_iterator<T, T&, T*> iterator;					// 非const迭代器
+		typedef __list_iterator<T, const T&, const T*> const_iterator;	// const迭代器
+
+		// 由于List结构是带头结点的双向循环链表，头节点不需要存数据，所以构造函数不用传参
+		list()
+		{
+			_head = new Node();			// _node 为Node类的实例化对象的指针，new 调用Node构造函数实例化对象 并将其地址赋予_node
+			_head->_next = _head;
+			_head->_prev = _head;
+		}
+		// 尾插
+		// 双向带头循环链表尾插其实就是 在头节点的prev插入
+		void push_back(const T& val)
+		{
+			Node* tail = _head->_prev;	// 记录头结点的 prev
+			Node* newNode = new Node(val);
+
+			newNode->_next = tail;
+			_head->_prev = newNode;
+			newNode->_prev = _head;
+			_head->_next = newNode;
+		}
+
+		// 实现了尾插，如果想要遍历 list 就需要 iterator迭代器
+		// 而 list 存储数据并不是一块连续的物理空间，所以iterator是无法使用简单的内置类型指针实现的
+		// 要实现 iterator 和 const_iterator 还要去阅读 STL-源码查看 iterator源码部分是如何实现的，再来模拟实现
+		// 在源码中，迭代器是由模板类实现的，但是其模板参数有 3个
+		// 为什么STL源码实现 list的迭代器 需要三个模板参数？
+		//
+		// 因为 list的迭代器本质上是由 类实现的, 但是如果想要实现可以针对不同数据类型的迭代器，就需要使用泛型编程
+		// 又由于模板传参只能传与 实际数据类型相同的类型，因为模板参数不同就表示数据类型不同，而迭代器的实现需要用实际类型数据赋值模板参数类型数据的，如果模板参数的类型与实际数据类型不符是无法进行赋值的。所以迭代器的泛型编程的模板参数如果只有一个的话，那对于 const 和 非const 类型的数据就需要实现两个不同的类名的模板，因为只能传参实际数据类型(即，如果list数据类型为 int，模板传参就只能传int，不能传const int，因为会造成类不同)，类不同就无法实现操作
+		// 所以如果泛型编程的模板参数只有一个的话，就需要分别实现操作 const 和 非const类型数据的类模板，然而这种类模板内容几乎都是相同的，重复编写就是浪费资源
+		// 
+		// 为什么三个模板参数就可以获得 一个模板类同时可以针对 const和非const类型数据的操控的效果呢？
+		// 在之前的string和vector迭代器种，迭代器可以实现 ++、--、*等
+		// 所以就需要在迭代器类中 对这些运算符进行重载，这些重载函数的返回值也无非就，T, T&, T*, const T, const T&, const T*这六种，不区分const的话也就只有三种即 T, T&, T*
+		// STL源码 list迭代器的实现 使用了 3个模板参数，分别是 T(传数据类型), Ref(传类型的&), Ptr(传类型的*);
+		// const 和 非const 迭代器使用时，就是有 Ref和Ptr类型是否带有 const来区分调用的
+		// 即 const_iterator 可以为 __list_iterator<T, const T&, const T*>
+		// 非const 的iterator 可以为 __list_iterator<T, T&, T*>
+		//
+		// 接下来就在 list类外 模拟实现一下iterator 类，以及 list的begin和end 函数
+		// 在STL源码中， list的begin 是链表中第一个数据节点的位置而不是头结点的位置
+		//				 list的end 是才是链表头节点的位置
+		//
+		//
+		iterator begin()
+		{
+			return iterator(_head->_next);
+		}
+		iterator end()
+		{
+			return iterator(_head);
+		}
+
+		const_iterator begin() const
+		{
+			return const_iterator(_head->_next);
+		}
+		const_iterator end() const
+		{
+			return const_iterator(_head);
+		}
+
+		// insert 插入操作, 在pos位置之前插入数据
+		// STL源码 中返回的是 新插入的节点的迭代器
+		iterator insert(iterator pos, const T& val)
+		{
+			Node* newNode = new Node(val);
+			Node* cur = pos._node;
+			Node* prev = cur->_prev;
+
+			newNode->_next = cur;
+			newNode->_prev = prev;
+			cur->_prev = newNode;
+			prev->_next = newNode;
+
+			return iterator(newNode);		// 新节点的迭代器
+		}
+
+
+		// earse 删除节点，返回值为被删除节点的下一节点的迭代器
+		// 由于 list结构为双向带头循环链表，所以 迭代器不能指向pos
+		iterator erase(iterator pos)
+		{
+			assert(pos != end());
+
+			Node* cur = pos._node;
+			Node* next = cur->_next;
+			Node* prev = cur->_prev;
+
+			next->_prev = prev;
+			prev->_next = next;
+			delete cur;				// delete pos._node 即为指定节点，因为 pos._node 是由指定节点初始化的
+
+			return iterator(next);
+		}
+
+	private:
+		Node* _head;	// 成员变量：Node 指针类型的 头节点
+	};
+}
