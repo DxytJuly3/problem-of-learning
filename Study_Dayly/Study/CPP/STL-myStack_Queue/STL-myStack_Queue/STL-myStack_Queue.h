@@ -6,5 +6,6 @@
 #include <stack>
 #include <deque>
 #include <list>
+#include <functional>
 
 using namespace std;

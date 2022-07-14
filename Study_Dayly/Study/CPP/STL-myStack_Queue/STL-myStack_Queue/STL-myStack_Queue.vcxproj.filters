@@ -29,5 +29,8 @@
     <ClInclude Include="myStack.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="myPriority_Queue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

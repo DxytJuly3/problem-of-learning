@@ -130,6 +130,7 @@
     <ClCompile Include="STL-myStack_Queue.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="myPriority_Queue.h" />
     <ClInclude Include="myQueue.h" />
     <ClInclude Include="myStack.h" />
     <ClInclude Include="STL-myStack_Queue.h" />
