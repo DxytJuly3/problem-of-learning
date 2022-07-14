@@ -1,49 +1,52 @@
+#pragma once
+
 #include "STL-myStack_Queue.h"
 
 namespace July
 {
-	// ä¸stackç›¸ä¼¼ï¼ŒSTLæºç ä¸­ï¼Œqueueçš„å®ç°ä¹Ÿæ˜¯ç”¨é€‚é…å™¨æ¥å®ç°çš„
+	// ÓëstackÏàËÆ£¬STLÔ´ÂëÖĞ£¬queueµÄÊµÏÖÒ²ÊÇÓÃÊÊÅäÆ÷À´ÊµÏÖµÄ
 	//
-	// queue é˜Ÿåˆ—
-	// æ˜¯ä¸€ä¸ªå…ˆè¿›å…ˆå‡ºçš„æ•°æ®ç»“æ„ï¼Œç±»ä¼¼æ’é˜Ÿåªèƒ½å°¾æ’å¤´åˆ ï¼Œå¯å–é˜Ÿå¤´å’Œå¯¹ä½çš„å…ƒç´ 
+	// queue ¶ÓÁĞ
+	// ÊÇÒ»¸öÏÈ½øÏÈ³öµÄÊı¾İ½á¹¹£¬ÀàËÆÅÅ¶ÓÖ»ÄÜÎ²²åÍ·É¾£¬¿ÉÈ¡¶ÓÍ·ºÍ¶ÔÎ»µÄÔªËØ
 	template<class T, class Container = deque<T>>
 	class queue
 	{
 	public:
-		// åŒæ ·çš„é“ç†ï¼Œqueueä¸éœ€è¦æ˜¾å¼å®šä¹‰æ„é€ å‡½æ•°
+		// Í¬ÑùµÄµÀÀí£¬queue²»ĞèÒªÏÔÊ½¶¨Òå¹¹Ôìº¯Êı
 		//
-		// å…¥é˜Ÿ --> å°¾æ’
+		// Èë¶Ó --> Î²²å
 		void push(const T& val)
 		{
 			_con.push_back(val);
 		}
-		// å‡ºé˜Ÿ --> å¤´åˆ 
+		// ³ö¶Ó --> Í·É¾
 		void pop()
 		{
 			_con.pop_front();
 		}
-		// å–é˜Ÿå¤´å…ƒç´ 
+		// È¡¶ÓÍ·ÔªËØ
 		const T& front()
 		{
 			return _con.front();
 		}
-		// å–é˜Ÿå°¾å…ƒç´ 
+		// È¡¶ÓÎ²ÔªËØ
 		const T& back()
 		{
 			return _con.back();
 		}
-		// é˜Ÿåˆ—å¤§å°
+		// ¶ÓÁĞ´óĞ¡
 		size_t size()
 		{
 			return _con.size();
 		}
-		// åˆ¤ç©º
+		// ÅĞ¿Õ
 		bool empty()
 		{
 			return _con.empty();
 		}
-		
+
 	private:
 		Container _con;
 	};
 }
+
