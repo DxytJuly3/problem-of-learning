@@ -5,12 +5,94 @@
 
 namespace July
 {
+	template<class Iterator, class Ref, class Ptr>
+	struct reverseIterator
+	{
+		typedef reverseIterator<Iterator, Ref, Ptr> Self;
+
+		Iterator _it;
+
+		// 构造函数
+		// 反向迭代器的成员变量是正向迭代器，构造函数都是在对象实例化时调用的
+		// 反向迭代器就是在 类的 rbegin() 或 rend() 中，构造函数的传参也是
+		// 需要将反向迭代器的成员变量初始化为 其调用对象的相应的正向迭代器
+		reverseIterator(Iterator it)
+			:_it(it)
+		{}
+
+		// * 操作符重载
+		// 作用是 *解引用反向迭代器，可提供对返回值的修改，所以要用&返回
+		// 返回的是 当前位置正向迭代器的前一位的解引用，实质返回的是什么需要看 正向迭代器的实现
+		// 为什么是正向迭代器的前一位？
+		// 以 rbegin() 获取的反向迭代器为例，获取的是最后一个元素的下一位，即不在容器的数据范围内，如果直接对当前位置的正向迭代器解引用，会发生错误，前一位才数据容器的数据范围
+		Ref operator*()
+		{
+			Iterator tmp(_it);
+
+			return *(--tmp);
+		}
+
+		// -> 操作符重载
+		// -> 一般用于指针操作，所以返回应该是指针
+		// 返回的也是 当前位置正向迭代器的迁移位置解引用的取地址
+		Ptr operator->()
+		{
+			return &(operator*()); 		// 复用 *重载
+		}
+		// 前置++重载
+		// 前置 ++\-- 都直接改变原值所以不需要拷贝，且返回的都是修改后的迭代器
+		// 后置 ++\-- 返回修改前的迭代器，所以需要保存修改前的迭代器
+		Self& operator++()
+		{
+			--_it; 			// 反向迭代器 ++其实是 --
+
+			return *this;
+		}
+		// 后置++
+		Self operator++(int)
+		{
+			Self tmp(_it); 		// 保存修改前的迭代器
+			--_it;
+
+			return tmp;  			// 返回临时变量所以 传值返回
+		}
+		// 前置--
+		Self& operator--()
+		{
+			++_it; 			// 反向迭代器 --其实是 ++
+
+			return *this;
+		}
+		// 后置--
+		Self operator--(int)
+		{
+			Self tmp(_it);
+			++_it;
+
+			return tmp;
+		}
+
+		// != 与 == 的重载
+		bool operator!=(const Self& sit)
+		{
+			return _it != sit._it;
+		}
+		bool operator==(const Self& sit)
+		{
+			return _it == sit._it;
+		}
+	};
+
 	template<class T>
 	class vector
 	{
 	public:
 		typedef T* iterator;
 		typedef const T* const_iterator;
+
+		typedef reverseIterator<iterator, T&, T*> reverse_iterator;		// 非 const反向迭代器
+		typedef reverseIterator<const_iterator, const T&, const T*> const_reverse_iterator;		//  const反向迭代器
+
 		// 构造函数
 		vector()
 			:_start(nullptr)
@@ -125,6 +207,22 @@ namespace July
 		const_iterator end() const
 		{
 			return _finish;
+		}
+		reverse_iterator rbegin()
+		{
+			return _finish;
+		}
+		reverse_iterator rend()
+		{
+			return _start;
+		}
+		const_reverse_iterator rbegin() const
+		{
+			return _finish;
+		}
+		const_reverse_iterator rend() const
+		{
+			return _start;
 		}
 
 		size_t size() const

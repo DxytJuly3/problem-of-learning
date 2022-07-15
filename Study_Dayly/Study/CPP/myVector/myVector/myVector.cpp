@@ -51,10 +51,39 @@ void Test1()
 	cout << endl;
 }
 
+void test_reverseIter()
+{
+    cout << "test_reverseIter() ::" << endl;
+    cout << "主要测试 正\\反向迭代器" << endl;
+    July::vector<int> v1;
+    v1.push_back(1);
+    v1.push_back(2);
+    v1.push_back(3);
+    v1.push_back(4);
+    v1.push_back(5);
+    cout << "正向输出 v1 :: ";
+    July::vector<int>::iterator it2 = v1.begin();
+    while (it2 != v1.end())
+    {
+        cout << *it2 << " ";
+        ++it2;
+    }
+    cout << endl;
+    cout << "反向输出 v1 :: ";
+    July::vector<int>::reverse_iterator it1 = v1.rbegin();
+    while (it1 != v1.rend())
+    {
+        cout << *it1 << " ";
+        ++it1;
+    }
+    cout << endl;
+}
+
 
 int main()
 {
 	Test1();
+    test_reverseIter();
 
 	return 0;
 }
