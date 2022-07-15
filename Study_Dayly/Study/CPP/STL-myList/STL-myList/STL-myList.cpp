@@ -87,10 +87,39 @@ void test_list()
     cout << endl;
 }
 
+void test_reverseIter()
+{
+    cout << "test_reverseIter() ::" << endl;
+    cout << "主要测试 正\\反向迭代器" << endl;
+    July::list<int> lt1;
+    lt1.push_back(1);
+    lt1.push_back(2);
+    lt1.push_back(3);
+    lt1.push_back(4);
+    lt1.push_back(5);
+    cout << "正向输出 list1 :: ";
+    July::list<int>::iterator it2 = lt1.begin();
+    while (it2 != lt1.end())
+    {
+        cout << *it2 << " ";
+        ++it2;
+    }
+    cout << endl;
+    cout << "反向输出 list1 :: ";
+    July::list<int>::reverse_iterator it1 = lt1.rbegin();
+    while (it1 != lt1.rend())
+    {
+        cout << *it1 << " ";
+        ++it1;
+    }
+    cout << endl;
+}
+
 int main()
 {
     test_push_pop();
     test_list();
+    test_reverseIter();
 
     return 0;
 }
