@@ -227,4 +227,138 @@ C++中，继承是什么？
 
 ## 子类的默认成员函数
 
- 
+ 普通类有 默认成员函数，具有继承关系的子类也是有默认成员函数的，它们的作用就不一一介绍了，看下图可知
+
+![image-20220721104712985](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220721104712985.png)
+
+但是，**子类中默认成员函数的用法** 还是需要介绍一下的
+
+思考一个问题：子类 实例化的对象，对象内部明显还存在父类的成员变量，那么**实例化时是怎么调用构造函数的呢？**
+
+1. 子类的构造函数 必须 **先调用父类的构造函数初始化父类的那一部分成员**
+
+    就像这样：
+
+    ![Inherit_constructor](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/Inherit_constructor.gif)
+
+    可以看到 子类实例化对象调用子类构造函数时，**会先去调用父类默认构造函数，然后再继续执行子类的构造函数**
+
+    
+
+    如果 **父类没有默认构造函数，则必须在子类构造函数的初始化列表阶段显示调用**
+
+    <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220721130248499.png" alt="image-20220721130248499" style="zoom:80%;" />
+
+    否则会出现：
+
+    <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220721130419272.png" alt="image-20220721130419272" style="zoom: 67%;" />
+    
+    并且，**不能直接对 父类成员变量进行初始化，只能传参调用父类的构造函数**
+    
+    > 为实现，实例化 子类对象时，指定 姓名、性别、年龄，可以 **给子类对象的构造函数添加指定相应类型的形参**：
+    >
+    > ![image-20220721140526606](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220721140526606.png)
+
+对象实例化时 构造函数的调用 是这样的，而 析构函数、拷贝构造函数、赋值重载函数 也类似
+
+2. 子类的拷贝构造的调用，是 **先调用父类的拷贝构造函数将父类的部分拷贝过来，然后在调用子类的拷贝构造进行拷贝**。 赋值重载函数也是一样的
+
+    > 子类 显式定义 拷贝构造函数，是**需要在 初始化列表手动传参调用父类的拷贝构造函数**的：
+    > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220721140843908.png" alt="image-20220721140843908" style="zoom:67%;" />
+    >
+    > 示例：
+    >
+    > ![Inherit_Copy](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/Inherit_Copy.gif)
+    >
+    > 当然，**当成员变量所属类型提供的有拷贝构造函数，编译器自动生成的默认拷贝构造函数，也是可以用的**
+
+    > 显式定义 子类的赋值重载函数，也是**需要在内部 手动调用父类的赋值重载函数**的：
+    >
+    > ![image-20220721143334605](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220721143334605.png)
+    >
+    > ()
+    >
+    > 并且，需要注意的是，子类内部调用 父类的赋值重载函数时，**需要指明类域**，否则将无限循环调用子类的赋值重载函数，因为 **父类的赋值重载函数被隐藏**
+    >
+    > > `Person::operator=(s);` 这个语句，存在的两个切片操作是哪两个？
+    > >
+    > > `operator=(s)` 在调用时，编译器会将其 转换为 `operator=(this, s)`
+    > >
+    > > 这样一看就能明白，**子类的`this`** 传给 **父类`operator=` 的形参`this`**  和 **子类对象 `s`** 传给 **父类`operator=` 的形参`p`**
+    > >
+    > > 一共发生**两个** 切片/切割 操作
+    >
+    > ![Inherit_=](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/Inherit_=.gif)
+    >
+    > 在此父子类中，默认赋值重载函数也是可以用的
+
+3. 子类对象 调用析构函数时，会 **先调用子类的析构函数 析构子类部分的，再 调用父类的析构函数析构父类部分的**
+
+    > 因为**先构造的后析构**，这个规则 在 类和对象的默认构造函数 时就已经说过了，原因是因为 栈区是按照顺序向上使用的，也需要按照顺序清理释放
+
+    按照之前的逻辑，子类的构造函数应该这样写：
+
+    <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220721152043967.png" alt="image-20220721152043967" style="zoom: 80%;" />
+
+    为什么会出现：`没有与这些操作数匹配的'~'运算符`  `没有与参数列表匹配的构造函数Person::Person`  `Person 没有合适地默认构造可用` 这样的错误？
+
+    出现这样的错误，其实是因为 
+    编译器把 `~Person` 中的 `Person` 当作了构造函数，把 `~` 当作了一个操作符；
+    并没有把 `~Person` 当作一个析构函数，为什么？
+
+    因为，**继承关系中，父子类的析构函数构成隐藏**
+
+    > 父子类的析构函数是特殊的，虽然**没有满足函数名相同这个构成隐藏的条件，但是它们还是构成隐藏** 
+    >
+    > 这是因为 C++ 中多态的需要，会把 继承关系的父子类的析构函数 统一处理为 **`~destructor()`**，所以才会构成隐藏
+    >
+    > *PS：多态中的需求，所以会处理析构函数，对构造函数没有什么特殊需求，所以不处理*
+
+    构成隐藏，所以 **指出类域**应该可以调用：
+
+    ![image-20220721153222667](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220721153222667.png)
+
+    知名类域确实可以 调用 Person的析构函数了，但是 子类的析构过程 却调用了两次~Person，这又是为什么？
+
+    原因是，子类对象析构时，**为了保证析构顺序，调用完子类的析构函数，编译器会自动去调用父类的析构函数**
+
+    所以，**子类析构函数的定义其实不需要显式调用父类的析构函数**
+
+    ![image-20220721144927644](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220721144927644.png)
+
+    可以看到 子类对象的析构是 **先调用 子类的析构函数 后自动调用 父类的析构函数的**
+    调用父类析构函数的操作，是编译器自动执行的，不需要手动在子类析构函数内写出来：
+    ![Inherit_destructor](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/Inherit_destructor.gif)
+
+### 问题：怎么定义一个不能被继承的类
+
+上面 介绍了 继承关系中 子类默认成员函数的调用过程
+
+那么 提出问题：**怎么才能定义一个 不能被继承的类？**
+
+答案其实很简单，**把这个类的构造函数定义为私有成员**，此类就不能被继承了
+因为，私有成员 **对子类不可见**，而 子类实例化对象**需要调用父类的构造函数**，当父类的构造函数为私有成员时，**子类无法调用**，也就达成了 类不能被继承的条件
+
+## 继承与友元
+
+友元与继承的关系很简单，就是没有什么关系
+
+**友元不能被继承**：
+
+![image-20220721160244247](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220721160244247.png)
+
+`TEST` 作为 `Person的友元函数`，可以访问 `Person`的成员：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220721160501463.png" alt="image-20220721160501463" style="zoom:80%;" />
+
+而 `Student`作为 `Person的子类`，`TEST`作为`Person的友元` 若解开注释：
+
+![image-20220721160736445](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220721160736445.png)
+
+## 继承 与 静态成员
+
+一个继承体系中，可以有静态成员
+
+但是，**整个继承体系只能有 一个静态成员，无论实例化多少个子类，静态成员也只是同一个**
+
+所以继承体系中的静态成员一般用来统计子类数目
+
