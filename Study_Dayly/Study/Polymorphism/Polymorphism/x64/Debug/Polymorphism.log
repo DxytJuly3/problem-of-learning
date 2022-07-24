@@ -1,0 +1,2 @@
+﻿  Polymorphism.cpp
+F:\Microsoft Visual Studio\Project\2022\Polymorphism\Polymorphism\Polymorphism.cpp(16,19): error C3668: “Student::buyTicket”: 包含重写说明符“override”的方法没有重写任何基类方法
