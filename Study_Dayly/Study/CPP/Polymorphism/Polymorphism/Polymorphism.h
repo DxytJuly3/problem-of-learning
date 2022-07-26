@@ -235,8 +235,8 @@ public:
 	virtual void Func1() {
 		cout << "Advanced:: Func1()" << endl;
 	}
-	virtual void ADFunc() {
-		cout << "Advanced:: ADFunc()" << endl;
+	void Func2() {
+		cout << "Advanced:: Func2()" << endl;
 	}
 
 private:

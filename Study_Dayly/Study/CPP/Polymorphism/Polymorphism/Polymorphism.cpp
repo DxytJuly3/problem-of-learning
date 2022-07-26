@@ -118,24 +118,35 @@
 //	return 0;
 //}
 
+//
+//int main()
+//{
+//	Person per1;
+//	Student stu1;
+//	Elderly eld1;
+//
+//	Person* ptrPer = &stu1;
+//	Person& quoPer1 = eld1;
+//
+//	ptrPer->buyTicket();
+//	quoPer1.buyTicket();
+//
+//	ptrPer = &eld1;
+//	Person& quoPer2 = stu1;
+//
+//	ptrPer->buyTicket();
+//	quoPer2.buyTicket();
+//
+//	return 0;
+//}
 
 int main()
 {
-	Person per1;
-	Student stu1;
-	Elderly eld1;
+	Base* ptrBas = new Advanced;
 
-	Person* ptrPer = &stu1;
-	Person& quoPer1 = eld1;
+	ptrBas->Func1();
 
-	ptrPer->buyTicket();
-	quoPer1.buyTicket();
-
-	ptrPer = &eld1;
-	Person& quoPer2 = stu1;
-
-	ptrPer->buyTicket();
-	quoPer2.buyTicket();
+	ptrBas->Func2();
 
 	return 0;
 }
