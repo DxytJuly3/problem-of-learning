@@ -1,2 +1,3 @@
 ﻿  Polymorphism.cpp
+F:\Microsoft Visual Studio\Project\2022\Polymorphism\Polymorphism\Polymorphism.cpp(103,10): warning C4477: “printf”: 格式字符串“%x”需要类型“unsigned int”的参数，但可变参数 2 拥有了类型“VFTPTR”
   Polymorphism.vcxproj -> F:\Microsoft Visual Studio\Project\2022\Polymorphism\Debug\Polymorphism.exe

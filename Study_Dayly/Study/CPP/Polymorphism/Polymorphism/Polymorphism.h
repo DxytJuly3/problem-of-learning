@@ -3,31 +3,31 @@
 using namespace std;
 
 //
-class Person
-{
-public:
-	virtual Person* buyTicket() {
-		cout << "一般成年人：买票    全价————80￥" << endl;
-		return this;
-	}
-};
-
-class Student : public Person
-{
-public:
-	virtual Student* buyTicket(){
-		cout << "在校学生  ：买票    半价————40￥" << endl;
-		return this;
-	}
-};
-
-class Elderly : public Person
-{
-	virtual Elderly* buyTicket(){
-		cout << "老年人    ：买票    免票————0￥" << endl;
-		return this;
-	}
-};
+//class Person
+//{
+//public:
+//	virtual Person* buyTicket() {
+//		cout << "一般成年人：买票    全价————80￥" << endl;
+//		return this;
+//	}
+//};
+//
+//class Student : public Person
+//{
+//public:
+//	virtual Student* buyTicket(){
+//		cout << "在校学生  ：买票    半价————40￥" << endl;
+//		return this;
+//	}
+//};
+//
+//class Elderly : public Person
+//{
+//	virtual Elderly* buyTicket(){
+//		cout << "老年人    ：买票    免票————0￥" << endl;
+//		return this;
+//	}
+//};
 
 //class Person
 //{
@@ -212,58 +212,192 @@ class Elderly : public Person
 //	}
 //};
 
-class Base
+//class Base
+//{
+//public:
+//	virtual void Func1() {
+//		cout << "Base1:: Func1()" << endl;
+//	}
+//	void Func2() {
+//		cout << "Base1:: Func2()" << endl;
+//	}
+//	virtual void Func3() {
+//		cout << "Base1:: Func3()" << endl;
+//	}
+//
+//private:
+//	int _b1 = 1;
+//};
+//
+//class Advanced :public Base
+//{
+//public:
+//	virtual void Func1() {
+//		cout << "Advanced:: Func1()" << endl;
+//	}
+//	void Func2() {
+//		cout << "Advanced:: Func2()" << endl;
+//	}
+//
+//private:
+//	int _b2 = 2;
+//};
+//
+
+
+// 研究多态调用原理
+//class Clothes
+//{
+//public:
+//	virtual void Wear() = 0;
+//};
+//
+//class Jacket : public Clothes
+//{
+//public:
+//	virtual void Wear()
+//	{
+//		cout << "上身" << endl;
+//	}
+//};
+//
+//class Pants : public Clothes
+//{
+//public:
+//	virtual void Wear()
+//	{
+//		cout << "下身" << endl;
+//	}
+//};
+
+
+// 研究多继承的虚表
+//class Base1 {
+//public:
+//    virtual void func1() {
+//        cout << "Base1:: func1" << endl;
+//    }
+//    virtual void func2() {
+//        cout << "Base1:: func2" << endl;
+//    }
+//private:
+//    int b1;
+//    int b4;
+//    int b3;
+//};
+//
+//class Base2 {
+//public:
+//    virtual void func1() {
+//        cout << "Base2:: func1" << endl;
+//    }
+//    virtual void func2() {
+//        cout << "Base2:: func2" << endl;
+//    }
+//private:
+//    int b2;
+//};
+//
+//class Advanced : public Base1, public Base2 {
+//public:
+//    virtual void func1() {
+//        cout << "Advanced:: func1" << endl;
+//    }
+//    virtual void func3() {
+//        cout << "Advanced:: func3" << endl;
+//    }
+//private:
+//    int d1;
+//};
+
+//class Elementary
+//{
+//public:
+//	virtual void func1(){
+//		cout << "Elementary:: func1" << endl;
+//	}
+//	virtual void func2() {
+//		cout << "Elementary:: func2" << endl;
+//	}
+//	virtual void func3() {
+//		cout << "Elementary:: func3" << endl;
+//	}
+//
+//private:
+//	int _elem;
+//};
+//
+//class Intermediate1 : virtual public Elementary
+//{
+//public:
+//	virtual void func1() {
+//		cout << "Intermediate1:: func1" << endl;
+//	}
+//
+//private:
+//	int _inte1;
+//};
+//
+//class Intermediate2 : virtual public Elementary
+//{
+//public:
+//	virtual void func2() {
+//		cout << "Intermediate2:: func2" << endl;
+//	}
+//
+//private:
+//	int _inte2;
+//};
+//
+//class Advanced : public Intermediate1, public Intermediate2
+//{
+//public:
+//	virtual void func1() {
+//		cout << "Advanced:: func1" << endl;
+//	}
+//	void func3() {
+//		cout << "Advanced:: func3" << endl;
+//	}
+//	virtual void func4() {
+//		cout << "Advanced:: func4" << endl;
+//	}
+//private:
+//	int _adv;
+//};
+
+class Elementary
 {
 public:
-	virtual void Func1() {
-		cout << "Base1:: Func1()" << endl;
+	Elementary()
+		: _elem(1)
+	{}
+
+	virtual inline void func1() {
+		cout << "Elementary:: func1" << endl;
 	}
-	void Func2() {
-		cout << "Base1:: Func2()" << endl;
-	}
-	virtual void Func3() {
-		cout << "Base1:: Func3()" << endl;
+	virtual void func2();
+
+	static void func3()
+	{
+		cout << "Elementary:: static func3" << endl;
 	}
 
 private:
-	int _b1 = 1;
+	int _elem;
 };
 
-class Advanced :public Base
+void Elementary::func2() {
+	cout << "Elementary:: func2" << endl;
+}
+
+class Intermediate : public Elementary
 {
-public:
-	virtual void Func1() {
-		cout << "Advanced:: Func1()" << endl;
+	virtual inline void func1() {
+		cout << "Intermediate:: func1" << endl;
 	}
-	void Func2() {
-		cout << "Advanced:: Func2()" << endl;
-	}
-
-private:
-	int _b2 = 2;
+	virtual void func2();
 };
 
-
-class Clothes
-{
-public:
-	virtual void Wear() = 0;
-};
-
-class Jacket : public Clothes
-{
-public:
-	virtual void Wear()
-	{
-		cout << "上身" << endl;
-	}
-};
-
-class Pants : public Clothes
-{
-public:
-	virtual void Wear()
-	{
-		cout << "下身" << endl;
-	}
-};
+void Intermediate::func2() {
+	cout << "Intermediate:: func2" << endl;
+}

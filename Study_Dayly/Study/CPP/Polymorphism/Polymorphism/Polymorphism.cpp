@@ -93,19 +93,19 @@
 //	return 0;
 //}
 //
-//typedef void(*VFTPTR)();
-//void PrintVTable(VFTPTR vTable[])
-//{
-//	// 依次取虚表中的虚函数指针打印并调用。调用就可以看出存的是哪个函数
-//	cout << " 虚表地址>" << vTable << endl;
-//	for (int i = 0; vTable[i] != nullptr; ++i)
-//	{
-//		printf(" 第%d个虚函数地址 :0X%x,->", i, vTable[i]);
-//		VFTPTR f = vTable[i];
-//		f();
-//	}
-//	cout << endl;
-//}
+typedef void(*VFTPTR)();
+void PrintVTable(VFTPTR vTable[])
+{
+	// 依次取虚表中的虚函数指针打印并调用。调用就可以看出存的是哪个函数
+	cout << " 虚表地址>" << vTable << endl;
+	for (int i = 0; vTable[i] != nullptr; ++i)
+	{
+		printf(" 第%d个虚函数地址 :0X%x,->", i, vTable[i]);
+		VFTPTR f = vTable[i];
+		f();
+	}
+	cout << endl;
+}
 //
 //int main()
 //{
@@ -139,14 +139,78 @@
 //
 //	return 0;
 //}
+//
+//int main()
+//{
+//	Base* ptrBas = new Advanced;
+//
+//	ptrBas->Func1();
+//	ptrBas->Func2();
+//
+//	return 0;
+//}
+
+//int main()
+//{
+	//Advanced adv;
+	//// 取对象头4个字节地址
+	//VFTPTR* vTable1 = (VFTPTR*)(*(int*)&adv);
+	//// 取对象第二个父类部分的 头4个字节的地址
+//	VFTPTR* vTable2 = (VFTPTR*)(*(int*)((char*)&adv + sizeof(Base1)));
+//
+//	PrintVTable(vTable1);
+//	PrintVTable(vTable2);
+//
+//	Base1* ptr1 = &adv;
+//	Base2* ptr2 = &adv;
+//
+//	ptr1->func1();
+//	ptr2->func1();
+//
+//	return 0;
+//}
+
+//void Func(Elementary* ptrElem)
+//{
+//	ptrElem->func1();
+//	ptrElem->func2();
+//}
+//
+//void Func(Elementary Elem)
+//{
+//	Elem.func1();
+//	Elem.func2();
+//}
+//
+//int main()
+//{
+//	Intermediate inte;
+//	Elementary* elem;
+//
+//	Elementary::func3();
+//
+//	/*Func(&inte);
+//	Func(inte);*/
+//
+//	return 0;
+//}
+
+int a = 0;
 
 int main()
 {
-	Base* ptrBas = new Advanced;
+	Elementary* elem = new Elementary;
+	VFTPTR* vTable = (VFTPTR*)(*(int*)&elem);
 
-	ptrBas->Func1();
-
-	ptrBas->Func2();
+	static int b = 1;
+	int c = 0;
+	const char* ptrS = "hello";
+	cout << "静态区存储变量 a的地址：" << &a << endl;
+	cout << "静态区存储变量 b的地址：" << &b << endl;
+	cout << "栈区存储变量 c的地址：" << &c << endl;
+	printf("常量区存储的地址：%p\n", ptrS);
+	cout << "堆区存储对象 elem的地址：" << elem << endl;
+	cout << "虚表地址：" << *vTable << endl;
 
 	return 0;
 }
