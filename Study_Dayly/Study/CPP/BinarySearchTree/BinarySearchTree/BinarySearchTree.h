@@ -215,10 +215,11 @@ public:
 					Node* minRight = cur->_right;
 					while (minRight->_left)
 					{
+						minParent = minRight;
 						minRight = minRight->_left;
 					}
 
-					std::swap(minParent->_key, cur->_key);		// 删除某个指定值的节点，在本树中没有重复数据 交换数据就可以
+					std::swap(minRight->_key, cur->_key);		// 删除某个指定值的节点，在本树中没有重复数据 交换数据就可以
 					if (minRight == minParent->_left)
 					{
 						minParent->_left = minRight->_right;
