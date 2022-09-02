@@ -1,7 +1,9 @@
 ﻿#include <iostream>
 #include <map>
 #include <set>
+
 using std::set;
+using std::multiset;
 using std::map;
 using std::cout;
 using std::cin;
@@ -106,25 +108,58 @@ void Set_test3() {
 void Set_test4() {
     set<int> s1;
     s1.insert(1);
+    s1.insert(2);
     s1.insert(3);
+    s1.insert(4);
     s1.insert(5);
-    s1.insert(2);
-    s1.insert(4);
     s1.insert(6);
+    s1.insert(7);
+    s1.insert(8);
     s1.insert(9);
-    s1.insert(1);
-    s1.insert(2);
-    s1.insert(4);
+    for (auto kv : s1) {
+        cout << kv << ' ';
+    }
+    cout << endl;
 
-    auto pos = s1.lower_bound(6);
-    cout << *pos;
-    pos = s1.upper_bound(6);
-    cout << *pos;
+    auto posBegin = s1.lower_bound(2);
+    auto posEnd = s1.upper_bound(7);
+    s1.erase(posBegin, posEnd);
+
+    for (auto kv : s1) {
+        cout << kv << ' ';
+    }
+    cout << endl;
+}
+
+void Multiset_test1() {
+    multiset<int> ms1;
+    ms1.insert(1);
+    ms1.insert(1);
+    ms1.insert(2);
+    ms1.insert(1);
+    ms1.insert(1);
+    ms1.insert(2);
+    ms1.insert(2);
+    ms1.insert(2);
+    ms1.insert(1);
+
+    for (auto kv : ms1) {
+        cout << kv << ' ';
+    }
+    cout << endl;
+    cout << "1 有 " << ms1.count(1) << " 个" << endl;
+
+    ms1.erase(1);
+    for (auto kv : ms1) {
+        cout << kv << ' ';
+    }
+    cout << endl;
+    cout << "1 有 " << ms1.count(1) << " 个" << endl;
 }
 
 int main()
 {
-    Set_test4();
+    Multiset_test1();
     
     return 0;
 }
