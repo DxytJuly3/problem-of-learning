@@ -4,11 +4,11 @@ set 和 map 是C++ - STL 中非常重要的两个容器，上一篇文章介绍�
 
 本篇文章先来介绍一下 set 和 map 简单的介绍，以及相关接口的使用
 
-# set
+# 关于set
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209021620449.png" alt="image-20220902162016395" style="zoom:80%;" />
 
-## 什么是 set
+##  set
 
 按照set模板的定义，其模板参数的意义是：
 
@@ -29,9 +29,9 @@ set 和 map 是C++ - STL 中非常重要的两个容器，上一篇文章介绍�
 > 除了存储唯一元素的 `set`，STL中还存在另一个可以存储重复元素的容器：`multiset`
 > 与set的区别仅在于 其可以存储重复的元素
 
-## set 常用的接口
+### set 常用的接口
 
-### 1. insert 插入元素
+#### 1. insert 插入元素
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209021717791.png" alt="image-20220902171738747" style="zoom:80%;" />
 
@@ -74,7 +74,7 @@ set 和 map 是C++ - STL 中非常重要的两个容器，上一篇文章介绍�
 >
 > > 因为 `set `不存储重复数据所以才会如此，而 `multiset` 的 `insert` 就不需要这样
 
-### 2. 迭代器相关
+#### 2. 迭代器相关
 
 | 接口      | 功能                   |
 | --------- | ---------------------- |
@@ -100,7 +100,7 @@ set 和 map 是C++ - STL 中非常重要的两个容器，上一篇文章介绍�
 set 关于迭代器的其他接口函数还有：`cbegin()` `cend()` `rbegin()` `rend()` `crbgin()` `crend()`
 无非是关于 **反向迭代器** 和 **`const`迭代器**
 
-### 3. find 查找位置
+#### 3. find 查找位置
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022120794.png" alt="image-20220902212042758" style="zoom:80%;" />
 
@@ -112,7 +112,7 @@ set 关于迭代器的其他接口函数还有：`cbegin()` `cend()` `rbegin()` 
 
 > `find` 一般与 `erase` 一起使用，先用 `find` 查找数据位置迭代器，再用 `erase` 删除
 
-### 4. erase 删除元素
+#### 4. erase 删除元素
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022101327.png" alt="image-20220902210136296" style="zoom:80%;" />
 
@@ -135,6 +135,8 @@ erase 删除元素接口，有三个不同的重载版本：
 > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022117827.png" alt="image-20220902211729787" style="zoom:80%;" />
 >
 > 多次重复删除 3，也不会出现问题
+>
+> 并且 此版本存在返回值，返回值就是 **删除的这个数据**
 
 > **删除指定位置版本：**
 >
@@ -165,10 +167,101 @@ erase 删除元素接口，有三个不同的重载版本：
 >
 > 而取 `set` 中的一个指定的区间范围，将会用到下面介绍的两个接口函数：`lower_bound` `upper_bound`
 
-### 5. lower_bound 和 upper_bound
+#### 5. lower_bound 和 upper_bound
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022252222.png" alt="image-20220902225250184" style="zoom:80%;" />
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022253727.png" alt="image-20220902225304692" style="zoom:80%;" />
 
- 这两个接口函数
+这两个接口函数，在之前的容器中都没有见过
+
+其实这两个接口函数的作用是 指定一个值，在set中找 `>=(lower)` 或 `>(upper)` 这个值的第一个元素，并返回其迭代器
+
+例如：在一个 set 中，存储的元素是：`1 3 5 6 8 9` ，则，使用 `lower_bound(6)` 会返回 `6` 的迭代器；而 使用 `upper_bound(6)` 会返回 `8` 的迭代器
+
+即，`lower_bound()` 返回 第一个**`>=`**指定值的元素的迭代器，`upper_bound()` 返回 第一个**`>`**指定值的元素的迭代器
+
+举个例子：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022344043.png" alt="image-20220902234455976" style="zoom:80%;" />
+
+> 使用 这两个接口函数 就可以实现 指定区间删除数据：
+>
+> 比如，对于 `1 2 3 4 5 6 7 8 9 10` 删除 `[2, 7)` 之间的数据：
+>
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022351794.png" alt="image-20220902235132733" style="zoom:80%;" />
+>
+> > 注意：由于erase的迭代器失效、以及erase没有有效的迭代器返回值问题，不能使用类似下面这样的代码，对set的一个迭代器区间进行删除数据：
+> >
+> > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022355613.png" alt="image-20220902235504564" style="zoom:80%;" />
+> >
+> > 原因是 执行`erase`之后 `posBegin`这个迭代器表示的意义已经失效了，不能再按照其原本的意义进行改变
+> > 即 此时的 `posBegin` 已经不是`set`中某个值的位置了，再直接对其使用某些操作其实是对**野指针**的操作，是会发生错误的
+
+#### 6. count
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030031748.png" alt="image-20220903003144716" style="zoom:80%;" />
+
+`set` 存在一个接口函数叫 `count`，这个函数在 `set` 里好像没有什么太大的用途
+
+因为 `count` 的作用是，统计 相同值的个数并返回
+
+在 `set` 中，不能存储重复的数据，所以 `count` 只能返回 `0 或 1`. 所以 `count` 在 `set` 里的作用更像是 验证当前`set`中是否存在某个值
+
+## multiset
+
+multiset 与 set 略有不同，multiset 可以存储重复的数据，除此之外 与 set 没有什么区别
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030047679.png" alt="image-20220903004745625" style="zoom:80%;" />
+
+### multiset 常用的接口
+
+由于 multiset 结构的不同，所以 其某些常用的接口函数的用法不太一样
+
+这里只介绍一下 用法与set不相同的接口函数
+
+#### 1. find
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030045398.png" alt="image-20220903004502354" style="zoom:80%;" />
+
+由于 multiset 可以存储重复的数据，所以 find 也就有可能找重复的数据，不过 找到重复的数据 find 只返回重复的第一个数据的迭代器
+
+#### 2. equal_range
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030051312.png" alt="image-20220903005136271" style="zoom:80%;" />
+
+find 是返回重复数据的第一个迭代器，而 equal_range 则是返回找到的重复的数据的 首尾范围，并以 pair<iterator, iterator> 返回
+
+#### 3. erase
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030053117.png" alt="image-20220903005335076" style="zoom:80%;" />
+
+erase 接口的功能，与 set 中不同的 只有删除指定数据的功能
+
+set 中的 erase，只删除指定的一个数据，而 multiset 中的erase 是将结构中 相同的数据全部删除：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030056483.png" alt="image-20220903005601439" style="zoom:80%;" />
+
+#### 4. count
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030057208.png" alt="image-20220903005748171" style="zoom:80%;" />
+
+在 set 中，count 只能返回 1 或 0
+
+而由于 multiset 可以存储重复的数据，所以 count 就可以按照其功能 返回指定数据的个数
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030100060.png" alt="image-20220903010019018" style="zoom:80%;" />
+
+# 关于 map
+
+map 与 set 相似，但又有一些不同，map 和 set 的底层都是由 红黑树 实现的
+
+但不同的是，map 更像是 之前介绍的 K-V二叉搜索树
+
+map 的单个数据的类型是 `pair<T1, T2>` ，而 `set` 的单个数据 就只是指定的单个类型(当然也可以指定一个pair，但是如果这样 为什么不直接用map呢？)
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030108050.png" alt="image-20220903010840010" style="zoom:80%;" />
+
+查看 map 的模板参数：
+
+第一个模板参数——关键字类型；第二个模板参数——关键字对应的值得类型；第三个模板参数——比较规则的仿函数；第四个模板参数——分配器
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030114893.png" alt="image-20220903011418844" style="zoom:80%;" />
