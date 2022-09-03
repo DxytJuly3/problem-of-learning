@@ -1,22 +1,22 @@
-set 和 map 是C++ - STL 中非常重要的两个容器，上一篇文章介绍了 二叉搜索树。
+`set` 和 `map` 是C++ - STL 中非常重要的两个容器，上一篇文章介绍了 二叉搜索树。 
 
-而 set 和 map 的一层就是由一种二叉搜索树来实现的——红黑树
+而 `set` 和 `map` 的一层就是由一种二叉搜索树来实现的——红黑树 
 
-本篇文章先来介绍一下 set 和 map 简单的介绍，以及相关接口的使用
+本篇文章先来介绍一下 `set` 和 `map` 简单的介绍，以及相关接口的使用 
 
 # 关于set
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209021620449.png" alt="image-20220902162016395" style="zoom:80%;" />
-
 ##  set
 
-按照set模板的定义，其模板参数的意义是：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209021620449.png" alt="image-20220902162016395" style="zoom:80%;" />
+
+按照`set`模板的定义，其模板参数的意义是：
 
 第一个模板参数T——存储元素类型；第二个模板参数——元素比较的仿函数；第三个模板参数——分配器
 
 > 第二个和第三个模板参数 都给定了缺省值，本篇文章对其使用的介绍暂时不涉及 后两个模板参数的改变
 
-官方文档中对set的介绍是：
+官方文档中对`set`的介绍是：
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209021622401.png" alt="image-20220902162240345" style="zoom:80%;" />
 
 总结一下就是：
@@ -26,12 +26,12 @@ set 和 map 是C++ - STL 中非常重要的两个容器，上一篇文章介绍�
 
 > 其实这里的二叉搜索树再具体一点，就是红黑树
 
-> 除了存储唯一元素的 `set`，STL中还存在另一个可以存储重复元素的容器：`multiset`
-> 与set的区别仅在于 其可以存储重复的元素
+> 除了存储唯一元素的 `set`，STL中还存在另一个可以存储重复元素的容器：``multiset``
+> 与`set`的区别仅在于 其可以存储重复的元素
 
-### set 常用的接口
+### set 的常用接口
 
-#### 1. insert 插入元素
+#### 1. insert 
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209021717791.png" alt="image-20220902171738747" style="zoom:80%;" />
 
@@ -87,7 +87,7 @@ set 和 map 是C++ - STL 中非常重要的两个容器，上一篇文章介绍�
 >
 > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022034744.png" alt="image-20220902203432693" style="zoom:80%;" />
 >
-> 关于 set 的迭代器需要注意的是：**`set` 迭代器表示的内容是无法修改的**
+> 关于 `set` 的迭代器需要注意的是：**`set` 迭代器表示的内容是无法修改的**
 >
 > 即，即使是 `iterator` 而不是 `const_iterator` ，其表示的内容也是无法修改的：
 > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022037506.png" alt="image-20220902203731462" style="zoom:80%;" />
@@ -97,10 +97,10 @@ set 和 map 是C++ - STL 中非常重要的两个容器，上一篇文章介绍�
 >
 > 查看`STL关于set`的源码，就可以看到 `iterator` 和 `const_iterator` 都是对 `rep_type::const_iterator` 的 `typedef`
 
-set 关于迭代器的其他接口函数还有：`cbegin()` `cend()` `rbegin()` `rend()` `crbgin()` `crend()`
+`set` 关于迭代器的其他接口函数还有：`cbegin()` `cend()` `rbegin()` `rend()` `crbgin()` `crend()`
 无非是关于 **反向迭代器** 和 **`const`迭代器**
 
-#### 3. find 查找位置
+#### 3. find
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022120794.png" alt="image-20220902212042758" style="zoom:80%;" />
 
@@ -112,7 +112,7 @@ set 关于迭代器的其他接口函数还有：`cbegin()` `cend()` `rbegin()` 
 
 > `find` 一般与 `erase` 一起使用，先用 `find` 查找数据位置迭代器，再用 `erase` 删除
 
-#### 4. erase 删除元素
+#### 4. erase
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022101327.png" alt="image-20220902210136296" style="zoom:80%;" />
 
@@ -130,7 +130,7 @@ erase 删除元素接口，有三个不同的重载版本：
 >
 > 只需要在调用时传入值就可以完成指定值的删除
 >
-> 即使是 set 中没有的值，也不会出错：
+> 即使是 `set` 中没有的值，也不会出错：
 >
 > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022117827.png" alt="image-20220902211729787" style="zoom:80%;" />
 >
@@ -148,7 +148,7 @@ erase 删除元素接口，有三个不同的重载版本：
 > 那么 当删除 `pos` 之后，不改变 `pos`，再次删除会发生什么？
 > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022134420.png" alt="image-20220902213439370" style="zoom:80%;" />
 >
-> 很明显会报错，此时其实是**迭代器失效**了，`pos` 已经不再表示set中存储的3了，意义已经变了
+> 很明显会报错，此时其实是**迭代器失效**了，`pos` 已经不再表示 `set `中存储的3了，意义已经变了
 >
 > > STL提供的通用的 `find` 也可以找指定数据的位置，但是效率终究不如`set`本身的
 > >
@@ -175,9 +175,9 @@ erase 删除元素接口，有三个不同的重载版本：
 
 这两个接口函数，在之前的容器中都没有见过
 
-其实这两个接口函数的作用是 指定一个值，在set中找 `>=(lower)` 或 `>(upper)` 这个值的第一个元素，并返回其迭代器
+其实这两个接口函数的作用是 指定一个值，在`set`中找 `>=(lower)` 或 `>(upper)` 这个值的第一个元素，并返回其迭代器
 
-例如：在一个 set 中，存储的元素是：`1 3 5 6 8 9` ，则，使用 `lower_bound(6)` 会返回 `6` 的迭代器；而 使用 `upper_bound(6)` 会返回 `8` 的迭代器
+例如：在一个 `set` 中，存储的元素是：`1 3 5 6 8 9` ，则，使用 `lower_bound(6)` 会返回 `6` 的迭代器；而 使用 `upper_bound(6)` 会返回 `8` 的迭代器
 
 即，`lower_bound()` 返回 第一个**`>=`**指定值的元素的迭代器，`upper_bound()` 返回 第一个**`>`**指定值的元素的迭代器
 
@@ -191,7 +191,7 @@ erase 删除元素接口，有三个不同的重载版本：
 >
 > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022351794.png" alt="image-20220902235132733" style="zoom:80%;" />
 >
-> > 注意：由于erase的迭代器失效、以及erase没有有效的迭代器返回值问题，不能使用类似下面这样的代码，对set的一个迭代器区间进行删除数据：
+> > 注意：由于erase的迭代器失效、以及erase没有有效的迭代器返回值问题，不能使用类似下面这样的代码，对`set`的一个迭代器区间进行删除数据：
 > >
 > > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209022355613.png" alt="image-20220902235504564" style="zoom:80%;" />
 > >
@@ -210,58 +210,183 @@ erase 删除元素接口，有三个不同的重载版本：
 
 ## multiset
 
-multiset 与 set 略有不同，multiset 可以存储重复的数据，除此之外 与 set 没有什么区别
+`multiset` 与 `set` 略有不同，`multiset` 可以存储重复的数据，除此之外 与 set 没有什么区别
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030047679.png" alt="image-20220903004745625" style="zoom:80%;" />
 
 ### multiset 常用的接口
 
-由于 multiset 结构的不同，所以 其某些常用的接口函数的用法不太一样
+由于 `multiset` 结构的不同，所以 其某些常用的接口函数的用法不太一样 
 
-这里只介绍一下 用法与set不相同的接口函数
+这里只介绍一下 用法与`set`不相同的接口函数 
 
 #### 1. find
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030045398.png" alt="image-20220903004502354" style="zoom:80%;" />
 
-由于 multiset 可以存储重复的数据，所以 find 也就有可能找重复的数据，不过 找到重复的数据 find 只返回重复的第一个数据的迭代器
+由于 `multiset` 可以存储重复的数据，所以 find 也就有可能找重复的数据，不过 找到重复的数据 find 只返回重复的第一个数据的迭代器 
 
 #### 2. equal_range
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030051312.png" alt="image-20220903005136271" style="zoom:80%;" />
 
-find 是返回重复数据的第一个迭代器，而 equal_range 则是返回找到的重复的数据的 首尾范围，并以 pair<iterator, iterator> 返回
+`find` 是返回重复数据的第一个迭代器，而 `equal_range` 则是返回找到的重复的数据的 首尾范围，并以 `pair<iterator, iterator>` 返回
 
 #### 3. erase
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030053117.png" alt="image-20220903005335076" style="zoom:80%;" />
 
-erase 接口的功能，与 set 中不同的 只有删除指定数据的功能
+`erase` 接口的功能，与 `set` 中不同的 只有删除指定数据的功能
 
-set 中的 erase，只删除指定的一个数据，而 multiset 中的erase 是将结构中 相同的数据全部删除：
+`set` 中的 `erase`，只删除指定的一个数据，而 `multiset` 中的`erase` 是将结构中 相同的数据全部删除： 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030056483.png" alt="image-20220903005601439" style="zoom:80%;" />
 
 #### 4. count
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030057208.png" alt="image-20220903005748171" style="zoom:80%;" />
 
-在 set 中，count 只能返回 1 或 0
+在 `set` 中，`count` 只能返回 1 或 0
 
-而由于 multiset 可以存储重复的数据，所以 count 就可以按照其功能 返回指定数据的个数
+而由于 `multiset` 可以存储重复的数据，所以 `count` 就可以按照其功能 返回指定数据的个数
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030100060.png" alt="image-20220903010019018" style="zoom:80%;" />
 
 # 关于 map
 
-map 与 set 相似，但又有一些不同，map 和 set 的底层都是由 红黑树 实现的
+## map
 
-但不同的是，map 更像是 之前介绍的 K-V二叉搜索树
+`map` 与 `set` 相似，但又有一些不同，`map` 和 `set` 的底层都是由 红黑树 实现的 
 
-map 的单个数据的类型是 `pair<T1, T2>` ，而 `set` 的单个数据 就只是指定的单个类型(当然也可以指定一个pair，但是如果这样 为什么不直接用map呢？)
+但不同的是，`map` 更像是 之前介绍的 K-V二叉搜索树
+
+`map` 存储的单个数据的类型是 `pair<T1, T2>` ，而 `set` 的单个数据 就只是指定的单个类型(当然也可以指定一个`pair`，但是如果这样 为什么不直接用``map``呢？)
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030108050.png" alt="image-20220903010840010" style="zoom:80%;" />
 
-查看 map 的模板参数：
+查看 `map` 的模板参数：
 
 第一个模板参数——关键字类型；第二个模板参数——关键字对应的值得类型；第三个模板参数——比较规则的仿函数；第四个模板参数——分配器
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209030114893.png" alt="image-20220903011418844" style="zoom:80%;" />
+
+### map 的常用接口
+
+上边介绍过 set的常用接口之后，map 的常用接口的了解 就会非常的简单
+
+#### 1. insert
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031416100.png" alt="image-20220903141600048" style="zoom:80%;" />
+
+`map` 中 `insert` 的使用方式与 `set`的`insert` 相同，但是由于 `map`的数据类型是 pair，所以 `insert`传参就需要传入`pair`对象 
+
+> 那么就需要了解如何创建 `pair`对象
+>
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031445119.png" alt="image-20220903144523073" style="zoom:80%;" />
+>
+> `pair` 的拥有两个成员变量：`first` 和 `second`；`first` 是 T1类型的，second 是 T2类型的
+>
+> `pair` 作为一个类，当然可以调用构造函数实例化对象：
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031456939.png" alt="image-20220903145648905" style="zoom:80%;" />
+>
+> 或者 在调用`insert`时实例化匿名对象： 
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031500413.png" alt="image-20220903150010371" style="zoom:80%;" />
+>
+> 但是这两种实例化对象的方式，都需要显式指定数据类型，还有一个方法 可以更加方便的实例化对象：
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031503574.png" alt="image-20220903150343533" style="zoom:80%;" />
+>
+> `make_pair`：
+>
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031504705.png" alt="image-20220903150442639" style="zoom:80%;" />
+>
+> `make_pair` 是一个函数模板，作用是实例化并返回一个匿名对象
+>
+> 但是，`make_pair` 使用时，可以通过传入的参数来推导参数的类型
+>
+> 所以`insert`时使用`make_pair`省去了 显式指定数据类型的步骤，方便了很多
+
+由于结构的限制，`map的insert` 最常用的版本还是 不指定位置插入数据 的版本
+
+此版本的返回值是一个 `pair<iterator, bool>`，与 `set` 中的相同 返回的 pair存储的是插入元素的迭代器和插入是否成功的记录
+
+#### 2. 迭代器相关
+
+`map` 迭代器相关的接口函数依旧是 **正向**、**反向**、**是否`const`** 这几种组合，也没有什么需要注意的
+
+需要注意的是 `map` 的迭代器本身：
+
+`map` 迭代器指向的是 `map`的数据，而 `map`存储的数据是 `pair`，所以通过迭代器访问数据，**不能直接解引用迭代器，而是需要再通过迭代器去访问 `pair`的成员变量**
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031529979.png" alt="image-20220903152953925" style="zoom:80%;" />
+
+#### 3. find
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031532846.png" alt="image-20220903153214812" style="zoom:80%;" />
+
+`map` 的 `find` 是通过 关键字 来查找相应的节点的，也就是通过 `pair` 中的 `first`变量：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031538221.png" alt="image-20220903153808152" style="zoom:80%;" />
+
+如果没有找到相应的节点，就会返回 `map.end()`
+
+#### 4. erase
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031539037.png" alt="image-20220903153953996" style="zoom:80%;" />
+
+map 的erase 也没有什么特别的用法，几乎与set一模一样，不过还是需要注意：
+
+1. 迭代器失效的问题
+2. 通过 `key`(`pair`的`first`变量) 删除
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031552395.png" alt="image-20220903155230339" style="zoom:80%;" />
+
+#### 5. operator[] *
+
+在前一篇文章 介绍 K-V 二叉搜索树时，介绍了一种K-V二叉搜索树的使用场景：统计某种物品的个数：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031558546.png" alt="image-20220903155859491" style="zoom:80%;" />
+
+`map` 当然也可以做到：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031611194.png" alt="image-20220903161140128" style="zoom:80%;" />
+
+使用 `map` 显式通过 与 K-V二叉搜索树 相似的解决方式，达到了相同的目的，但是过于繁琐
+
+使用 `map` 还可以更简单：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031616406.png" alt="image-20220903161647363" style="zoom:80%;" />
+
+这是 `map` 中 `operator[]` 可以达到的效果
+
+`map`中 `[]` 的重载函数是怎么实现的才能达到这样的效果？
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031621001.png" alt="image-20220903162146955" style="zoom:80%;" />
+
+这是文档中关于 `operator[]` 的介绍，翻译一下就是：
+
+这个函数的作用是：**返回指定关键字对应的值的引用；如果map不存在此关键字，则将此关键字插入其中，并返回其对应值的引用** 
+
+调用此函数 等效于：
+`(*((this->insert(make_pair(k,mapped_type()))).first)).second`
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031553915.png" alt="image-20220903155345879" style="zoom:80%;" />
+
+operator[] 返回值类型是 mapped_type&
+
+map的文档显示：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031628495.png" alt="image-20220903162837464" style="zoom:80%;" />
+mapped_type 是map的第二个模板参数，其实就是关键字映射的值得类型
+
+`(*((this->insert(make_pair(k,mapped_type()))).first)).second` 是什么意思？
+
+其实这一句代码分析一下，可以分析出 `operator[]` 可能是这样定义的：
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209031638160.png" alt="image-20220903163803108" style="zoom:80%;" />
+
+> 在C++中，内置类型(`int、double、char`等)也可以看作是类，可以使用一般类实例化对象的方式实例化数值
+
+那么这段代码的意思就是，向`map`中 `insert` 一个 `以 k 作为first,以 mapped_type类型的缺省值 作为second 的pair`，并接收 `insert`的返回值
+
+然后再根据返回值，访问插入节点的 `second`变量 并返回
+
+在 上面的记录水果个数的例子中，返回的就是 某种水果的个数。如果是 苹果的个数，就说明刚刚记录的是苹果，就需要将苹果的个数`++`
+
+`map` 中 `operator[]` 是一个非常重要，也非常细节的重载函数，需要牢记
+
