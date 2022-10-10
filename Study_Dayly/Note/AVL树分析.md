@@ -55,21 +55,90 @@ AVL树 是最早被设计出来的平衡二叉搜索树
 
 AVL树的是一种三叉链结构，即 每个节点除左右孩子、数据之外，还存有父亲节点
 
-为了方便得出每个节点的子树高度差，所以还可以存储一个变量来记录左右孩子的高度差（平衡因子）
+为了方便得出每个节点的子树高度差，所以还可以存储一个变量来记录左右孩子的高度差，一般被称为 `平衡因子`
 
-所以 AVL树 的节点结构可以设计 定义为：
+所以 `AVL树 的节点结构` 可以设计为：
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/202209052153361.png" alt="image-20220905215307309" style="zoom:80%;" />
 
-当然 在节点内存储平衡因子并不是必须的，也可以通过其他方法记录
+> 当然 在节点内存储平衡因子并不是必须的，也可以通过其他方法记录
 
 ### 3. AVL树 插入数据
 
-AVL树 是平衡二叉搜索树，建立的过程是 在二叉搜索树的前提下，再调整节点构建出来的
+AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前提下`，调整节点构建出来的。而树的构建过程, 其实也就是树节点插入的过程
 
-所以 AVL树插入数据的过程可以大致分为两个步骤：
+那么 AVL树 执行插入操作之后, 也就需要保证 结果树依旧是一个 AVL树, 不过 在插入新节点之前需要保证 树已经是 AVL树
+
+所以, AVL树插入数据的过程可以大致分为 两个步骤：
 
 1. 按照二叉搜索树的插入方式插入新节点
 2. 分析节点的子树高度差，并进行调整
 
-所以
+下面也按照这两个步骤来对 AVL树的插入操作进行分析：
+
+> 1. 按照二叉搜索树的插入方式插入新节点
+>
+> 二叉搜索树的特点是：节点的左孩子比节点小, 节点的右孩子比节点大
+>
+> 所以 插入新节点就需要通过比较新节点与各个节点的大小, 找到合适的位置, 然后再将新节点连接到树中：
+>
+> ```cpp
+> bool insert(const T& data) {
+> 	// 首先按照 二叉搜索树的方式 查找插入位置并插入节点
+> 	if (_root == nullptr) {
+> 		// 树为空 插入节点 直接将新节点作为树的根
+> 		_root = new Node(data);
+> 		_root->_bf = 0;		// 只有根节点的树，根节点平衡因子为 0
+> 
+> 		return true;		// 插入成功，直接返回
+> 	}
+> 
+> 	// 走到这里就说明需要 查找插入位置 了
+> 	Node* cur = _root;	// 从根节点开始比较
+> 	Node* parent = nullptr;	// 需要记录父亲节点 供插入时连接
+> 	while (cur) {
+> 		// 循环结束的条件是 cur为空，cur为空时就说明 插入位置找到了
+> 		if (cur->_data > data) {
+> 			// 插入值比当前节点值 小，则向左孩子找
+> 			parent = cur;
+> 			cur = cur->_pLeft;
+> 		}
+> 		else if (cur->_data < data) {
+> 			// 插入值比当前节点值 大，则向右孩子找
+> 			parent = cur;
+> 			cur = cur->_pRight;
+> 		}
+> 		else {
+> 			// 走到这里 说明数中已存在相同数据
+> 			return false;
+> 		}
+> 	}
+> 
+>     // 出循环之后，cur 即为数据需要插入的位置
+> 	cur = new Node(data);
+> 	// 将cur与树连接起来
+> 	if (data > parent->_data) {
+> 		parent->_pRight = cur;		// 插入数据比父亲节点数据大，则插入到父亲节点的右孩子
+> 	}
+> 	else if (data < parent->_data) {
+> 		parent->_pLeft = cur;			// 插入数据比父亲节点数据小，则插入到父亲节点的左孩子
+> 	}
+> 	// 三叉链结构，cur节点虚存储父亲节点
+> 	cur->_pParent = parent;
+>     }
+> ```
+>
+> 二叉搜索树的插入已经轻车熟路了, 所以 AVL树插入数据 最重要的、也是最难理解的部分 其实是：
+> `插入数据之后, 对各个节点的平衡因子的分析, 以及对不平衡树的平衡操作`
+
+在树中插入新的结点之后, 很有可能会造成树的不平衡, 举几个简单的例子：
+
+> 存在插入之后, 存在不会失衡的情况
+>
+> <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221010233200183.png" alt="image-20221010233200183" style="zoom:67%;" /> <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221010233309020.png" alt="image-20221010233309020" style="zoom:66%;" /> `7 节点平衡因子, 从 1或-1 到 0`
+>
+> <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221010232811437.png" alt="image-20221010232811437" style="zoom:66%;" /> `7 节点平衡因子 从 0 到 1或-1`
+>
+> 当然也有 使树失去平衡的情况：
+>
+> <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221010234431163.png" alt="image-20221010234431163" style="zoom:67%;" /> `21节点 平衡因子从 1 到 2`
