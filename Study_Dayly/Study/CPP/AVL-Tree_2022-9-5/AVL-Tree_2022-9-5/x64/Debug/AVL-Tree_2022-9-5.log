@@ -1,1 +1,8 @@
-﻿  AVL-Tree_2022-9-5.vcxproj -> E:\Microsoft VS\Project\2022\AVL-Tree_2022-9-5\x64\Debug\AVL-Tree_2022-9-5.exe
+﻿  main.cpp
+E:\Microsoft VS\Project\2022\AVL-Tree_2022-9-5\AVL-Tree_2022-9-5\main.cpp(7,12): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
+E:\Microsoft VS\Project\2022\AVL-Tree_2022-9-5\AVL-Tree_2022-9-5\main.cpp(11,16): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
+          with
+          [
+              _Ty=int
+          ]
+  AVL-Tree_2022-9-5.vcxproj -> E:\Microsoft VS\Project\2022\AVL-Tree_2022-9-5\x64\Debug\AVL-Tree_2022-9-5.exe
