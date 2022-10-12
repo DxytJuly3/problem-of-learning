@@ -133,6 +133,8 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 
 在树中插入新的结点之后, 很有可能会造成树的不平衡, 举几个简单的例子：
 
+> 2. 分析节点的子树高度差，并进行调整
+>
 > 存在插入之后, 存在不会失衡的情况
 >
 > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221010233200183.png" alt="image-20221010233200183" style="zoom:67%;" /> <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221010233309020.png" alt="image-20221010233309020" style="zoom:66%;" /> `7 节点平衡因子, 从 1或-1 到 0`
@@ -302,7 +304,9 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > > 对比一下, h不同时 插入新节点 导致树失衡 再到 平衡的过程：
 > >
 > > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012175509307.png" alt="image-20221012175509307" style="zoom:67%;" /> 
+> >
 > > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012175442944.png" alt="image-20221012175442944" style="zoom:67%;" /> 
+> >
 > > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012175239846.png" alt="image-20221012175239846" style="zoom:67%;" /> 
 > >
 > > 可以发现, 如果将 `平衡因子为2的节点 为 parent, 其右孩子节点 为 subR`, 则此类情况的调整平衡的具体操作 其实是：
@@ -451,7 +455,7 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > > }
 > > ```
 >
-> > 可以知道 此种情况的特点是：`不平衡节点必须是因为左孩子的左子树高而不平衡的` 。也就是说
+> > 可以知道 此种情况的特点是：`不平衡节点必须是因为 左孩子的左子树高 而不平衡的` 。也就是说
 > >
 > > 当 `parent->_bf == -2 && cur->_bf == -1` 成立时, 才会 `执行右单旋进行调平`
 > >
@@ -465,11 +469,11 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 >
 > 1. **`某 AVL树的根节点平衡因子为 1 (即此树右子树高), 且又在此树的右子树中 插入新节点导致右子树高度再增加, 进而导致此树失衡`**
 >
->     即 `不平衡节点因为其右孩子的右子树高而不平衡(简称 右右)`
+>     即 `不平衡节点因为其 右孩子的右子树高 而不平衡(简称 右右)`
 >
 > 2. **`某 AVL树的根节点平衡因子为 -1 (即此树左子树高), 且又在此树的左子树中 插入新节点导致左子树高度再增加, 进而导致此树失衡`**
 >
->     即 `不平衡节点因为其左孩子的左子树高而不平衡(简称 左左)`
+>     即 `不平衡节点因为其 左孩子的左子树高 而不平衡(简称 左左)`
 >
 > 但是, 不平衡的情况不仅仅只有这两种情况, 还存在其他情况。
 >
@@ -486,7 +490,7 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > > **`某 AVL树的根节点平衡因子为 -1 (即此树左子树高), 且又在此根节点的左孩子的右子树中插入新节点 `**
 > > **`导致 以 左孩子为根的树的高度 再增加, 进而导致此树失衡`**
 > >
-> > 也就是 `不平衡节点因为其左孩子的右子树高而不平衡(简称 左右)`
+> > 也就是 `不平衡节点因为其 左孩子的右子树高 而不平衡(简称 左右)`
 > >
 > > > 1. `h = 0`
 > > >
@@ -494,7 +498,7 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > > >
 > > >     所以 h = 0 时的实例图 应该为：
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012210747723.png" alt="image-20221012210747723" style="zoom:67%;" /> 60节点 就是新插入的节点
+> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221013000005221.png" alt="image-20221013000005221" style="zoom:67%;" /> 60节点 就是新插入的节点
 > > >
 > > >     此时应该怎么调整呢？
 > > >
@@ -508,13 +512,13 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > > >
 > > >     那么 就以 40节点为`parent`进行左单旋
 > > >
-> > >     即 <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012212156818.png" alt="image-20221012212156818" style="zoom:67%;" /> 
+> > >     即 <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012235930916.png" alt="image-20221012235930916" style="zoom:67%;" /> 
 > > >
 > > >     这样 就把树的结构调整为了 `左左` 的情况
 > > >
 > > >     然后 以 80节点 为 `parent` 进行 `右单旋`：
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012212959249.png" alt="image-20221012212959249" style="zoom:67%;" /> 
+> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012235850082.png" alt="image-20221012235850082" style="zoom:67%;" /> 
 > > >
 > > >     树平衡
 > > >
@@ -522,7 +526,7 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > > >
 > > >     h = 1, A、D树 高度为 1, B、C树 高度为 0, 在 60节点左、右孩子插入新节点
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012215309026.png" alt="image-20221012215309026" style="zoom:67%;" /> `(虚线, 表示 也可以在此位置插入)`
+> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012234858908.png" alt="image-20221012234858908" style="zoom:67%;" /> `(虚线, 表示 也可以在此位置插入)`
 > > >
 > > >     以80节点为根的树 失衡的情况是 `左右`
 > > >
@@ -536,13 +540,13 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > > >
 > > >     所以, 以 40节点为 `parent` 进行左单旋：
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012230016062.png" alt="image-20221012230016062" style="zoom:67%;" /> 
+> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012235000721.png" alt="image-20221012235000721" style="zoom:67%;" /> 
 > > >
 > > >     此时 以80节点为根的树 失衡的情况就变成了 `左左`
 > > >
 > > >     就可以 以 80节点为 `parent` 进行`右单旋`
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012230318756.png" alt="image-20221012230318756" style="zoom:67%;" /> 
+> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012235018281.png" alt="image-20221012235018281" style="zoom:67%;" /> 
 > > >
 > > >     树平衡
 > > >
@@ -571,5 +575,369 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > > >     然后就可以, 以 80节点为`parent` 执行`右单旋`操作
 > > >
 > > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012234022767.png" alt="image-20221012234022767" style="zoom:67%;" /> 
+> > >
+> > >     树平衡
+> > >
+> > > 4. `h = 3` ······
+> > >
+> > > 5. ······
+> > >
+> > > h 当然可以更大, 但是 方法都是相同的, 因为是同一种失衡情况：`“左右”`, `不平衡节点因为其 左孩子的右子树高 而不平衡`
+> >
+> > 对比 h 不同时, 此种失衡情况, 从失衡到平衡的调节 过程：
+> >
+> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221013003832745.png" alt="image-20221013003832745" style="zoom:67%;" /> 
+> >
+> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221013003851859.png" alt="image-20221013003851859" style="zoom:67%;" /> 
+> >
+> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221013003912696.png" alt="image-20221013003912696" style="zoom:67%;" /> 
+> >
+> > 可以看到, 插入新结点之后, 调节平衡的过程是：
+> >
+> > 1. 先 以 不平衡节点的左孩子`subL` 为`parent`, 执行`左单旋`操作
+> > 2. 再 以 不平衡节点`parent` 为`parent`, 执行`右单旋`操作
+> >
+> > 这就是 **`左右双旋`** , 其处理的情况是：
+> >
+> > **`某 AVL树的根节点平衡因子为 -1 (即此树左子树高), 且又在此根节点的左孩子的右子树中插入新节点 `**
+> > **`导致 以 左孩子为根的树的高度 再增加, 进而导致此树失衡`**
+> >
+> > 即 `不平衡节点因为其 左孩子的右子树高 而不平衡`
+> >
+> > 所以, 当 `parent->_bf == -2 && cur->_bf == 1` 时, 使用 `左右双旋` 调节平衡
+> >
+> > `左右双旋` 的具体实现可以通过 调用`左单旋`和`右单旋`实现, 但是需要注意的是, `左右双旋` 调节结构之后
+> >
+> > 树的其中三个节点的平衡因子是会发生改变的, 需要根据情况更新平衡因子
+> >
+> > 根据对比实例可以看出, 插入新结点之后：
+> >
+> > 1. 当 `subLR` 的平衡因子为0, 那么此次双旋操作中 `parent->_bf = 0`、`subL->_bf = 0`、`subLR->_bf = 0`
+> > 2. 当 `subLR` 的平衡因子为1, 那么此次双旋操作中 `parent->_bf = 0`、`subL->_bf = -1`、`subLR->_bf = 0`
+> > 3. 当 `subLR` 的平衡因子为-1, 那么此次双旋操作中 `parent->_bf = 1`、`subL->_bf = 0`、`subLR->_bf = 0`
+> >
+> > 所以 `左右双旋` 的实现代码：
+> >
+> > ```cpp
+> > void RotateLR(Node* parent) {
+> > 	Node* subL = parent->_pLeft;		// 不平衡节点的左孩子
+> > 	Node* subLR = subL->_pRight;		// 不平衡节点的左孩子的右孩子
+> > 	int bf = subLR->_bf;
+> > 	// 左右双旋
+> > 	RotateL(parent->_pLeft);
+> > 	RotateR(parent);
+> > 	
+> > 	// 画图可以看出来 如果插入的位置不同 平衡因子的更新规则也不同
+> > 	if (bf == 0) {
+> > 		parent->_bf = 0;
+> > 		subL->_bf = 0;
+> > 		subLR->_bf = 0;
+> > 	}
+> > 	else if (bf == 1) {
+> > 		parent->_bf = 0;
+> > 		subL->_bf = -1;
+> > 		subLR->_bf = 0;
+> > 	}
+> > 	else if (bf == -1) {
+> > 		parent->_bf = 1;
+> > 		subL->_bf = 0;
+> > 		subLR->_bf = 0;
+> > 	}
+> > 	else {
+> > 		assert(false);
+> > 	}
+> > }
+> > ```
+>
+> 既然有 `左右双旋`, 那肯定也有 `右左双旋`
+>
+> > ### `右左双旋`
+> >
+> > 与 `左单旋`和`右单旋` 之间的关系一样, `左右双旋`和`右左双旋` 也有相似的关系
+> >
+> > `右左双旋` 处理的失衡情况 是这样的：
+> >
+> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221013004918686.png" alt="image-20221013004918686" style="zoom:67%;" /> 
+> >
+> > 对比 `左右双旋` 可以看出, `右左双旋` 解决的失衡情况是：
+> >
+> > **`某 AVL树的根节点平衡因子为 1 (即此树右子树高), 且又在此根节点的右孩子的左子树中插入新节点 `**
+> > **`导致 以 右孩子为根的树的高度 再增加, 进而导致此树失衡`**
+> >
+> > 即 `不平衡节点因为其 右孩子的左子树高 而不平衡`, 可以简称为 `“右左”`
+> >
+> > 并且, 与 `左右双旋` 类似, `右左双旋` 则是:
+> >
+> > 1. 先 以 不平衡节点的右孩子`subR` 为`parent`, 执行`右单旋`操作
+> > 2. 再 以 不平衡节点`parent` 为`parent`, 执行`左单旋`操作
+> >
+> > 执行 双旋操作之后, 再根据插入新节点后 `subRL` 的平衡因子, 来更新 `parent`、`subR`、`subRL`的平衡因子
+> >
+> > 1. 当 `subRL` 的平衡因子为0, 那么此次双旋操作中 `parent->_bf = 0`、`subL->_bf = 0`、`subLR->_bf = 0`
+> > 2. 当 `subRL` 的平衡因子为1, 那么此次双旋操作中 `parent->_bf = -1`、`subL->_bf = 0`、`subLR->_bf = 0`
+> > 3. 当 `subRL` 的平衡因子为-1, 那么此次双旋操作中 `parent->_bf = 0`、`subL->_bf = 1`、`subLR->_bf = 0`
+> >
+> > `右左双旋` 的代码实现为：
+> >
+> > ```cpp
+> > void RotateRL(Node* parent) {
+> > 	Node* subR = parent->_pRight;
+> > 	Node* subRL = subR->_pLeft;
+> > 	int bf = subRL->_bf;
+> > 	// 右左双旋
+> > 	RotateR(parent->_pRight);
+> > 	RotateL(parent);
+> > 	
+> > 	if (bf == 0) {
+> > 		parent->_bf = 0;
+> > 		subR->_bf = 0;
+> > 		subRL->_bf = 0;
+> > 	}
+> > 	else if (bf == 1) {
+> > 		parent->_bf = -1;
+> > 		subR->_bf = 0;
+> > 		subRL->_bf = 0;
+> > 	}
+> > 	else if (bf == -1) {
+> > 		parent->_bf = 0;
+> > 		subR->_bf = 1;
+> > 		subRL->_bf = 0;
+> > 	}
+> > 	else {
+> > 		assert(false);
+> > 	}
+> > }
+> > ```
+> >
+> > > `右左双旋也可以画图 分析一下`
 
- 
+这 AVL树 插入数据大致分为的 两个步骤：
+
+1. 按照二叉搜索树的插入方式插入新节点
+2. 分析节点的子树高度差，并进行调整
+
+都已经分析完了, 所以 AVL树的插入操作 具体的代码实现应该是：
+
+```cpp
+public:
+	bool insert(const T& data) {
+		// 首先按照 二叉搜索树的方式 查找插入位置并插入节点
+		if (_root == nullptr) {
+			// 树为空 插入节点 直接将新节点作为树的根
+			_root = new Node(data);
+			_root->_bf = 0;		// 只有根节点的树，根节点平衡因子为 0
+
+			return true;		// 插入成功，直接返回
+		}
+
+		// 走到这里就说明需要 查找插入位置 了
+		Node* cur = _root;	// 从根节点开始比较
+		Node* parent = nullptr;	// 需要记录父亲节点 供插入时连接
+		while (cur) {
+			// 循环结束的条件是 cur为空，cur为空时就说明 插入位置找到了
+			if (cur->_data > data) {
+				// 插入值比当前节点值 小，则向左孩子找
+				parent = cur;
+				cur = cur->_pLeft;
+			}
+			else if (cur->_data < data) {
+				// 插入值比当前节点值 大，则向右孩子找
+				parent = cur;
+				cur = cur->_pRight;
+			}
+			else {
+				// 走到这里 说明数中已存在相同数据
+				return false;
+			}
+		}
+
+		// 出循环之后，cur 即为数据需要插入的位置
+		cur = new Node(data);
+		// 将cur与树连接起来
+		if (data > parent->_data) {
+			parent->_pRight = cur;		// 插入数据比父亲节点数据大，则插入到父亲节点的右孩子
+		}
+		else if (data < parent->_data) {
+			parent->_pLeft = cur;			// 插入数据比父亲节点数据小，则插入到父亲节点的左孩子
+		}
+        
+		// 三叉链结构，cur节点虚存储父亲节点
+		cur->_pParent = parent;
+		while (parent) {
+			if (cur == parent->_pLeft)
+				parent->_bf--;			// 新节点在父亲节点的左孩子，则父亲节点的左子树高度+1，则父亲节点的平衡因子-1
+			else
+				parent->_bf++;
+
+			// 更新完之后，就需要判断 需要继续更新 还是停止更新 或是调整平衡了
+			if (parent->_bf == 0) {
+				// 某祖先节点的平衡因子 从 -1 或 1 -> 0，说明 插入新节点使此祖先节点的左右子树高度相等了
+				// 不会再影响更上边的节点，所以可以结束
+				break;
+			}
+			else if (parent->_bf == -1 || parent->_bf == 1) {
+				cur = cur->_pParent;
+				parent = parent->_pParent;
+			}
+			else if (parent->_bf == -2 || parent->_bf == 2) {
+				// 左单旋的情况
+				if (parent->_bf == 2 && cur->_bf == 1) {
+					RotateL(parent);
+				}
+				// 右单旋的情况
+				else if (parent->_bf == -2 && cur->_bf == -1) {
+					RotateR(parent);
+				}
+				// 左右双旋的情况
+				else if (parent->_bf == -2 && cur->_bf == 1) {
+					RotateLR(parent);
+				}
+				else if (parent->_bf == 2 && cur->_bf == -1) {
+					RotateRL(parent);
+				}
+
+				break;
+			}
+			else {
+				// 以上情况都是在保证插入新节点时，树已经是平衡二叉搜索树
+				// 如果不是 则会走到此处 触发断言 进而发现错误
+				assert(false);
+			}
+		}
+		
+		return true;
+	}
+
+private:
+	void RotateL(Node* parent) {
+		Node* subR = parent->_pRight;		// 此节点, 即不平衡节点的右孩子
+		Node* subRL = subR->_pLeft;			// 此节点左孩子
+
+		/* parent 可能是 整棵树的根, 也可能是某节点的子树根
+		* 而 由于AVL树的节点是三叉链的结构, 所以改变节点的位置 需要改变此节点的父亲节点, 所以
+		* 当 parent 是整棵树的根时, 即parent->_pParent 为空, 那么左旋时 就需要直接将 subR改为整棵树的根
+		* 当 parent 是某节点的子树时, 就需要将 parent->_pParent 与 subR 连接起来
+		* 所以 需要将 parent->_pParent 存储起来
+		*/
+		Node* ppNode = parent->_pParent;
+
+		// 将 此节点的左孩子 变为 父亲节点的右孩子, 并将 此节点的父亲节点 变为 此节点的左孩子
+		// 并记得 链接三叉链
+		parent->_pRight = subRL;
+		if (subRL)
+			subRL->_pParent = parent;
+
+		subR->_pLeft = parent;
+		parent->_pParent = subR;
+
+		// 改变不平衡节点 的 父亲节点的指向
+		if (parent == _root) {
+			_root = subR;
+			_root->_pParent = nullptr;
+		}
+		else {
+			if (parent == ppNode->_pLeft)		// 不平衡节点是其父亲节点的左孩子
+				ppNode->_pLeft = subR;			// 把 subR 连接到 其父亲节点的左孩子上
+			else
+				ppNode->_pRight = subR;			// 把 subR 连接到 其父亲节点的右孩子上
+
+			subR->_pParent = ppNode;		// 更新 subR 的父亲节点
+		}
+
+		parent->_bf = 0;
+		subR->_bf = 0;
+	}
+
+	void RotateR(Node* parent) {
+		Node* subL = parent->_pLeft;		// 此节点, 即不平衡节点的左孩子
+		Node* subLR = subL->_pRight;		// 此节点右孩子
+
+		Node* ppNode = parent->_pParent;
+        
+		parent->_pLeft = subLR;
+		if (subLR)
+			subLR->_pParent = parent;
+
+		subL->_pRight = parent;
+		parent->_pParent = subL;
+
+		// 改变不平衡节点 的 父亲节点的指向
+		if (parent == _root) {
+			_root = subL;
+			_root->_pParent = nullptr;
+		}
+		else {
+			if (parent == ppNode->_pLeft)		// 不平衡节点是其父亲节点的左孩子
+				ppNode->_pLeft = subL;			// 把 subL 连接到 其父亲节点的左孩子上
+			else
+				ppNode->_pRight = subL;			// 把 subL 连接到 其父亲节点的右孩子上
+
+			subL->_pParent = ppNode;		// 更新 subL 的父亲节点
+		}
+
+		parent->_bf = 0;
+		subL->_bf = 0;
+	}
+
+	void RotateLR(Node* parent) {
+		Node* subL = parent->_pLeft;
+		Node* subLR = subL->_pRight;
+		int bf = subLR->_bf;
+		// 左右双旋
+		RotateL(parent->_pLeft);
+		RotateR(parent);
+		
+		// 画图可以看出来 如果插入的位置不同 平衡因子的更新规则也不同
+		if (bf == 0) {
+			parent->_bf = 0;
+			subL->_bf = 0;
+			subLR->_bf = 0;
+		}
+		else if (bf == 1) {
+			parent->_bf = 0;
+			subL->_bf = -1;
+			subLR->_bf = 0;
+		}
+		else if (bf == -1) {
+			parent->_bf = 1;
+			subL->_bf = 0;
+			subLR->_bf = 0;
+		}
+		else {
+			assert(false);
+		}
+	}
+
+	void RotateRL(Node* parent) {
+		Node* subR = parent->_pRight;
+		Node* subRL = subR->_pLeft;
+		int bf = subRL->_bf;
+		// 右左双旋
+		RotateR(parent->_pRight);
+		RotateL(parent);
+		
+		if (bf == 0) {
+			parent->_bf = 0;
+			subR->_bf = 0;
+			subRL->_bf = 0;
+		}
+		else if (bf == 1) {
+			parent->_bf = -1;
+			subR->_bf = 0;
+			subRL->_bf = 0;
+		}
+		else if (bf == -1) {
+			parent->_bf = 0;
+			subR->_bf = 1;
+			subRL->_bf = 0;
+		}
+		else {
+			assert(false);
+		}
+	}
+```
+
+AVL树的 插入操作, 是AVL树第二难理解的内容, 最难理解的内容是 `AVL树 数据的删除`
+
+> `AVL树 数据的删除` 更难解决一些, 本篇文章不做分析
+
