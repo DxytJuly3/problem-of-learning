@@ -1,5 +1,7 @@
 ﻿  main.cpp
-  RedBlackTree.h
-  正在生成代码...
-  LINK : 没有找到 D:\Microsoft Visual Studio\Project\2022\RedBlackTree\x64\Debug\RedBlackTree.exe 或上一个增量链接没有生成它；正在执行完全链接
+D:\Microsoft Visual Studio\Project\2022\RedBlackTree\RedBlackTree\main.cpp(24,12): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
+D:\Microsoft Visual Studio\Project\2022\RedBlackTree\RedBlackTree\RedBlackTree.h(279,1): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
+D:\Microsoft Visual Studio\Project\2022\RedBlackTree\RedBlackTree\RedBlackTree.h(252): message : 在编译 类 模板 成员函数“void RBTree<int>::levelOrder(void)”时
+D:\Microsoft Visual Studio\Project\2022\RedBlackTree\RedBlackTree\main.cpp(15): message : 查看对正在编译的函数 模板 实例化“void RBTree<int>::levelOrder(void)”的引用
+D:\Microsoft Visual Studio\Project\2022\RedBlackTree\RedBlackTree\main.cpp(8): message : 查看对正在编译的 类 模板 实例化“RBTree<int>”的引用
   RedBlackTree.vcxproj -> D:\Microsoft Visual Studio\Project\2022\RedBlackTree\x64\Debug\RedBlackTree.exe

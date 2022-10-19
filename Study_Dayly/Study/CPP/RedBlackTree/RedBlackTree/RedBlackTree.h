@@ -1,6 +1,12 @@
-﻿#include <iostream>
+﻿#pragma once
+#include <iostream>
+#include <vector>
 #include <cassert>
-using namespace std;
+#include <queue>
+using std::cout;
+using std::vector;
+using std::endl;
+using std::queue;
 
 enum Color
 {
@@ -38,9 +44,10 @@ class RBTree {
 	typedef RBTreeNode<T1> Node;
 
 public:
-	bool insert(T1& data) {
+	bool insert(const T1& data) {
 		if (_root == nullptr) {
-			_root = Node(data);
+			_root = new Node(data);
+			_root->_color = BLACK;
 
 			return true;
 		}
@@ -50,13 +57,13 @@ public:
 		while (cur) {
 			if (data > cur->_data) {
 				// data大 向右找
+				parent = cur;
 				cur = cur->_pRight;
-				parent = cur->_pParent;
 			}
 			else if (data < cur->_data) {
 				// data小 向左找
+				parent = cur;
 				cur = cur->_pLeft;
-				parent = cur->_pParent;
 			}
 			else {
 				// 树中已有 data
@@ -97,7 +104,7 @@ public:
 			assert(grandFa);
 
 			// 当 parent是祖父节点的左孩子时
-			if (grandFa->_pLeft = parent) {
+			if (grandFa->_pLeft == parent) {
 				Node* uncle = grandFa->_pRight;
 
 				// 此时 也会因为 叔叔节点的情况不同 存在不同的处理方法
@@ -108,7 +115,7 @@ public:
 				//		因为叔叔节点和父亲节点原来都是红节点, 也就说名祖父节点本来是黑节点
 				//		既然 已经将 parent 和 uncle节点改为黑节点了, 那么就需要将这两个节点的父亲节点 也就是grandFa节点改为红节点
 				//		来保证路径上的黑节点数目是不变的
-				if (uncle->_color == RED) {
+				if (uncle && uncle->_color == RED) {
 					parent->_color = uncle->_color = BLACK;
 					grandFa->_color = RED;
 
@@ -139,7 +146,7 @@ public:
 						//	2. 再将 grandFa节点作为右单旋的parent 进行右单旋
 						// 然后再调节 当前节点 和 grandFa的颜色
 						rotateL(parent);
-						rotateL(grandFa);
+						rotateR(grandFa);
 
 						cur->_color = BLACK;
 						grandFa->_color = RED;
@@ -152,7 +159,7 @@ public:
 			else {
 				Node* uncle = grandFa->_pLeft;
 				
-				if (uncle->_color == RED) {
+				if (uncle && uncle->_color == RED) {
 					parent->_color = uncle->_color = BLACK;
 					grandFa->_color = RED;
 
@@ -192,23 +199,168 @@ public:
 				}
 			}
 		}
-		cur->_color = BLACK;
+		_root->_color = BLACK;
 
 		return true;
 	}
 
-	void rotateR(Node* parent) {
-		Node* subR = parent->_pParent;
+	
+	bool isRedBlackTree() {
+		// 判断是否为红黑树需要判断 此树是否满足红黑树的各个条件
+		//	判断 根节点是否为黑节点	
+		//	判断 红节点的父亲节点(孩子节点) 是否还是红节点
+		//	判断 每条路径中的黑节点数目是否相等
+		if (_root == nullptr)
+			return true;					// 空树也可以看作红黑树
+
+		if (_root->_color == RED) {
+			cout << "违反 红黑树根节点必须为黑节点 的规则" << endl;
+			return false;
+		}
+
+		// 计算任意一个路径的 黑节点数目, 为了方便对比其他路径 黑节点数目是否相等
+		// 每棵红黑树, 从根节点走到空的位置才算是一条路径
+		size_t blackCount = 0;
+		Node* pCur = _root;
+		while (pCur) {
+			if (pCur->_color == BLACK)
+				blackCount++;
+
+			pCur = pCur->_pLeft;
+		}
+		// 然后通过递归函数, 判断：
+		//	1. 红节点的父亲节点是否 还是红节点
+		//	2. 每条路径中的黑节点数目是否相同
+		size_t pathBlack = 0;
+		return _isPathRedBlackTree(_root, pathBlack, blackCount);
+	}
+
+	int maxHeight() {
+		return _maxHeight(_root);
+	}
+
+	int minHeight() {
+		return _minHeight(_root);
+	}
+
+	void Height() {
+		cout << "此树最长路径长度： " << _maxHeight(_root) << endl;
+		cout << "此树最短路径长度： " << _minHeight(_root) << endl;
+	}
+
+	// 层序遍历输出：
+	void levelOrder() {
+		queue<Node*> q;
+		int levelSize = 1;
+		q.push(_root);
+
+		while (!q.empty())
+		{
+			// levelSize控制一层一层出
+			vector<int> levelV;
+			while (levelSize--)
+			{
+				Node* front = q.front();
+				q.pop();
+				levelV.push_back(front->_data);
+				if (front->_pLeft)
+					q.push(front->_pLeft);
+
+				if (front->_pRight)
+					q.push(front->_pRight);
+			}
+			for (auto e : levelV)
+			{
+				cout << e << " ";
+			}
+			cout << endl;
+
+			// 上一层出完，下一层就都进队列
+			levelSize = q.size();
+		}
+	}
+	
+	void InOrder()
+	{
+		_InOrder(_root);
+		cout << endl;
+	}
+
+private:
+	void _InOrder(Node* root)
+	{
+		if (root == nullptr)
+			return;
+
+		_InOrder(root->_pLeft);
+		cout << root->_data << " ";
+		_InOrder(root->_pRight);
+	}
+
+	// 求最短路径
+	int _minHeight(Node* pRoot) {
+		if (pRoot == nullptr)
+			return 0;
+
+		int leftHeight = _minHeight(pRoot->_pLeft);
+		int rightHeight = _minHeight(pRoot->_pRight);
+
+		return leftHeight < rightHeight ? leftHeight+1 : rightHeight+1;
+	}
+
+	// 求最长路径
+	int _maxHeight(Node* pRoot) {
+		if (pRoot == nullptr)
+			return 0;
+
+		int leftHeight = _maxHeight(pRoot->_pLeft);
+		int rightHeight = _maxHeight(pRoot->_pRight);
+
+		return leftHeight > rightHeight ? leftHeight+1 : rightHeight+1;
+	}
+
+	bool _isPathRedBlackTree(Node* pRoot, size_t pathBlack, const size_t blackCount) {
+		// 这是一个子函数 用来递归遍历树 判断 每条路径的黑节点是否相等 和 是否存在连续的 红节点
+
+		if (pRoot == nullptr) {
+			// 当 pRoot节点为空时, 就表示此条路径走到底了
+			if (pathBlack != blackCount) {
+				cout << "违反 红黑树每条路径的黑节点数目相等 规则" << endl;
+				
+				return false;
+			}
+
+			return true;
+		}
+		
+		// 统计路径上的黑色节点
+		if (pRoot->_color == BLACK)
+			pathBlack++;
+
+		// 判断是否存在连续的红节点
+		if (pRoot->_color == RED && pRoot->_pParent && pRoot->_pParent->_color == RED) {
+			cout << "违反 红黑树不能存在连续的红节点 规则" << endl;
+			
+			return false;
+		}
+
+		// 递归左右子树
+		return _isPathRedBlackTree(pRoot->_pLeft, pathBlack, blackCount) && 
+			   _isPathRedBlackTree(pRoot->_pRight, pathBlack, blackCount);
+	}
+
+	void rotateL(Node* parent) {
+		Node* subR = parent->_pRight;
 		Node* subRL = subR->_pLeft;
 		
-		parent->_pLeft = subR;
-		if (subR)
-			subR->_pParent = parent;
+		parent->_pRight = subRL;
+		if (subRL)
+			subRL->_pParent = parent;
 
 		// 为了链接subR 作为新的根节点, 需要将 parent的_pParent记录下来
 		Node* ppNode = parent->_pParent;
 
-		subR->_pRight = parent;
+		subR->_pLeft = parent;
 		parent->_pParent = subR;
 		
 		if (parent == _root) {
@@ -227,17 +379,17 @@ public:
 		}
 	}
 
-	void rotateL(Node* parent) {
+	void rotateR(Node* parent) {
 		Node* subL = parent->_pLeft;
 		Node* subLR = subL->_pRight;
 
-		parent->_pRight = subLR;
+		parent->_pLeft = subLR;
 		if (subLR)
-			subL->_pParent = parent;
+			subLR->_pParent = parent;
 
 		Node* ppNode = parent->_pParent;
 
-		subL->_pLeft = parent;
+		subL->_pRight = parent;
 		parent->_pParent = subL;
 
 		if (parent == _root) {
@@ -255,7 +407,6 @@ public:
 			subL->_pParent = ppNode;
 		}
 	}
-
-private:
-	Node _root = nullptr;
+	
+	Node* _root = nullptr;
 };
