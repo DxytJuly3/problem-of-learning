@@ -9,7 +9,6 @@ enum Color {
     BLACK
 };
 
-
 template<class T>
 struct RBTreeNode {
     // RedBlackTreeNode 红黑树节点
@@ -27,18 +26,169 @@ struct RBTreeNode {
     Color _color;					// 节点颜色
 };
 
+template<class Type, class Ref, class Ptr>			// 模板参数分别是 原类型，引用类型，指针类型
+struct _RB_Tree_Iterator {
+    typedef RBTreeNode<Type> Node;
+    typedef _RB_Tree_Iterator<Type, Ref, Ptr> Self;
+
+    _RB_Tree_Iterator(Node* node)
+        : _node(node)
+    {}
+
+    Ref operator*() {
+        return _node->_data;					// * 解引用 返回节点中的数据。返回值是引用类型 因为需要提供修改功能
+    }
+
+    Ptr operator->() {
+        return &_node->_data;					// -> 返回节点中数据的地址。返回值是指针类型
+    }
+    
+    Self& operator++() {        // 无 int参数, 前置++
+        if (_node->_pRight == nullptr) {        // 迭代器指向节点 没有 右孩子
+            // 需要从此节点向上找 第一个不是右孩子的节点的父亲节点
+            Node* cur = _node;
+            Node* parent = cur->_pParent;
+
+            while (parent && cur == parent->_pRight) {      // 当父亲节点存在, 且cur节点还是其右孩子时 循环继续
+                cur = cur->_pParent;
+                parent = parent->_pParent;
+            }
+
+            // 走到这里 cur节点就是 第一个不为右孩子的节点
+            _node = parent;
+            // 如果 迭代器++ 之前 指向的是树中最后一个节点, 则 执行上述代码之后
+            // cur会走到 整棵树的根节点, 而根节点的parent为空
+            // 所以 迭代器会为空
+        }
+        else {              // 迭代器指向的节点 存在右子树
+            // 找右子树的最左节点
+            Node* farLeft = _node->_pRight;
+            while (farLeft->_pLeft) {
+                farLeft = farLeft->_pLeft;
+            }
+
+            _node = farLeft;
+        }
+
+        return *this;                       // 返回新的迭代器
+    }
+
+    Self& operator++(int) {                 // 后置++
+        Self tmp(*this);                    // 拷贝此迭代器
+
+        ++(*this);                          // 复用前置++
+
+        return tmp;                         // 返回++前 拷贝的迭代器
+    }
+
+    Self& operator--() {                     // 无 int参数 前置--
+        if (_node->_left == nullptr) {          // 当迭代器指向的节点 不存在左孩子 时
+            // 需要从此节点向上找 第一个不是左孩子 的节点的父亲节点
+            Node* cur = _node;
+            Node* parent = cur->_pParent;
+
+            while (parent && cur == parent->_pLeft) {
+                cur = cur->_pParent;
+                parent = parent->_pParent;
+            }
+
+            // 走到这里 cur节点就是 第一个不为左孩子的节点
+            _node = parent;
+        }
+        else {               // 迭代器指向节点 存在 左孩子时
+            // 找左子树的最右节点
+            Node* subRight = _node->_pLeft;
+            while (subRight->_pRight) {
+                subRight = subRight->_pRight;
+            }
+
+            _node = subRight;
+        }
+
+        return *this;
+    }
+
+    Self& operator--(int) {
+        Self tmp(*this);
+
+        --(*this);
+
+        return tmp;
+    }
+
+    bool operator!=(const Self& It) const {
+        return _node != It._node;
+    }
+
+    bool operator==(const Self& It) const {
+        return _node == It._node;
+    }
+
+    // 可能需要其他类访问, 所以设置为公有的
+    Node* _node;
+};
+
 template<class Key, class Value_type, class KeyOfValue>
 class RB_Tree {
     typedef RBTreeNode<Value_type> Node;			// 对节点类型进行typedef
 
 public:
-    bool insert(const Value_type& data) {
+    // 由于需要在类外使用  所以 typedef 为公共的
+    typedef _RB_Tree_Iterator<Value_type, Value_type&, Value_type*> iterator;
+    typedef _RB_Tree_Iterator<Value_type, const Value_type&, const Value_type*> const_iterator;
+
+    iterator begin() {          // begin 取树的最左节点
+        Node* farLeft = _root;
+        while (farLeft && farLeft->_pLeft) {
+            // 判断 farLeft是否存在 是为了防止 树为空时 farLeft->_pLeft 访问使用空指针
+            farLeft = farLeft->_pLeft;
+        }
+
+        return iterator(farLeft);
+    }
+    iterator end() {
+        return iterator(nullptr);
+    }
+
+    const_iterator begin() const {
+        Node* farLeft = _root;
+        while (farLeft && farLeft->_pLeft) {
+            farLeft = farLeft->_pLeft;
+        }
+
+        return const_iterator(farLeft);
+    }
+    const_iterator end() const {
+        return const_iterator(nullptr);
+    }
+
+    iterator find(const Key& key) {
+        //  查找节点 是按照 key 来找的
+        Node* cur = _root;
+        KeyOfValue KOV;
+        while (cur) {
+            if (KOV(cur->_data) < key) {
+                cur = cur->_pRight;
+            }
+            else if (KOV(cur->_data) > key) {
+                cur = cur->_pLeft;
+            }
+            else {
+                return iterator(cur);
+            }
+        }
+
+        return end();           // 走到这 就没有找到
+    }
+       
+    // 插入数据之后 要返回新节点的迭代器 和 插入结果
+    pair<iterator, bool> insert(const Value_type& data) {
         if (_root == nullptr) {
             // 树为空时, 插入新节点
             _root = new Node(data);
             _root->_color = BLACK;			// 根节点要为 黑
 
-            return true;
+            return make_pair(iterator(_root), true);
         }
         
         KeyOfValue KOV;
@@ -58,12 +208,15 @@ public:
             }
             else {
                 // 树中已存在插入数据, 返回 false 插入失败
-                return false;
+                return make_pair(iterator(cur), false);
             }
         }
 
         // 出循环之后, cur所在位置就是 新节点需要插入的位置
         cur = new Node(data);
+
+        Node* newNode = cur;                // 记录新节点位置 以返回
+
         cur->_color = RED;
         // parent 与 cur连接起来
         if (KOV(data) > KOV(parent->_data)) {
@@ -149,7 +302,7 @@ public:
         }
         _root->_color = BLACK;				  // 无论如何 最后更新根节点的颜色为黑
 
-        return true;						// 插入完成, 返回true
+        return make_pair(iterator(newNode), true);
     }
 
 private:
