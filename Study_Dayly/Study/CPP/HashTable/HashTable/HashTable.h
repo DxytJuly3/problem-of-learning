@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
+#include <string>
 #include <iostream>
+using std::string;
 using std::pair;
 using std::make_pair;
 using std::vector;
@@ -109,6 +111,36 @@ namespace July {
 
 
 namespace Bucket {
+	template<class Key>
+	struct defaultHashFcn {							// 默认的仿函数, 处理可以直接转换成 size_t的类型
+		size_t operator()(const Key& k) {
+			return (size_t)k;
+		}
+	};
+	
+	template<>
+	struct defaultHashFcn<string> {					// 默认仿函数 针对string类型的特化
+		size_t operator()(const string& str) {
+			size_t hash = 0;
+			for (auto c : str) {
+				hash = hash * 131 + c;
+			}
+
+			return hash;
+		}
+	};
+
+	/*template<class Key>
+	struct stringHashFcn {
+		size_t operator()(const Key& str) {
+			size_t hash = 0;
+			for (auto c : str) {
+				hash = hash * 131 + c;
+			}
+
+			return hash;
+		}
+	};*/
 	
 	// 数据节点 结构
 	template<class K, class V>
@@ -122,7 +154,7 @@ namespace Bucket {
 		{}
 	};
 
-	template<class K, class V>
+	template<class K, class V, class HashFcn = defaultHashFcn<K>>
 	class HashTable {
 		typedef HashNode<K, V> Node;
 	public:
@@ -145,7 +177,7 @@ namespace Bucket {
 			if (find(kv.first)) {
 				return false;						// 设计 不可重复存储数据
 			}
-
+			HashFcn hf;
 			// 设置 当负载因子== 1时 扩容
 			/*if (_tables.size() == _n) {
 				size_t newSize = _tables.size() == 0 ? 10 : _tables.size() * 2;
@@ -171,7 +203,7 @@ namespace Bucket {
 			// 上面的扩容方法 非常的影响效率且开销过大
 			// 下面的另一种方法, 不调用insert, 不创建新的哈希桶 不创建新的节点 也不需要释放新的空间
 			// 而是 直接将 旧数组中的节点 重新计算映射到新的数组中, 再将 哈希桶的数组更新为新数组就可以了
-			if (_tables.size() == n) {
+			if (_tables.size() == _n) {
 				size_t newSize = _tables.size() == 0 ? 10 : _tables.size() * 2;
 
 				vector<Node*> newTable;
@@ -181,7 +213,7 @@ namespace Bucket {
 					while (cur) {
 						Node* next = cur->_next;				// 后面会 使cur->_next 变成 数组中存储的头节点, 所以 下一个节点提前记录
 
-						size_t hashI = cur->_data.first % newTable.size();					// 以新数组的容量计算 对应的哈希地址
+						size_t hashI = hf(cur->_data.first) % newTable.size();					// 以新数组的容量计算 对应的哈希地址
 						cur->_next = newTable[hashI];										// 插入的节点 与 newTable存储的头节点相连接
 						newTable[hashI] = cur;
 
@@ -195,7 +227,8 @@ namespace Bucket {
 			}
 			
 			// 扩容完毕, 下面插入数据
-			size_t hashI = kv.first % _tables.size();
+			//size_t hashI = kv.first % _tables.size();
+			size_t hashI = hf(kv.first) % _tables.size();
 			// 找到该向数组中第几个位置插入数据
 			// 然后进行头插
 			Node* newNode = new Node(kv);						// 以kv数据创建新的节点
@@ -212,7 +245,9 @@ namespace Bucket {
 				return nullptr;
 			}
 
-			size_t hashI = key % _tables.size();
+			//size_t hashI = key % _tables.size();
+			HashFcn hf;
+			size_t hashI = hf(key) % _tables.size();
 			Node* cur = _tables[hashI];
 			while (cur) {
 				if (cur->_data.first == key) {
@@ -228,7 +263,8 @@ namespace Bucket {
 		bool erase(const K& key) {
 			/*
 			// 一般思路
-			size_t hashI = key % _tables.size();
+			HashFcn hf;
+			size_t hashI = hf(key) % _tables.size();
 			Node* cur = _tables[hashI];
 			Node* prev = nullptr;
 			while (cur) {
@@ -252,7 +288,9 @@ namespace Bucket {
 			//		要删除 cur节点的数据, 就将cur的数据 用 cur->next的数据 覆盖掉, 再将 cur与 cur->next->next 建立连接之后 释放cur->next节点
 			// 这只是一种思路, 并不是说这种方法更好, 事实上这种方法并没有上面哪一种方法好, 因为 这种方法 一定会产生数据的拷贝
 			// 当数据内容过大 过多时, 开销过大
-			size_t hashI = key % _tables.size();
+			//size_t hashI = key % _tables.size();
+			HashFcn hf;
+			size_t hashI = hf(key) % _tables.size();
 			Node* cur = _tables[hashI];
 			while (cur) {
 				if (cur->_data.first == key) {
