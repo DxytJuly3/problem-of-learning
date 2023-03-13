@@ -84,68 +84,69 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 >
 > ```cpp
 > bool insert(const T& data) {
-> 	// 首先按照 二叉搜索树的方式 查找插入位置并插入节点
-> 	if (_root == nullptr) {
-> 		// 树为空 插入节点 直接将新节点作为树的根
-> 		_root = new Node(data);
-> 		_root->_bf = 0;		// 只有根节点的树，根节点平衡因子为 0
+>     // 首先按照 二叉搜索树的方式 查找插入位置并插入节点
+>     if (_root == nullptr) {
+>         // 树为空 插入节点 直接将新节点作为树的根
+>         _root = new Node(data);
+>         _root->_bf = 0;		// 只有根节点的树，根节点平衡因子为 0
 > 
-> 		return true;		// 插入成功，直接返回
-> 	}
+>         return true;		// 插入成功，直接返回
+>     }
 > 
-> 	// 走到这里就说明需要 查找插入位置 了
-> 	Node* cur = _root;	// 从根节点开始比较
-> 	Node* parent = nullptr;	// 需要记录父亲节点 供插入时连接
-> 	while (cur) {
-> 		// 循环结束的条件是 cur为空，cur为空时就说明 插入位置找到了
-> 		if (cur->_data > data) {
-> 			// 插入值比当前节点值 小，则向左孩子找
-> 			parent = cur;
-> 			cur = cur->_pLeft;
-> 		}
-> 		else if (cur->_data < data) {
-> 			// 插入值比当前节点值 大，则向右孩子找
-> 			parent = cur;
-> 			cur = cur->_pRight;
-> 		}
-> 		else {
-> 			// 走到这里 说明数中已存在相同数据
-> 			return false;
-> 		}
-> 	}
+>     // 走到这里就说明需要 查找插入位置 了
+>     Node* cur = _root;	// 从根节点开始比较
+>     Node* parent = nullptr;	// 需要记录父亲节点 供插入时连接
+>     while (cur) {
+>         // 循环结束的条件是 cur为空，cur为空时就说明 插入位置找到了
+>         if (cur->_data > data) {
+>             // 插入值比当前节点值 小，则向左孩子找
+>             parent = cur;
+>             cur = cur->_pLeft;
+>         }
+>         else if (cur->_data < data) {
+>             // 插入值比当前节点值 大，则向右孩子找
+>             parent = cur;
+>             cur = cur->_pRight;
+>         }
+>         else {
+>             // 走到这里 说明数中已存在相同数据
+>             return false;
+>         }
+>     }
 > 
 >     // 出循环之后，cur 即为数据需要插入的位置
-> 	cur = new Node(data);
-> 	// 将cur与树连接起来
-> 	if (data > parent->_data) {
-> 		parent->_pRight = cur;		// 插入数据比父亲节点数据大，则插入到父亲节点的右孩子
-> 	}
-> 	else if (data < parent->_data) {
-> 		parent->_pLeft = cur;			// 插入数据比父亲节点数据小，则插入到父亲节点的左孩子
-> 	}
-> 	// 三叉链结构，cur节点虚存储父亲节点
-> 	cur->_pParent = parent;
+>     cur = new Node(data);
+>     // 将cur与树连接起来
+>     if (data > parent->_data) {
+>         parent->_pRight = cur;		// 插入数据比父亲节点数据大，则插入到父亲节点的右孩子
 >     }
+>     else if (data < parent->_data) {
+>         parent->_pLeft = cur;			// 插入数据比父亲节点数据小，则插入到父亲节点的左孩子
+>     }
+>     // 三叉链结构，cur节点虚存储父亲节点
+>     cur->_pParent = parent;
+> }
 > ```
 >
-> 二叉搜索树的插入已经轻车熟路了, 所以 AVL树插入数据 最重要的、也是最难理解的部分 其实是：
+> 二叉搜索树的插入已经轻车熟路了, 不过这并不是AVL树的重点, AVL树插入数据 最重要的、也是最难理解的部分 其实是：
 > `插入数据之后, 对各个节点的平衡因子的分析, 以及对不平衡树的平衡操作`
 
 在树中插入新的结点之后, 很有可能会造成树的不平衡, 举几个简单的例子：
 
 > 2. 分析节点的子树高度差，并进行调整
 >
-> 存在插入之后, 存在不会失衡的情况
+> 插入之后, 存在不会失衡的情况
 >
-> <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221010233200183.png" alt="image-20221010233200183" style="zoom:67%;" /> <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221010233309020.png" alt="image-20221010233309020" style="zoom:66%;" /> `7 节点平衡因子, 从 1或-1 到 0`
+> ![image-20230313201737882](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313201737882.png) `7 节点平衡因子, 从 1或-1 到 0`
 >
-> <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221010232811437.png" alt="image-20221010232811437" style="zoom:66%;" /> `7 节点平衡因子 从 0 到 1或-1`
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313201850541.png" alt="image-20230313201850541" style="zoom:80%;" />
+> `7 节点平衡因子 从 0 到 1或-1`
 >
 > 当然也有 使树失去平衡的情况：
 >
-> <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221010234431163.png" alt="image-20221010234431163" style="zoom:67%;" /> `21节点 平衡因子从 1 到 2`
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313202304687.png" alt="image-20230313202304687" style="zoom:80%;" /> `21节点 平衡因子从 1 到 2`
 >
-> <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221010235353398.png" alt="image-20221010235353398" style="zoom:67%;" /> `21节点 平衡因子从 -1 到 -2`
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313202340833.png" alt="image-20230313202340833" style="zoom:80%;" /> `21节点 平衡因子从 -1 到 -2`
 >
 > 其实 AVL树插入新节点之后, 一些节点的平衡因子一定会发生变化, 进而可能会对整棵树产生一定的影响
 >
@@ -160,7 +161,7 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 >
 > 对下面 这个稍微复杂的 刚插入一个新节点的 AVL树进行分析：
 >
-> <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221011001953703.png" alt="image-20221011001953703" style="zoom:67%;" /> 黑色为未插入新节点的 AVL树, `绿、综、红表示在不同位置插入新节点`
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313202436441.png" alt="image-20230313202436441" style="zoom:80%;" /> 黑色为未插入新节点的 AVL树, `绿、综、红表示在不同位置插入新节点`
 >
 > 1. 如果在 绿色 位置插入, 则 `31节点平衡因子 由 0 变为 -1, 进而 22节点平衡因子由 -1 变为 0`, 不再向上影响, 停止更新
 > 2. 如果在 棕色 位置插入, 则 `46节点平衡因子 由 0 变为 -1, 进而 41节点平衡因子由 1 变为 2, 以 41节点为根的树失衡, 需要进行调节 保持平衡`
@@ -229,7 +230,7 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > >
 > > 左单旋 处理的情况一般是这样的：
 > >
-> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012163545948.png" alt="image-20221012163545948" style="zoom:67%;" /> 
+> > ![image-20230313202638297](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313202638297.png)
 > >
 > > **某 AVL树的根节点平衡因子为 1 (即此树右子树高度), 且又在此树的右子树中 插入新节点导致右子树高度再增加, 进而导致此树失衡**
 > >
@@ -241,55 +242,58 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > >
 > > > 1. `h = 0`
 > > >
-> > >     当 h = 0, 即说明 A、B、C树为空。此时 在 C 树中插入新节点 其实就是在 N节点的右孩子处 插入新节点
+> > >   当 h = 0, 即说明 A、B、C树为空。此时 在 C 树中插入新节点 其实就是在 N节点的右孩子处 插入新节点
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012164150669.png" alt="image-20221012164150669" style="zoom:66%;" /> 
+> > >   <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313202758090.png" alt="image-20230313202758090" style="zoom:80%;" /> 
 > > >
-> > >     此时 树失衡, 需要 将树调平。根据 `右孩子大` 的特点, 假设 `M=10` `N=20` `X=30`
+> > >   此时 树失衡, 需要 将树调平。根据 `右孩子大` 的特点, 假设 `M=10` `N=20` `X=30`
 > > >
-> > >     要怎么调节才能将树变得平衡？
+> > >   
 > > >
-> > >     在此树中 很简单, 只需要将树的结构变成这样：<img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012164852713.png" alt="image-20221012164852713" style="zoom:67%;" /> 三个节点都在, 且树平衡
+> > >   要怎么调节才能将树变得平衡？
 > > >
-> > >     好像只是 `将 N节点 的 父亲节点(M节点) 变成了, N节点 的 左孩子`
+> > >   在此树中 很简单, 只需要将树的结构这样变化：<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313202857274.png" alt="image-20230313202857274" style="zoom:80%;" /> 三个节点都在, 且树平衡
+> > >
+> > >   好像只是 `将 N(20)节点 的 父亲节点(M(10)节点) 变成了, N节点 的 左孩子`
 > > >
 > > > 2. `h = 1`
 > > >
-> > >     A、B、C树的高度为 1, 在 C 树中插入新节点：
+> > > 	A、B、C树的高度为 1, 在 C 树中插入新节点：
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012171048503.png" alt="image-20221012171048503" style="zoom:67%;" /> `(虚线, 表示 也可以在此位置插入)` 
+> > > 	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313203119573.png" alt="image-20230313203119573" style="zoom:80%;" /> `(虚线, 表示 也可以在此位置插入)` 
 > > >
-> > >     树失衡, 需要调平。 此时又该怎么调整树的结构呢？
+> > > 	树失衡, 需要调平。 此时又该怎么调整树的结构呢？
 > > >
-> > >     其实也很简单, 将 60节点的左孩子 变成 40节点的右孩子, 再将 40节点 作为 60节点的左子树, 让 60节点变为树的根, 将树变为这样：
+> > > 	其实也很简单, 将 60节点的左孩子 变成 40节点的右孩子, 再将 40节点 作为 60节点的左子树, 让 60节点变为树的根, 将树变为这样：
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012171146555.png" alt="image-20221012171146555" style="zoom:67%;" /> 
+> > > 	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313203159437.png" alt="image-20230313203159437" style="zoom:80%;" /> 
 > > >
-> > >     将 `60的左孩子变为其父亲节点的右孩子, 再将 60节点的父亲节点 变为 60节点的左孩子`
+> > > 	将 `60的左孩子变为其父亲节点的右孩子, 再将 60节点的父亲节点 变为 60节点的左孩子`
 > > >
 > > > 3. `h = 2`
 > > >
-> > >     A、B、C 树的高度是 2, 在 C 树中插入新节点
+> > >   A、B、C 树的高度是 2, 在 C 树中插入新节点
 > > >
-> > >     `在分析 h = 1 时, 可以看到 新节点插入的位置 可以有两个, 那么 h = 2 时, 只会更多`
+> > >   `在分析 h = 1 时, 可以看到 新节点插入的位置 可以有两个, 那么 h = 2 时, 只会更多`
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012172759257.png" alt="image-20221012172759257" style="zoom:67%;" /> `(虚线, 表示 也可以在此位置插入)`
+> > >   ![image-20230313203747704](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313203747704.png)
+> > >   `(虚线, 表示 也可以在此位置插入)`
 > > >
-> > >     A、B 树各 3 种情况, C树只能是第3种高度为2的二叉树, 则新节点存在 4 个可插入位置, 所以 h = 2 时, 共有 `36` 种结构
+> > >   A、B 树各 3 种情况, C树只能是第3种高度为2的二叉树, 则新节点存在 4 个可插入位置, 所以 h = 2 时, 共有 `36` 种结构
 > > >
-> > >     > 为什么 C树只能是第三种情况的树？
-> > >     >
-> > >     > 如果 C树 是前两种情况, 可能出现非左单旋处理的情况, 此时只讨论需要左单旋处理的情况
+> > >   > 为什么 C树只能是第三种情况的树？
+> > >   >
+> > >   > 如果 C树 是前两种情况, `可能出现非左单旋处理的情况, 而我们此时讨论的只是需要左单旋处理的情况`
 > > >
-> > >     此时 树不平衡, 需要调平。如何 调整？
+> > >   此时 树不平衡, 需要调平。如何 调整？
 > > >
-> > >     稍微有些难想, 但是 根据之前的经验：
+> > >   稍微有些难想, 但是 根据之前的经验：
 > > >
-> > >     将 `40节点的左子树 变为 其父亲节点的右子树, 再将 40节点的父亲节点 变为 40节点的左子树`:
+> > >   将 `40节点的左子树 变为 其父亲节点的右子树, 再将 40节点的父亲节点 变为 40节点的左子树`:
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012173745307.png" alt="image-20221012173745307" style="zoom:67%;" /> 
+> > >   <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313203600258.png" alt="image-20230313203600258" style="zoom:80%;" /> 
 > > >
-> > >     树结构平衡
+> > >   树结构平衡
 > > >
 > > > 4. `h = 3` `······`
 > > >
@@ -303,21 +307,21 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > >
 > > 对比一下, h不同时 插入新节点 导致树失衡 再到 平衡的过程：
 > >
-> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012175509307.png" alt="image-20221012175509307" style="zoom:67%;" /> 
+> > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313202857274.png" alt="image-20230313202857274" style="zoom:80%;" /> 
 > >
-> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012175442944.png" alt="image-20221012175442944" style="zoom:67%;" /> 
+> > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313203159437.png" alt="image-20230313203159437" style="zoom:80%;" /> 
 > >
-> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012175239846.png" alt="image-20221012175239846" style="zoom:67%;" /> 
+> > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313203600258.png" alt="image-20230313203600258" style="zoom:80%;" /> 
 > >
 > > 可以发现, 如果将 `平衡因子为2的节点 为 parent, 其右孩子节点 为 subR`, 则此类情况的调整平衡的具体操作 其实是：
 > >
 > > **`将subR的左孩子 变为 parent的右孩子, 再将 parent 变为 subR的左孩子`**
 > >
-> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012203645999.png" alt="image-20221012203645999" style="zoom:67%;" />
+> > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313204053412.png" alt="image-20230313204053412" style="zoom:80%;" />
 > >
 > > 执行此操作之后, 树的结构就平衡了, **`此操作也就是左单旋操作`**
 > >
-> > 但是如果只改变结构, 整棵树其实还是不正确的, 因为 只动了结构, 平衡因子还没有更新
+> > 但是如果只改变结构, 整棵树其实还是不正确的, 因为 `只动了结构, 平衡因子还没有更新`
 > >
 > > 而 观察可以发现, 左单旋操作之后, `parent` 和 `subR` 的 平衡因子变为了 0, `其他节点的平衡因子并没有改变`
 > >
@@ -368,19 +372,19 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > > >
 > > > 1. 三叉链的连接
 > > >
-> > >     AVL树的节点的结构是 三叉链结构, 除左右孩子指针之外 还存在一个存储父亲节点地址的 `父亲节点指针`
+> > > 	AVL树的节点的结构是 三叉链结构, 除左右孩子指针之外 还存在一个存储父亲节点地址的 `父亲节点指针`
 > > >
-> > >     所以在调节平衡 改变节点的位置 或 关系的时候, 需要 `特别注意 父亲节点的链接`
+> > > 	所以在调节平衡 改变节点的位置 或 关系的时候, 需要 `特别注意 父亲节点的链接`
 > > >
 > > > 2. 不平衡节点的父亲节点为空时的处理
 > > >
-> > >     不平衡节点的父亲节点为空, 也就是说 平衡因子的绝对值为 2 的节点 其实就是`整棵树的根`
+> > > 	不平衡节点的父亲节点为空, 也就是说 平衡因子的绝对值为 2 的节点 其实就是`整棵树的根`
 > > >
-> > >     此时 需要单独处理, 因为是整颗树的根, 所以旋转之后 `subR` 节点应该变为整棵树的根
+> > > 	此时 需要单独处理, 因为是整颗树的根, 所以旋转之后 `subR` 节点应该变为整棵树的根
 > > >
 > > > 3. 不平衡节点的右孩子的左孩子为空时的处理
 > > >
-> > >     因为需要三叉链需要链接父亲节点, 所以在左单旋中, 由于 `subR`节点 的左孩子变成了 `parent`节点的左孩子, 那么 `subR`节点的左孩子的父亲节点就需要变为 `parent`节点, 但是如果 `subR`节点的左孩子为空, 就不能链接, 因为不能通过 空指针访问节点内容
+> > > 	因为需要三叉链需要链接父亲节点, 所以在左单旋中, 由于 `subR`节点 的左孩子变成了 `parent`节点的左孩子, 那么 `subR`节点的左孩子的父亲节点就需要变为 `parent`节点, 但是如果 `subR`节点的左孩子为空, 就不能链接, 因为不能通过 空指针访问节点内容
 >
 > `左单旋` 用于处理 **`某 AVL树的根节点平衡因子为 1 (即此树右子树高), 且又在此树的右子树中 插入新节点导致右子树高度再增加, 进而导致此树失衡`** 的情况
 >
@@ -406,7 +410,7 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > >
 > > `右单旋` 处理的情况一般是这样的:
 > >
-> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012201651304.png" alt="image-20221012201651304" style="zoom:67%;" /> 
+> > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313204538026.png" alt="image-20230313204538026" style="zoom:80%;" /> 
 > >
 > > **`某 AVL树的根节点平衡因子为 -1 (即此树左子树高), 且又在此树的左子树中 插入新节点导致左子树高度再增加, 进而导致此树失衡`**
 > >
@@ -416,7 +420,7 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > >
 > > **`将subL的右孩子 变为 parent的左孩子, 再将 parent 变为 subL的右孩子`**
 > >
-> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012204135237.png" alt="image-20221012204135237" style="zoom:67%;" />
+> > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313204452542.png" alt="image-20230313204452542" style="zoom:80%;" />
 > >
 > > 此种方法 就是 `右单旋`, 对应的实现代码即为：
 > >
@@ -469,11 +473,11 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 >
 > 1. **`某 AVL树的根节点平衡因子为 1 (即此树右子树高), 且又在此树的右子树中 插入新节点导致右子树高度再增加, 进而导致此树失衡`**
 >
->     即 `不平衡节点因为其 右孩子的右子树高 而不平衡(简称 右右)`
+> 	即 `不平衡节点因为其 右孩子的右子树高 而不平衡(简称 右右)`
 >
 > 2. **`某 AVL树的根节点平衡因子为 -1 (即此树左子树高), 且又在此树的左子树中 插入新节点导致左子树高度再增加, 进而导致此树失衡`**
 >
->     即 `不平衡节点因为其 左孩子的左子树高 而不平衡(简称 左左)`
+> 	即 `不平衡节点因为其 左孩子的左子树高 而不平衡(简称 左左)`
 >
 > 但是, 不平衡的情况不仅仅只有这两种情况, 还存在其他情况。
 >
@@ -483,7 +487,7 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > >
 > > 左右双旋 处理的情况是这样的：
 > >
-> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012210148873.png" alt="image-20221012210148873" style="zoom:67%;" /> 
+> > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313204823511.png" alt="image-20230313204823511" style="zoom:80%;" /> 
 > >
 > > 这种情况 是：
 > >
@@ -494,89 +498,89 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > >
 > > > 1. `h = 0`
 > > >
-> > >     h = 0, 也就意味着 A、B、C、D 树 都为空, 并且 60节点 都应该为空。因为 B、C 树的高度是 h-1
+> > > 	h = 0, 也就意味着 A、B、C、D 树 都为空, 并且 60节点 都应该为空。因为 B、C 树的高度是 h-1
 > > >
-> > >     所以 h = 0 时的实例图 应该为：
+> > > 	所以 h = 0 时的实例图 应该为：
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221013000005221.png" alt="image-20221013000005221" style="zoom:67%;" /> 60节点 就是新插入的节点
+> > > 	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313204910566.png" alt="image-20230313204910566" style="zoom:80%;" /> 60节点 就是新插入的节点
 > > >
-> > >     此时应该怎么调整呢？
+> > > 	此时应该怎么调整呢？
 > > >
-> > >     最终要调节的是 80节点, 80节点是因为左子树高而失衡的, 所以 `最终需要右单旋来调节`
+> > > 	最终要调节的是 80节点, 80节点是因为左子树高而失衡的, 所以 `最终需要右单旋来调节`
 > > >
-> > >     但是 右单旋处理的是 `左左` 的情况
+> > > 	但是 右单旋处理的是 `左左` 的情况
 > > >
-> > >     所以 需要将 此树调整为 `左左`
+> > > 	所以 需要将 此树调整为 `左左`
 > > >
-> > >     而 左单旋就是将 `parent` 旋转到 `subR` 的左孩子, 并将`subR`连接到`parent`的父亲节点下
+> > > 	而 左单旋就是将 `parent` 旋转到 `subR` 的左孩子, 并将`subR`连接到`parent`的父亲节点下
 > > >
-> > >     那么 就以 40节点为`parent`进行左单旋
+> > > 	那么 就以 40节点为`parent`进行左单旋
 > > >
-> > >     即 <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012235930916.png" alt="image-20221012235930916" style="zoom:67%;" /> 
+> > > 	即 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313205051406.png" alt="image-20230313205051406" style="zoom:80%;" /> 
 > > >
-> > >     这样 就把树的结构调整为了 `左左` 的情况
+> > > 	这样 就把树的结构调整为了 `左左` 的情况
 > > >
-> > >     然后 以 80节点 为 `parent` 进行 `右单旋`：
+> > > 	然后 以 80节点 为 `parent` 进行 `右单旋`：
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012235850082.png" alt="image-20221012235850082" style="zoom:67%;" /> 
+> > > 	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313205202716.png" alt="image-20230313205202716" style="zoom:80%;" /> 
 > > >
-> > >     树平衡
+> > > 	树平衡
 > > >
 > > > 2. `h = 1`
 > > >
-> > >     h = 1, A、D树 高度为 1, B、C树 高度为 0, 在 60节点左、右孩子插入新节点
+> > > 	h = 1, A、D树 高度为 1, B、C树 高度为 0, 在 60节点左、右孩子插入新节点
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012234858908.png" alt="image-20221012234858908" style="zoom:67%;" /> `(虚线, 表示 也可以在此位置插入)`
+> > > 	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313205509787.png" alt="image-20230313205509787" style="zoom:80%;" /> `(虚线, 表示 也可以在此位置插入)`
 > > >
-> > >     以80节点为根的树 失衡的情况是 `左右`
+> > > 	以80节点为根的树 失衡的情况是 `左右`
 > > >
-> > >     80节点因为左子树高 而失衡, 最终需要 `右单旋`调节
+> > > 	80节点因为左子树高 而失衡, 最终需要 `右单旋`调节
 > > >
-> > >     所以 需要先将此树调整为 `左左`
+> > > 	所以 需要先将此树调整为 `左左`
 > > >
-> > >     以 40节点为 `parent` 进行左单旋, 可以将 `subR`(60节点)调整为左子树高, 且将 `subR` 连接在 `parent` 的父亲节点下
+> > > 	以 40节点为 `parent` 进行左单旋, 可以将 `subR`(60节点)调整为左子树高, 且将 `subR` 连接在 `parent` 的父亲节点下
 > > >
-> > >     即可以将 此树调整为 `左左`
+> > > 	即可以将 此树调整为 `左左`
 > > >
-> > >     所以, 以 40节点为 `parent` 进行左单旋：
+> > > 	所以, 以 40节点为 `parent` 进行左单旋：
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012235000721.png" alt="image-20221012235000721" style="zoom:67%;" /> 
+> > > 	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313205650265.png" alt="image-20230313205650265" style="zoom:80%;" /> 
 > > >
-> > >     此时 以80节点为根的树 失衡的情况就变成了 `左左`
+> > > 	此时 以80节点为根的树 失衡的情况就变成了 `左左`
 > > >
-> > >     就可以 以 80节点为 `parent` 进行`右单旋`
+> > > 	就可以 以 80节点为 `parent` 进行`右单旋`
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012235018281.png" alt="image-20221012235018281" style="zoom:67%;" /> 
+> > > 	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313205713734.png" alt="image-20230313205713734" style="zoom:80%;" /> 
 > > >
-> > >     树平衡
+> > > 	树平衡
 > > >
 > > > 3. `h = 2`
 > > >
-> > >     A、D树 高度为2, B、C树 高度为1，在B、C树插入新节点
+> > > 	A、D树 高度为2, B、C树 高度为1，在B、C树插入新节点
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012232014448.png" alt="image-20221012232014448" style="zoom:67%;" /> `(虚线, 表示 也可以在此位置插入)`
+> > > 	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313205806979.png" alt="image-20230313205806979" style="zoom:80%;" /> `(虚线, 表示 也可以在此位置插入)`
 > > >
-> > >     A、D树各 3 种情况, 新节点可能插入位置有 4 个, 所以此情况的结构一共有 `36` 种
+> > > 	A、D树各 3 种情况, 新节点可能插入位置有 4 个, 所以此情况的结构一共有 `36` 种
 > > >
-> > >     但是还是可以用相同的思路分析：
+> > > 	但是还是可以用相同的思路分析：
 > > >
-> > >     80节点平衡因子是 -2, 最终需要 `右单旋`进行平衡
+> > > 	80节点平衡因子是 -2, 最终需要 `右单旋`进行平衡
 > > >
-> > >     而 `右单旋`解决的是 `“左左”` 的情况, 而现在是 `“左右”`
+> > > 	而 `右单旋`解决的是 `“左左”` 的情况, 而现在是 `“左右”`
 > > >
-> > >     根绝 左单旋的结果的特点 可以知道, 以 40节点为parent 执行左单旋操作
+> > > 	根绝 左单旋的结果的特点 可以知道, 以 40节点为parent 执行左单旋操作
 > > >
-> > >     会将 `subR`(60节点)的左子树增高, 并将 `subR` 连接在 `parent` 的父亲节点之下
+> > > 	会将 `subR`(60节点)的左子树增高, 并将 `subR` 连接在 `parent` 的父亲节点之下
 > > >
-> > >     进而 可以使 以 80节点为根的树的失衡情况变为 `“左左”`
+> > > 	进而 可以使 以 80节点为根的树的失衡情况变为 `“左左”`
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012233410784.png" alt="image-20221012233410784" style="zoom:67%;" /> 
+> > > 	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313205956389.png" alt="image-20230313205956389" style="zoom:80%;" /> 
 > > >
-> > >     然后就可以, 以 80节点为`parent` 执行`右单旋`操作
+> > > 	然后就可以, 以 80节点为`parent` 执行`右单旋`操作
 > > >
-> > >     <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221012234022767.png" alt="image-20221012234022767" style="zoom:67%;" /> 
+> > > 	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313210019865.png" alt="image-20230313210019865" style="zoom:80%;" /> 
 > > >
-> > >     树平衡
+> > > 	树平衡
 > > >
 > > > 4. `h = 3` ······
 > > >
@@ -586,11 +590,11 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > >
 > > 对比 h 不同时, 此种失衡情况, 从失衡到平衡的调节 过程：
 > >
-> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221013003832745.png" alt="image-20221013003832745" style="zoom:67%;" /> 
+> > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313210101534.png" alt="image-20230313210101534" style="zoom:80%;" /> 
 > >
-> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221013003851859.png" alt="image-20221013003851859" style="zoom:67%;" /> 
+> > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313210115081.png" alt="image-20230313210115081" style="zoom:80%;" /> 
 > >
-> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221013003912696.png" alt="image-20221013003912696" style="zoom:67%;" /> 
+> > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313210151607.png" alt="image-20230313210151607" style="zoom:80%;" /> 
 > >
 > > 可以看到, 插入新结点之后, 调节平衡的过程是：
 > >
@@ -626,7 +630,7 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > > 	// 左右双旋
 > > 	RotateL(parent->_pLeft);
 > > 	RotateR(parent);
-> > 	
+> > 
 > > 	// 画图可以看出来 如果插入的位置不同 平衡因子的更新规则也不同
 > > 	if (bf == 0) {
 > > 		parent->_bf = 0;
@@ -657,7 +661,7 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > >
 > > `右左双旋` 处理的失衡情况 是这样的：
 > >
-> > <img src="C:\Users\dxyt2\AppData\Roaming\Typora\typora-user-images\image-20221013004918686.png" alt="image-20221013004918686" style="zoom:67%;" /> 
+> > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230313210221665.png" alt="image-20230313210221665" style="zoom:80%;" /> 
 > >
 > > 对比 `左右双旋` 可以看出, `右左双旋` 解决的失衡情况是：
 > >
@@ -687,7 +691,7 @@ AVL树 是平衡二叉搜索树，建立的过程 是在 `二叉搜索树的前�
 > > 	// 右左双旋
 > > 	RotateR(parent->_pRight);
 > > 	RotateL(parent);
-> > 	
+> > 
 > > 	if (bf == 0) {
 > > 		parent->_bf = 0;
 > > 		subR->_bf = 0;
