@@ -1,3 +1,9 @@
+![image-20221031221702230](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20221031221702230.png)
+
+---
+
+
+
 # 什么是 Linux
 
 ​	Linux 是一款基于`	 GNU 通用公共许可协议` 的 `自由和开放源代码` 的类UNIX操作系统，该操作系统的内核由 Linus Torvalds 在1991年首次发布。之后，在加上用户空间的应用程序之后，就成为了Linux操作系统。  但是，严格来讲， Linux只是操作系统内核，但通常采用 “Linux内核” 来表达该意思。而 Linux 则常用来指基于Linux内核的完整操作系统，它包括GUI组件和许多其他实用工具。  
@@ -108,7 +114,7 @@
 > > > 相对路径是相对当前目录下来说的，比如：
 > > > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220702231803250.png" alt="image-20220702231803250" style="zoom:67%;" />
 >
-> > **`.`** 叫当前目录(当前路径)，它有什么用呢？
+> > **`.`** 叫当前`目录(当前路径)`，它有什么用呢？
 > >
 > > 随便编写一个c代码并编译，会生成一个可执行文件 `a.out`：
 > > <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20220702222107373.png" alt="image-20220702222107373" style="zoom:67%;" />
@@ -707,3 +713,9 @@ Linux 不仅仅只有上面那些指令，还有许多指令需要学习：
 - 其它命令：`gunzip`、`unarj`、`mtools`、`unendcode`、`uudecode`  
 
 但是这些指令，相比上面的指令 相对没有那么常用罢了
+
+---
+
+感谢阅读~
+
+<img src="https://img-blog.csdnimg.cn/6e5d35b9b94e4b9897743b2ca8e059d0.png#pic_center" alt="万分感谢" width="30%" />
