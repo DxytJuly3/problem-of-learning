@@ -18,7 +18,7 @@
 
 而这些指令, 其实都是一个个程序 指令名即为程序名：
 
-![image-20230304152443049](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304152443049.png) 
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304152443049.png" alt="image-20230304152443049" style="zoom:80%;" /> 
 
 这些指令 在用户使用的时候运行 成为进程, 完成任务之后再从内存中被释放。运行流程与我们个人编写的程序并没有什么区别。
 
