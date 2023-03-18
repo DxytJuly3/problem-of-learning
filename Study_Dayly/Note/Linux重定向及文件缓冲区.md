@@ -713,3 +713,108 @@ int main() {
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318120508912.png" alt="image-20230318120508912" style="zoom:80%;" />
 
 <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318120716841.png" alt="image-20230318120716841" style="zoom:80%;" />
+
+# 再谈重定向
+
+本篇文章的第二个部分, 已经介绍过Linux中的重定向. 但是似乎和我们一直在使用的重定向不太一样.
+
+## 实现命令行重定向
+
+一般来说, 重定向都是在命令行中确定的. 
+
+而上面介绍的重定向只是在进程内部调用dup2()进行重定向. 那么如何实现在命令行中使用 `>` `>>` `<` 实现重定向呢？
+
+实现 命令行中的重定向, 可以在之前实现简易shell中添加功能.
+
+重定向的实现的具体内容, 可以去阅读博主这篇文章：
+
+**`简易shell博客地址`**
+
+## 命令行重定向的用法
+
+### 标准输出与标准错误
+
+在正式介绍命令行重定向的用法之前, 先来介绍一下 标准输出fd=1和标准错误fd=2这两个文件, 在C语言中对应着 stdout 和 stderr
+
+Linux内存文件中, 这两个被打开的文件`一般都是显示器`. 也就是说, 不论是向fd=1还是fd=2写入数据, 一般情况下都是向显示器写入数据
+
+那么执行这段代码, 其实都会向屏幕上打印内容：
+
+```cpp
+#include <cstdio>
+#include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <cstring>
+#include <cerrno>
+
+int main() {
+	// stdout
+	printf("hello printf fd=1\n");
+	fprintf(stdout, "hello fprintf fd=1\n");
+	fputs("hello printf fd=1\n", stdout);
+
+	// stderr
+	fprintf(stderr, "hello fprintf fd=2\n");
+	fputs("hello fputs fd=2\n", stderr);
+	perror("hello perror fd=2");
+
+	// cout
+	std::cout << "hello cout fd=1" << std::endl;
+
+	// cerr
+	std::cerr << "hello cerr fd=2" << std::endl;
+
+	return 0;
+}
+```
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318203428385.png" alt="image-20230318203428385" style="zoom:80%;" />
+
+这段代码分别向标准输出和标准错误打印了4句话, 那么当我们执行代码并输出重定向到文件中时：
+
+`./out_err > out_err.txt`
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318203744732.png" alt="image-20230318203744732" style="zoom:80%;" />
+
+这意味着什么？
+
+这其实意味着, 虽然 标准输出和标准错误 都表示显示器, 但是并不是一同控制的
+
+默认的输出重定向是修改的标准输出, 那么如果想修改标准错误, 应该怎么控制呢？
+
+### 重定向的完整用法
+
+如果想要重定向把标准错误修改为指定文件, 该怎么控制呢？
+
+在介绍之前, 先看一下这个命令：`./out_err 1> out_err.txt`
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318204610775.png" alt="image-20230318204610775" style="zoom:80%;" />
+
+那么如果是这个呢？`./out_err 2> out_err.txt`
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318204858396.png" alt="image-20230318204858396" style="zoom:80%;" />
+
+使用 `1> 重定向` 是输出重定向, 而使用 `2> 重定向` 则是错误重定向
+
+那么命令行中, 重定向的完整正确用法是否是这样的 —––> `命令 fd> 文件`
+
+是的, 命令行中重定向符号的完整使用, 其实是 `fd>`:
+
+`0>` 是输入重定向, `1>` 是输出重定向, `2>` 是错误重定向, `>> ` 是追加重定向
+
+### 重定向分离用法
+
+我们已经知道了 `1>` 是输出重定向, `2>` 是错误重定向.
+
+那么可不可以同时输出重定向和错误重定向？
+
+是可以的, 就像这样：
+
+`./out_err 1> out.txt 2> err.txt`
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318205735657.png" alt="image-20230318205735657" style="zoom:80%;" />
+
+这样的重定向用法, `可以分离程序的运行日志, 可以将运行错误日志分离出来以便分析`
+
