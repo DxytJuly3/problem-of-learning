@@ -322,7 +322,7 @@ int main() {
 
 	而如果有文件缓冲区的存在, 即使屏幕资源已经被占满了, 输出语句执行之后, 会将需要输出的信息存入文件缓冲区中, 然后进程继续执行其他代码. 等到合适的时候, 再刷新文件缓冲区 将需要打印的信息打印到屏幕上
 
-	这样看, 其实`文件缓冲区的存在, 在一定程度上节省了进程的时间`
+	这样看, 其实`文件缓冲区的存在, 在一定程度上节省了进程使用缓冲区(此缓冲区非文件缓冲区)的时间`
 
 2. 如果没有文件缓冲区的存在, 我们打印信息就会立马在屏幕上打印出来.
 
@@ -337,3 +337,379 @@ int main() {
 	这样, `文件缓冲区的存在, 其实可以集中处理数据刷新, 有效的减少操作系统与硬件之间的I/O次数, 进而提高整机的效率`
 
 ## 文件缓冲区在什么地方
+
+知道了什么是文件缓冲区, 有了解了文件缓冲区存在的某些意义. 那文件缓冲区到底在什么地方呢？
+
+还记得上面那段代码的执行结果吗？
+
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h> 
+
+int main() {
+	printf("Hello world");
+	write(stdout->_fileno, "I am a process", strlen("I am a process"));
+
+	sleep(3);
+
+	return 0;
+}
+```
+
+这段代码的执行结果是, 先输出了`"I am a process"`, 然后在3s之后输出了`"Hello world"`
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/printfBuffer.gif" alt="printfBuffer" style="zoom:80%;" />
+
+这样的结果可以确定一个结论：`系统接口wirte(), 是不存在文件缓冲区的, 所以用write()向标准输出写数据, 会直接在屏幕中打印出来`
+
+而 printf(), 如果不刷新缓冲区的话, 就不会将需要打印的信息打印出来. 且 C语言的printf() 一定是封装了write()接口的.
+
+也就是说, Linux下 **`printf()最终可以在屏幕上打印数据, 一定是在内部调用了write()接口. 但是 write()打印数据是会直接打印出来的`**.
+
+那么, 提问：文件缓冲区在什么地方？或者这里应该问：`文件缓冲区在什么地方使用了？`
+
+答：`文件缓冲区一定是在printf()内部使用了`.
+
+文件缓冲区在printf()的内部被使用了, write()没有使用文件缓冲区. 难道文件缓冲区是由语言提供的吗？
+
+是的, **`文件缓冲区就是由语言本身提供的, 与操作系统无关`**.
+
+C语言中的FILE是一个结构体, 里面封装了许多与文件相关的属性, 其中就`包括fd(_fileno) 和 文件缓冲区`
+
+---
+
+在Linux平台中, /usr/include/stdio.h 文件内 有一句：`typedef struct _IO_FILE FILE;`：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318084548361.png" alt="image-20230318084548361" style="zoom:80%;" />
+
+这就是C语言中我们熟知的 FILE结构体. 那么 `struct _IO_FILE{}` 具体是什么呢？
+
+在相同的目录下：/usr/include/libio.h 文件内, 存储着 `struct _IO_FILE{}` 相关内容：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318085351950.png" alt="image-20230318085351950" style="zoom:80%;" />
+
+C语言中, 文件缓冲区的相关描述, 其实一直存储在 `FILE结构体` 中. 与操作系统无关
+
+> 文件缓冲区在FILE结构体中描述着.
+>
+> 而使用C语言的文件接口, 每打开一个文件就会返回一个FILE*
+>
+> 那么是否, **`C语言每个打开的文件都有自己独立的文件缓冲区`**呢？是的.
+
+---
+
+那么也就是说, 当我们使用`printf`、`fprintf`、`fputs`等C语言提供的 均封装了`write()`的 向其他文件中写入数据的接口时, 其实都会使用到C语言提供的文件缓冲区.
+
+这块缓冲区被描述在C语言的FILE结构体中. 只有在缓冲区被刷新时, 才会真正调用`writr()`接口向文件中写入数据：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318093720202.png" alt="image-20230318093720202" style="zoom:80%;" />
+
+---
+
+C语言中存在着文件缓冲区, 并且在合适的时候需要清空缓冲区. 
+
+那么究竟什么时候清空缓冲区呢？？或者说 缓冲区的刷新策略是什么？
+
+还有 如果在刷新缓冲区之前, 我们将fd关闭会发生什么？
+
+下面就来测试一下：
+
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h> 
+
+int main() {
+	printf("Hello July");
+	fprintf(stdout, "Hello July");
+	fputs("Hello July", stdout);
+	// 如果没有关闭stdout, 这三个语句会在进程结束时正常在屏幕上输出
+
+	// 进程退出会自动刷新缓冲区
+	// 我们在这里将 stdout 关闭
+	close(stdout->_fileno);
+
+	return 0;
+}
+```
+
+执行上面的代码, 可以发现：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318094633174.png" alt="image-20230318094633174" style="zoom:80%;" />
+
+屏幕上什么都没有打印.
+
+而, 当我们不关闭stdout时：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318094804037.png" alt="image-20230318094804037" style="zoom:80%;" />
+
+执行代码就会在屏幕上打印三个`"Hello July"`
+
+即, `在刷新缓冲区之前, 关闭指定的fd, 缓冲区内的数据就不能被写入到指定的fd中了`
+
+## 缓冲区的刷新策略
+
+文件缓冲区是用来减少I/O次数的, 而不是禁止I/O的.
+
+所以文件缓冲区需要在合适的时候将数据写入到系统内核, 然后刷新缓冲区
+
+那么文件缓冲区的刷新策略是什么呢？
+
+一般情况下, 文件缓冲区存在三种刷新策略：
+
+1. 无缓冲, 即立即刷新. 每次存储到缓冲区的内容都会被立即写入系统内核数据, 并刷新缓冲区
+2. 行刷新, 即遇到`'\n'`时刷新. 我们使用的`printf() 这种向显示器文件中写入数据的 一般就采用的行刷新策略, 当输出的内容结尾处有'\n'时, 会将'\n'及之前的数据打印出来`
+3. 全刷新, 即`缓冲区满再刷新`. 全刷新策略一般在 `向块设备对应的文件(例如磁盘文件)中写入数据时` 会采用
+
+然而, 还有特殊的情况：
+
+1. 当进程退出的时候, 文件缓冲区会自动刷新
+2. **用户可以强制刷新**文件缓冲区, `fflush()`函数就是这个作用
+
+## * 奇怪的问题
+
+我们了解了文件缓冲区, 那么以两种不同的方式执行这段代码, 试着分析为什么会出现不同的情况：
+
+```c
+include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h> 
+
+int main() {
+	const char* str1 = "Hello printf\n";
+	const char* str2 = "Hello fprintf\n";
+	const char* str3 = "Hello fputs\n";
+	const char* str4 = "Hello write\n";
+
+	// C库函数
+	printf("%s", str1);
+	fprintf(stdout, str2);
+	fputs(str3, stdout);
+
+	// 系统接口
+	write(stdout->_fileno, str4, strlen(str4));
+
+	fork();
+	
+	return 0;
+}
+```
+
+1. 正常编译运行：
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318101740805.png" alt="image-20230318101740805" style="zoom:80%;" />
+
+2. 输出重定向到文件中
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318101812284.png" alt="image-20230318101812284" style="zoom:80%;" />
+
+你会发现, `直接运行屏幕上输出了4句话, 但是如果是输出重定向到文件中, 文件中会被写入7句话`
+
+这是什么原因呢？
+
+首先, 针对第一种情况：
+
+虽然使用了fork()创建子进程, 但是 是在上面四条语句执行完之后 才创建的. 而且正常执行的话, 四个语句都是向屏幕中打印数据, 所以采用的是行刷新, 所以每个语句执行完之后都会直接在屏幕中打印数据并刷新缓冲区. 子进程也不会执行fork()之上的代码
+
+所以屏幕上输出了四句话
+
+那么针对第二种情况呢？
+
+我们首先要明确, `文件缓冲区是由FILE结构体维护的, 是属于父进程内部的数据`
+
+第二种情况是在运行时, 输出重定向到了一个文件中. 那么`文件缓冲区的刷新策略就改变了`, 上面介绍过向文件中写入数据, 文件缓冲区的刷新策略是`全刷新`. 所以在执行前三个语句时, **`会将三句话都存储到文件缓冲区内 且不刷新`**. 而执行系统接口**`wirte()是没有缓冲区`**的, 所以会率先写入到文件中. 
+
+之后, 进程会创建子进程. 我们知道, 子进程和父进程在不修改数据时是**`共享一份代码和数据`**的. 而**`无论父子进程谁要修改数据, 就会发生写时拷贝`**. 子进程被创建时, 很明显父进程的文件缓冲区还没有被刷新. 那么也就是说**`子进程创建出来时, 是与父进程共享同一份文件缓冲区的`**. 那么接下来, 无论是子进程先终止, 还是父进程先终止, 都需要清除共享的文件缓冲区. 而`fork()父子进程修改数据的机制是, 只要修改就会发生写时拷贝`, 所以在**`进程要清除文件缓冲区时, 另一个进程会先拷贝一份`**. 拷贝完成之后, 先终止的进程就会刷新文件缓冲区, 将缓冲区内的数据写入到文件中, 然后另一个进程终止, 将拷贝的文件缓冲区也刷新掉, 将相同的数据写入到文件中.
+
+至此, 就造成了此例中, 文件内被写入七句话
+
+# 写一份自己的C文件操作库, 并实现文件缓冲区
+
+要深刻理解文件缓冲区, 可以模仿C文件操作写一份简单的自己的文件操作库.
+
+但是不能调用C库中的文件操作函数
+
+## myFILE结构
+
+首先, C库维护文件使用的是FILE结构体, 我们也可以设置一个myFILE结构体, 不过不需要太多的成员：
+
+```c
+#define SIZE 1024 			// 缓冲区大小
+
+typedef struct _myFILE {
+	int _fileno;			// 首先需要存储文件的fd
+	char _buffer[SIZE];		 // 设置一个1024字节的缓冲区
+	int _end;				// 用来记录缓冲区目前长度, 即结尾
+	int _flags;				// 用来选择缓冲区刷新策略
+}myFILE;
+```
+
+## my_fopen()函数
+
+我们的需要仿照fopen()来实现, 通过不同的传参来以不同的方式打开文件：
+
+```c
+// 宏定义缓冲策略, 以便执行
+#define NONE_FLUSH 0x0
+#define LINE_FLUSH 0x1
+#define FULL_FLUSH 0x2
+
+myFILE* my_open(const char* filename, const char* method) {
+	// 两个参数, 一个文件名, 一个打开模式
+	 
+	assert(filename);
+	assert(method);
+	
+	int flag = O_RDONLY;	//打开文件方式 默认只读
+
+	if(strcmp(method, "r") == 0) {}		// 只读传参, 不对flag做修改
+	else if(strcmp(method, "r+") == 0) {
+		flag = O_RDWR;		// 读写, 文件不存在打开失败
+	}
+	else if(strcmp(method, "w") == 0) {
+		flag = O_WRONLY | O_CREAT | O_TRUNC;		// 清空只写, 文件不存在创建文件
+	}
+	else if(strcmp(method, "w+") == 0) {
+		flag = O_RDWR | O_CREAT | O_TRUNC;
+	}
+	else if(strcmp(method, "a") == 0) {
+		flag = O_WRONLY | O_CREAT | O_APPEND;		// 追加只写, 文件不存在创建文件
+	}
+	else if(strcmp(method, "a+") == 0) {
+		flag = O_RDWR | O_CREAT | O_APPEND;
+	}
+
+	int fileno = open(filename, flag, 0666);		// 封装系统接口打开文件
+	if(fileno < 0) {
+		return NULL;	// 打开文件失败
+	}
+
+	// 打开文件成功, 则为myFILE开辟空间
+	myFILE* fp = (myFILE*)malloc(sizeof(myFILE));	// 有开辟失败的可能
+	if(fp == NULL) {
+		return fp;
+	}
+	memset(fp, 0, sizeof(myFILE));		// 将开辟的空间全部置0
+	fp->_fileno = fileno;				// 更新 myFILE里的_fileno
+	fp->_flags |= LINE_FLUSH;			// 默认行刷新
+	fp->_end = 0;						// 默认缓冲区为空
+
+	return fp;
+}
+```
+
+此函数, 封装了系统接口open(), 打开文件, 并返回初始化过的myFILE指针
+
+可以在main()函数中测试一下：
+
+```c
+int main() {
+	myFILE* pf = my_open("newlog.txt", "w+");
+
+	printf("打卡文件的fd：%d\n", pf->_fileno);
+	printf("打卡文件缓冲区占用：%d\n", pf->_end);
+
+	return 0;
+}
+```
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318112042472.png" alt="image-20230318112042472" style="zoom:80%;" />
+
+## my_fclose()函数
+
+```c
+void my_fflush(myFILE* fp) {
+	assert(fp);
+
+	if(fp->_end > 0) {		// _end记录的是 缓冲区内数据的长度
+		write(fp->_fileno, fp->_buffer, fp->_end);		// 向fd中写入缓冲区数据
+		// 这里不在判断是否写入成功
+		fp->_end = 0;
+		syncfs(fp->_fileno);		// 我们只向内核中写入了数据, 数据可能存储到了操作系统中 文件系统的缓冲区中, 需要刷新一下文件系统的缓冲区
+								 // 与文件缓冲区不同
+	}
+}
+
+void my_fclose(myFILE* fp) {		// 暂时忽略返回值
+	// 再关闭文件之前, 需要先刷新缓冲区, 所以可以先写一个刷新缓冲区的函数
+	my_fflush(fp);
+	close(fp->_fileno);			// 封装系统接口close()关闭文件
+	free(fp);				   // 记得free掉 malloc出来的空间
+}
+```
+
+`my_fclose()` 的实现, 重点在关闭文件前缓冲区的刷新, 和 free()掉malloc的空间
+
+## my_fwrite()函数
+
+my_fwrite()的实现, 重点在刷新缓冲区的策略上.
+
+无缓冲和全刷新的实现, 还算简单. 一个不需要判断, 另一个只需要判断缓冲区是否存满
+
+重点是行刷新如何实现？
+
+行刷新的策略是：只要缓冲区内存在`'\n'` 就将`'\n'`及以前的所有数据刷新出去. 
+
+不过 **我们可以实现的简单一些, 只判断缓冲区末尾是`'\n'`就刷新**
+
+> 我们模拟实现C文件操作是为了加深对文件缓冲区的理解, 而不是为了完善函数和算法模拟
+
+```c
+void my_fwrite(myFILE* fp, const char* start, int len) {
+	assert(fp);
+	assert(start);
+	assert(len > 0);
+
+	strncpy(fp->_buffer + fp->_end, start, len);		// 将start 追加到_buffer原内容之后
+	fp->_end += len;					// 更新一下 _end;
+
+	// 刷新缓冲区
+	if(fp->_flags & NONE_FLUSH) {
+		// 无缓冲
+		my_fflush(fp);
+	}
+	else if(fp->_flags & LINE_FLUSH) {
+		// 行刷新
+		if(fp->_end > 0 && fp->_buffer[fp->_end-1] == '\n') {	// 需要访问_end-1位置, 所以要先判断_end > 0 
+			my_fflush(fp);
+		}
+	}
+	else if(fp->_flags & FULL_FLUSH) {
+		if(fp->_end == SIZE) {				// SIZE是缓冲区的大小
+			my_fflush(fp); 
+		}
+	}
+}
+```
+
+可以通过下面的代码验证一下：
+
+```c
+int main() {
+	myFILE* pf = my_open("newlog.txt", "a+");
+
+	const char* buf1 = "Hello world, hello July";
+	const char* buf2 = "Hello world, hello July\n";
+
+	my_fwrite(pf, buf2, strlen(buf2));
+	my_fwrite(pf, buf1, strlen(buf1));
+     
+//   my_fflush(pf);			// 可以看一下词语执行与否的差别
+    
+	return 0;
+}
+```
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318120508912.png" alt="image-20230318120508912" style="zoom:80%;" />
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230318120716841.png" alt="image-20230318120716841" style="zoom:80%;" />
