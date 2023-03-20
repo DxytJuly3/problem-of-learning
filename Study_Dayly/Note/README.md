@@ -2,6 +2,11 @@
 
 ### 持续更新(从2022年6月26日开始整理)
 
+- 2023年3月21
+  
+    添加 Note/CentOS7.6 从零搭建C-C++开发环境.md
+  **文章内容有关CentOS7.6 从零搭建C/C++开发调试环境：包括安装合适版本的gcc gdb node python3 cmake neovim clang 等**	`03:21`
+  
 - 2023年3月20日
   
     添加 Note/理解Linux文件系统.md
