@@ -4,7 +4,10 @@
 
 - 2023年3月21
   
-    添加 Note/CentOS7.6 从零搭建C-C++开发环境.md
+    修改 Note/理解Linux文件系统.md 为 Note/详析Linux文件系统中inode与软硬连接.md
+  **并添加有关Linux文件系统对分区、分组磁盘空间的管理, 引入inode、group descriptor table等概念**	`02:27`
+  
+  添加 Note/CentOS7.6 从零搭建C-C++开发环境.md
   **文章内容有关CentOS7.6 从零搭建C/C++开发调试环境：包括安装合适版本的gcc gdb node python3 cmake neovim clang 等**	`03:21`
   
 - 2023年3月20日
