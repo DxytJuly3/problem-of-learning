@@ -1,3 +1,5 @@
+![image-20230321000706906](https://img-blog.csdnimg.cn/img_convert/c4141ed86f9a01a039fe9a006bcafce2.png)
+
 # 环境变量
 
 ## 环境变量的概念
@@ -10,21 +12,21 @@
 
 在使用Linux系统且没有图形化界面的情况下, 所有的操作都要用命令行的形式执行, 操作系统会提供许多的相关指令, 像这样：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304151343614.png" alt="image-20230304151343614" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304151343614.png" alt="image-20230304151343614" width="55%" />
 
 并且可以使用 cd 指令, 再进入这个目录, 并使用 pwd 显示当前路径：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304151502777.png" alt="image-20230304151502777" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304151502777.png" alt="image-20230304151502777" width="55%" />
 
 而这些指令, 其实都是一个个程序 指令名即为程序名：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304152443049.png" alt="image-20230304152443049" style="zoom:80%;" /> 
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304152443049.png" alt="image-20230304152443049" width="67%" /> 
 
 这些指令 在用户使用的时候运行 成为进程, 完成任务之后再从内存中被释放。运行流程与我们个人编写的程序并没有什么区别。
 
 但是为什么 我们自己编写的程序不能直接用程序名运行, 而必须指定路径：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304152851154.png" alt="image-20230304152851154" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304152851154.png" alt="image-20230304152851154" width="60%" />
 
 这就与操作系统的环境变量有关系了！
 
@@ -34,7 +36,7 @@
 
 操作系统中有很多的环境变量, 这些环境变量中设置的内容都是与操作系统运行环境有关的参数, 使用 env 指令可以查看：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304154112509.png" alt="image-20230304154112509" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304154112509.png" alt="image-20230304154112509" width="88%" />
 
 > 博主使用的这台服务器上, 环境变量其实算很少了
 
@@ -48,7 +50,7 @@
 
 使用 `echo $PATH` 可以查看 环境变量PATH的内容：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304154925796.png" alt="image-20230304154925796" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304154925796.png" alt="image-20230304154925796" width="96%" />
 
 > `echo $环境变量名` 即可查看环境变量的内容
 
@@ -56,7 +58,7 @@
 
 这些路径下都有什么呢？就以 `/usr/bin` 路径为例：
 
-当你进入这个路径, 并执行 ls指令的时候, 你会发现 这个路径下有非常多的可执行程序：<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/bin%E8%B7%AF%E5%BE%84%E4%B8%8B%E7%9A%84%E7%A8%8B%E5%BA%8F.png" alt="bin路径下的程序" style="zoom: 15%;" />
+当你进入这个路径, 并执行 ls指令的时候, 你会发现 这个路径下有非常多的可执行程序：<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/bin%E8%B7%AF%E5%BE%84%E4%B8%8B%E7%9A%84%E7%A8%8B%E5%BA%8F.png" alt="bin路径下的程序" width="50%" />
 
 多到数不过来, 这些全部都是可以不指定路径, 在命令行直接执行的程序
 
@@ -68,7 +70,7 @@
 
 我们随便编写一个程序, 将它添加到 PATH环境变量中的某个路径下, 试验一下能否直接运行：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304160825183.png" alt="image-20230304160825183" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304160825183.png" alt="image-20230304160825183" width="88%" />
 
 也就是说, `我们自己的程序只要在PATH指定的路径下可以找到, 就能直接在命令行中运行`
 
@@ -90,17 +92,17 @@
 2. export PATH=当前路径
 3. 直接运行一下程序
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304162336044.png" alt="image-20230304162336044" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304162336044.png" alt="image-20230304162336044" width="55%" />
 
 三个操作执行下来, 可以发现 我们自己的程序已经可以直接运行了
 
 但是, 当我们需要执行部分其他命令的时候, 你会发现：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304162604312.png" alt="image-20230304162604312" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304162604312.png" alt="image-20230304162604312" width="55%" />
 
 在Linux操作系统中经常使用的命令用不了了, 命令行会提示:`command not found`, 这是为什么?
 
-当再次执行`echo $PATH`查看PATH的内容时：<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304162806014.png" alt="image-20230304162806014" style="zoom:80%;" />
+当再次执行`echo $PATH`查看PATH的内容时：<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304162806014.png" alt="image-20230304162806014" width="77%" />
 
 发现 PATH内容 只剩下了你设置的那一个路径. 其他命令的路径都没有了, 命令也就用不了了
 
@@ -112,7 +114,7 @@
 
 想要在PATH环境变量中添加路径, 需要这样 `PATH=$PATH:新路径`, `$PATH`可以直接表示PATH原来的内容, `:`是分隔符, 再加上新路径, 就可以完成在PATH环境变量中添加新路径的操作：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304164214197.png" alt="image-20230304164214197" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304164214197.png" alt="image-20230304164214197" width="55%" />
 
 ---
 
@@ -124,7 +126,7 @@
 
 在命令行中, 直接用 类似在C语言中定义变量的方式, 就可以在操作系统中定义一个本地变量：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304170205885.png" alt="image-20230304170205885" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304170205885.png" alt="image-20230304170205885" width="55%" />
 
 而 环境变量的创建, 就需要用到指令了
 
@@ -132,7 +134,7 @@
 
 上面介绍PATH时, 使用过export命令, 修改过PATH环境变量的内容
 
-export其实也可以创建一个环境变量：<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304170654452.png" alt="image-20230304170654452" style="zoom:80%;" />
+export其实也可以创建一个环境变量：<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304170654452.png" alt="image-20230304170654452" width="63%" />
 
 > unset可以将创建的环境变量删除
 
@@ -140,7 +142,7 @@ export其实也可以创建一个环境变量：<img src="https://dxyt-july-imag
 
 上面介绍环境变量的概念时, 使用env命令将当前系统中的环境变量全都列了出来, 可以看到系统中存在许多的环境变量, 下面就简单的介绍一下其中部分的环境变量都是什么：
 
-![image-20230304171055600](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304171055600.png)
+![image-20230304171055600](https://img-blog.csdnimg.cn/img_convert/fc3b0504bb005fd9cccd20e6503f52f7.png)
 
 1. `USER` 从字面意思就可以看出, 此环境变量是指 当前系统环境的使用用户
 
@@ -152,7 +154,7 @@ export其实也可以创建一个环境变量：<img src="https://dxyt-july-imag
 
 	在非root用户使用su命令, 并输入root密码之后, 在查看 `环境变量HOME`, 可以发现其值改变了：
 
-	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304172541696.png" alt="image-20230304172541696" style="zoom:80%;" />
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304172541696.png" alt="image-20230304172541696" width="45%" />
 
 4. `MAIL` 邮箱全局变量
 
@@ -203,13 +205,13 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304173852231.png" alt="image-20230304173852231" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304173852231.png" alt="image-20230304173852231" width="55%" />
 
 直接执行`./mainTest`, 此时 argv数组中只有一个元素, 存储的是 `./mainTest` 这句指令.
 
 但是, 在 `./mainTest`之后添加任意选项时：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304174156330.png" alt="image-20230304174156330" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304174156330.png" alt="image-20230304174156330" width="55%" />
 
 可以非常直观的看到, 程序打印的内容变多了, 也就意味着 argv数组中存储的元素变多了. 再一分析, 可以发现, `argv数组中多出来的元素 其实就是在执行程序时后面任意添加的选项`
 
@@ -285,11 +287,11 @@ main()函数的第三个参数为：`char *env[]`, 也是一个指针数组
 
 事实也确实如此, 这 `env数组, 其实就是接收环境变量用的, 即env就是一张环境变量表`, 数组中每个元素存储的都是环境变量, 且存储顺序与使用env命令时列出的顺序相同, 类似这样：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304195356212.png" alt="image-20230304195356212" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304195356212.png" alt="image-20230304195356212" width="67%" />
 
 即env数组中的最后一个元素为NULL, 所以可以直接for循环 以遇到到NULL为结束条件 进行数组遍历：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304195607147.png" alt="image-20230304195607147" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304195607147.png" alt="image-20230304195607147"  />
 
 ### C/C++ 获取环境变量
 
@@ -324,11 +326,11 @@ int main() {
 
 getenv()是Liunx系统提供的系统调用：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304201439146.png" alt="image-20230304201439146" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304201439146.png" alt="image-20230304201439146"  />
 
 此函数调用的参数传入的是需要查找的函数变量的变量名, 即这部分等号左边的全大写字母的内容：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304201740044.png" alt="image-20230304201740044" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304201740044.png" alt="image-20230304201740044"  />
 
 将变量名字符串传入 getenv系统调用, 就可以获得对应环境变量的内容：
 
@@ -346,7 +348,7 @@ int main() {
 }
 ```
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304202209572.png" alt="image-20230304202209572" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304202209572.png" alt="image-20230304202209572" width="50%" />
 
 ## 获取环境变量的作用
 
@@ -354,7 +356,7 @@ int main() {
 
 其实 获取环境变量还是很有作用的, 其作用之一就是, `可以限制程序功能的使用对象`：
 
-```
+```cpp
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
@@ -375,7 +377,7 @@ int main() {
 }
 ```
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304203049185.png" alt="image-20230304203049185" style="zoom:80%;" /> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304203105014.png" alt="image-20230304203105014" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304203049185.png" alt="image-20230304203049185" width="87%" />  <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304203105014.png" alt="image-20230304203105014" width="46%" />
 
 像这样, 在程序内部设置用户限制, 即使是root用户也无法突破限制
 
@@ -385,7 +387,7 @@ int main() {
 
 当我们运行自己的程序的时候, 我们可以发现此进程的父进程是zsh(bash)这类SHELL进程, 无论怎么运行、重新运行多少次, 进程的父进程永远都是SHELL进程：
 
-![image-20230304211403126](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304211403126.png)
+![image-20230304211403126](https://img-blog.csdnimg.cn/img_convert/ba45600fc66de3e0dd212252be18baab.png)
 
 无论进程重新运行多少次, 变得永远都是PID, 而不是PPID, 除非SHELL进程也重新运行
 
@@ -393,17 +395,17 @@ int main() {
 
 当从命令行运行top时：
 
-![image-20230304211835826](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304211835826.png)
+![image-20230304211835826](https://img-blog.csdnimg.cn/img_convert/fac1631e61af5a4dad33d36f66ea28d7.png)
 
 运行 gdb时：
 
-![image-20230304211933659](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304211933659.png)
+![image-20230304211933659](https://img-blog.csdnimg.cn/img_convert/9b32c79aede2a4e6253eb84dfc06804d.png)
 
 或者运行其他程序时：
 
-![image-20230304212044827](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304212044827.png)
+![image-20230304212044827](https://img-blog.csdnimg.cn/img_convert/fa4b1a72b68955f743c6a025368b4bd1.png)
 
-![image-20230304212154912](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304212154912.png)
+![image-20230304212154912](https://img-blog.csdnimg.cn/img_convert/37e393bd074d484dd7a86c130c02842b.png)
 
 可以发现, 只要是用命令行运行的进程, 其父进程一定是zsh(bash)这样的SHELL进程
 
@@ -415,7 +417,7 @@ int main() {
 
 而SHELL进程的环境变量也来源于它的父进程, 这样一直往上推, 可以推到 1号进程：
 
-<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304212926602.png" alt="image-20230304212926602" style="zoom:80%;" />
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230304212926602.png" alt="image-20230304212926602"  />
 
 但是暂且不论, 是否来源于1号进程
 
