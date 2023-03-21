@@ -4,7 +4,13 @@
 
 - 2023年3月21
   
-    修改 Note/理解Linux文件系统.md 为 Note/详析Linux文件系统中inode与软硬连接.md
+    更新 Note/Linux环境变量.md
+  **为Blog添加封面**	`20:45`
+  
+  更新 Note/详析Linux文件系统中inode与软硬连接.md
+  **文章更新了Linux文件系统对组的各种属性的分析, 以及对inode的详细分析, inode与其描述的文件的内容的联系方式, 以及创建、删除文件操作系统执行操作的大概流程及原理; 介绍了软硬连接的操作和作用等**	`20:45`
+  
+  修改 Note/理解Linux文件系统.md 为 Note/详析Linux文件系统中inode与软硬连接.md
   **并添加有关Linux文件系统对分区、分组磁盘空间的管理, 引入inode、group descriptor table等概念**	`02:27`
   
   添加 Note/CentOS7.6 从零搭建C-C++开发环境.md
