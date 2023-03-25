@@ -125,6 +125,14 @@ Linux为我们提供了三种进程间通信的方法：
 
 `这种不实际存储数据的行为特点, 其实也符合生活中管道的特点, 管道不能用来存储资源, 只能用来传输资源`
 
+并且, 除了管道不实际存储资源以外, 管道还有一个特点：**`管道是单向传输的`**
+
+这是管道的特点, Linux的管道也是遵循这个特点的, 也就是说, `两个进程间使用管道通信时, 其中一个进程若以只写方式打开管道, 那么另一个进程就只能以只读方式打开文件`.
+
+![](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230325110131491.png)
+
+或者也可以反过来, 不过`管道的两端只能是不同的打开方式`
+
 管道的种类有两种：
 
 1. 匿名管道
@@ -144,16 +152,35 @@ Linux为我们提供了三种进程间通信的方法：
 
 匿名管道用于父子进程之间的通信, 那么管道的创建流程大概就是：
 
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230325180631728.png" alt="image-20230325180631728" style="zoom:60%;" />
 
+![image-20230325180720445](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230325180720445.png)
 
-也就是说, 匿名管道的创建应该是由父进程创建, 然后创建子进程继承父进程的管道.
+![image-20230325180850724](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230325180850724.png)
 
-然后再关闭管道的写入端或读取端
+也就是说, 匿名管道的创建应该是**`由父进程创建, 然后创建子进程继承父进程的管道, 然后再关闭管道的写入端或读取端`**
+
+这样就创建了一个管道通信
 
 然而, 相信许多人对于这个过程都会有许多的问题：
 
 1. 为什么父子进程要分别以只读和只写方式打开两次文件, 然后再创建子进程呢？
+
+	为什么不是父进程以一个方式打开, 子进程再以另一个方式打开呢？
+
+	因为`子进程会以继承父进程的方式打开同一个文件, 即子进程打开文件的方式与父进程是相同的`
+
+	那这样的话, 父子进程通过想要通过管道实现进程通信, 子进程就需要先关闭已打开的文件, 再以某种方式打开同一个文件
+
+	这样比较麻烦, 如果在创建子进程之前, 父进程就已经以两种方式打开同一个文件, 那么再子进程创建之后, 只需要父进程关闭一个端口, 子进程关闭另一个端口就可以了
+
 2. 必须父进程关闭读取端, 子进程关闭写入端吗？
+
+	并不是的, 父子进程关闭哪个端口, 其实是**`根据需求`**关闭的.
+
+	如果子进程要向父进程传输数据, 那么关闭读取端的就应该是子进程
+
+
 
 ### 创建匿名管道
 
@@ -161,4 +188,140 @@ Linux操作系统提供了一个接口：
 
 ![image-20230324230532528](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230324230532528.png)
 
-pipe系统调用会让进程打开同一个文件
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230325183110031.png" alt="image-20230325183110031" style="zoom:80%;" />
+
+且, pipe(), 如果*`创建管道成功, 则返回0, 否则返回-1`*, 并设置errno
+
+pipe系统调用的作用是, 打开一个管道文件. 其参数是一个**`输出型参数`**
+
+在pipe系统调用**`执行成功之后, 参数数组内会存储两个元素`**：
+
+1. pipe[0], 存储以 只读方式 打开管道时获得的fd
+2. pipe[1], 存储以 只写方式 打开管道时获得的fd
+
+之后就可以根据需求, 选择父子进程的端口关闭
+
+此系统接口具体的使用, 可以参考下面这段代码：
+
+```cpp
+#include <iostream>
+#include <unistd.h>
+#include <cstring>
+
+int main() {
+    // 父进程 pipe()系统调用, 打开管道
+    int pipeFd[2] = {0};
+    int ret = pipe(pipeFd);
+    if(ret != 0) {
+        std::cerr << "pipe error" << std::endl;
+        return 1;
+    }
+
+    // 创建子进程
+    // 并让 父进程 通过管道 向子进程 传输数据
+    pid_t id = fork();
+    if(id < 0) {
+        std::cerr << "fork error" << std::endl;
+        return 2;
+    }
+    else if(id == 0) {
+        // 子进程执行代码
+        // 子进程接收数据, 所以关闭只写端口 pipeFd[1]
+        close(pipeFd[1]);
+        char buffer[1024];
+        while (true)
+        {    
+            memset(buffer, 0, 1024);
+            ssize_t s = read(pipeFd[0], buffer, sizeof(buffer)-1);
+            if(s > 0) {
+                // 读取成功
+                buffer[s] = '\0';
+                std::cout << buffer << std::endl;
+            }
+            else if(s == 0) {
+                // 读取结束       
+                std::cout << "父进程写入结束, 子进程读取也结束！" << std::endl;
+                break;
+            }
+            else {
+                // 读取失败
+            }
+        }
+        
+    }
+    else {
+        // 父进程执行代码
+        // 父进程发送数据, 所以关闭只读端口 pipeFd[0]
+        close(pipeFd[0]);
+        // 父进程每秒写入一句, 共5句
+        const char* msg = "你好子进程, 我是父进程, 我通过管道跟你通信, 此次发送编号:: ";
+        int cnt = 0;
+        while(cnt < 5) {
+            char sendBuffer[1024];
+            sprintf(sendBuffer, "%s %d", msg, cnt);
+            write(pipeFd[1], sendBuffer, strlen(sendBuffer));
+            sleep(1);
+            cnt++;
+        }
+        std::cout << "父进程写入完毕" << std::endl;
+    }
+
+    return 0;
+}
+```
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/%E5%8C%BF%E5%90%8D%E7%AE%A1%E9%81%93%E9%80%9A%E4%BF%A1%E6%B5%8B%E8%AF%95.gif" alt="匿名管道通信测试" style="zoom:80%;" />
+
+可以看到, 我们成功使用pipe()接口创建了匿名管道, 在父进程与子进程之间建立了通信
+
+但是, 上面的这个例子, 我们代码中写的时：
+
+1. 父进程每1s, 写入一次数据
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230325215305146.png" alt="image-20230325215305146" style="zoom:80%;" />
+
+2. 子进程死循环读取父进程写的数据
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230325215158088.png" alt="image-20230325215158088" style="zoom:80%;" />
+
+但是, 代码的执行结果是是什么？代码的执行结果**`并不是子进程死循环读取父进程写入到管道的内容`**
+
+代码的结果像是, 子进程也每1s读取一次管道数据, 或是说 子进程等父进程新写入数据之后才会读取数据
+
+这是什么原因呢？
+
+**`在父进程没有向管道内写入数据时, 子进程在等待！父进程写入数据之后, 子进程才能read到管道内容, 子进程读取、打印数据是以父进程的节奏为主的`**
+
+在父子进程对管道进行读写操作时, 是由顺序性的.
+
+**`此顺序是：写入端必须先写入数据, 读取端才能够读取数据`**
+
+也就是说, **`当管道内部无数据时, 读取端的进程将会进入阻塞状态, 直到写入端写入数据`**
+
+读取端进入阻塞状态, 是因为 `当管道内无数据时, 读取端进程会被放入到管道文件的等待队列中等待文件资源`
+
+相对应的, **`当管道内数据被写满时, 写入端的进程将会进入阻塞状态, 直到读取端读取数据`**
+
+> pipe文件中, 存在等待队列：
+>
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230325221323595.png" alt="image-20230325221323595" style="zoom:80%;" />
+
+可以通过修改父子进程的写入和读取数据的时间, 来验证一下管道文件是否存在读写顺序：
+
+我们将, 父进程改为10s一写入, 再测试：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/%E5%8C%BF%E5%90%8D%E7%AE%A1%E9%81%93%E9%80%9A%E4%BF%A1%E9%A1%BA%E5%BA%8F%E6%B5%8B%E8%AF%95.gif" alt="匿名管道通信顺序测试" style="zoom:80%;" />
+
+我们将, 子进程改为15s一读取, 再将父进程改为死循环写入并输出写入次数：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/%E5%8C%BF%E5%90%8D%E7%AE%A1%E9%81%93%E5%86%99%E6%BB%A1%E6%B5%8B%E8%AF%95.gif" alt="匿名管道写满测试" style="zoom:80%;" />
+
+可以看到, `当父进程存在一定的写入间隔时, 子进程读取管道数据也会根据父进程的写入间隔进行读取`
+
+`当父进程将管道写满, 子进程还未读取时, 父进程不会再向管道中写入内容`
+
+这是因为, pipe文件内部存在访问控制机制, 而对于无访问控制机制的文件, 则不会存在写入与读取的顺序
+
+> pipe文件存在访问控制机制, 会将管道文件的读写顺序控制为：先写再读.
+>
+> 这其实也符合生活中的管道特点, **`管道中传输的资源可以看作是一次性流通的`**. 比如 向管道中倒入一瓶水, 这瓶水完全经过管道流通之后, 这瓶水就不在管道中了. 管道通信也是这样的, 当读取端读取过管道中存在的数据时, 就可以看作此数据已经流出管道了, 不能在被二次读取. 
