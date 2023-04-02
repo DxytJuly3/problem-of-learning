@@ -8,4 +8,4 @@ ipcShmServer:ipcShmServer.cpp
 
 .PHONY:clean
 clean:
-	rm -f ipcShmClient ipcShmServer
+	rm -f ipcShmClient ipcShmServer .fifo
