@@ -623,10 +623,269 @@ int main() {
 
 这两个可执行程序, 可以完整的展示：共享内存块的创建、共享内存块的连接、共享内存块的使用(使用共享内存块通信)、共享内存块的分离、共享内存块的删除
 
+## 用管道为共享内存提供访问限制
+
 ---
 
 使用共享内存块进行进程间的通信速度是最快的, 但是由于共享内存块没有访问控制, 所以共享内存块相对来说不太安全
 
 而管道是有访问控制的.
 
-那么就可以结合 管道和共享内存块 一起使用. 达到
+那么就可以结合 管道和共享内存块 一起使用. 达到进程通过有访问控制的共享内存通信.
+
+我们具体要怎么实现呢？
+
+我们只是利用管道的自带访问控制的特点, 来在代码中添加访问控制的功能再来使用共享内存通信.
+
+所以, 可以通过这样的操作, 实现使用共享内存时存在一定的访问控制:
+
+1. 在向共享内存写入数据时, 也向管道中写入数据, 相关到中写入的数据不需要存在意义
+2. 在需要从共享内存中读取数据时, 先从管道中读取数据. 若管道中没有数据, 就等待
+3. 实际上, 相关到中写入数据和从管道中读取数据, 可以将管道中的数据看作信号. 客户端写入信号, 说明共享内存已经写入了数据; 服务端读取到信号, 说明可以从共享内存中读取数据
+
+下面这段代码, 可以实现这样的功能：
+
+`common.hpp:`
+
+```cpp
+#include <iostream>
+#include <cstring>
+#include <cstdlib>
+#include <cerrno>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string>
+#include <unistd.h>
+#include <cassert>
+
+#define SHM_SIZE 4096
+#define PATH_NAME ".fifo"
+#define PROJ_ID 0x14
+
+#define FIFO_FILE ".fifo"
+
+// 创建命名管道文件
+void CreatFifo() {
+    umask(0);
+    if(mkfifo(FIFO_FILE, 0666) < 0)
+    {
+        std::cerr << strerror(errno) << std::endl;
+        exit(-1);
+    }
+}
+
+#define READER O_RDONLY
+#define WRITER O_WRONLY
+
+// 以一定的方式打开管道文件
+int Open(const std::string &filename, int flags)
+{
+    return open(filename.c_str(), flags);
+}
+
+// 用于服务端, 等待读取管道文件数据, 即读取信号
+int Wait(int fd) {
+    uint32_t value = 0;
+    ssize_t res = read(fd, &value, sizeof(value));
+    
+    return res;
+}
+
+// 用于客户端, 向管道中写入数据, 即写入信号
+void Signal(int fd) {
+    uint32_t cmd = 1;
+    write(fd, &cmd, sizeof(cmd));
+}
+
+// 关闭管道文件, 删除管道文件
+void Close(int fd, const std::string& filename) {
+    close(fd);
+    unlink(filename.c_str());
+}
+```
+
+`ipcShmServer.cpp:`
+
+```cpp
+// ipcShmServer 服务端代码, 即 接收端
+// 需要创建、删除共享内存块
+// 需要创建、删除命名管道
+#include "common.hpp"
+using std::cout;
+using std::endl;
+using std::cerr;
+
+int main() {
+    // 0. 创建命名管道
+    CreatFifo();
+    int fd = Open(FIFO_FILE, READER);       // 只读打开命名管道
+    assert(fd >= 0);
+
+    // 1. 创建共享内存块
+    int key = ftok(PATH_NAME, PROJ_ID);
+    if(key == -1) {
+        cerr << "ftok error. " << strerror(errno) << endl;
+        exit(1);
+    }
+
+    cout << "Create share memory begin. " << endl;
+    int shmId = shmget(key, SHM_SIZE, IPC_CREAT | IPC_EXCL | 0666);
+    if(shmId == -1) {
+        cerr << "shmget error" << endl;
+        exit(2);
+    }
+    cout << "Creat share memory success, key: " << key << " , shmId: " << shmId << endl;
+
+    // 2. 连接共享内存块
+    sleep(2);
+    char* str = (char*)shmat(shmId, nullptr, 0);
+    if(str == (void*)-1) {
+        cerr << "shmat error" << endl;
+        exit(3);
+    }
+    cout << "Attach share memory success. \n" << endl;
+
+    // 3. 使用共享内存块
+    while(true) {
+        if (Wait(fd) <= 0)
+            break;              // 如果从管道读取数据失败, 或管道文件关闭, 则退出循环
+        
+        cout << str;
+        sleep(1);
+    }
+    cout << "\nThe server has finished using shared memory. " << endl;
+
+    sleep(1);
+    // 3. 分离共享内存块
+    int resDt = shmdt(str);
+    if(resDt == -1) {
+        cerr << "shmdt error" << endl;
+        exit(4);
+    }
+    cout << "Detach share memory success. \n" << endl;
+
+    // 4. 删除共享内存块
+    int res = shmctl(shmId, IPC_RMID, nullptr);
+    if(res == -1) {
+        cerr << "shmget error" << endl;
+        exit(5);
+    }
+    cout << "Delete share memory success. " << endl;
+
+    // 5. 删除管道文件
+    Close(fd, FIFO_FILE);
+    cout << "Delete FIFO success. " << endl;
+
+    return 0;
+}
+```
+
+`ipcShmClient.cpp:`
+
+```cpp
+// ipcShmClient 客户端代码, 即 发送端
+// 不参与共享内存块的创建与删除
+// 不参与命名管道的创建与删除
+#include "common.hpp"
+using std::cout;
+using std::endl;
+using std::cerr;
+
+int main() {
+    // 0. 打开命名管道
+    int fd = Open(FIFO_FILE, WRITER);
+
+    // 1. 获取共享内存块
+    int key = ftok(PATH_NAME, PROJ_ID);
+    if(key == -1) {
+        cerr << "ftok error. " << strerror(errno) << endl;
+        exit(1);
+    }
+    cout << "Get share memory begin. " << endl;
+    sleep(1);
+    int shmId = shmget(key, SHM_SIZE, IPC_CREAT);
+    if(shmId == -1) {
+        cerr << "shmget error" << endl;
+        exit(2);
+    }
+    cout << "Creat share memory success, key: " << key << " , shmId: " << shmId << endl;
+
+    // 2. 连接共享内存块
+    sleep(2);
+    char* str = (char*)shmat(shmId, nullptr, 0);
+    if(str == (void*)-1) {
+        cerr << "shmat error" << endl;
+        exit(3);
+    }
+    cout << "Attach share memory success. " << endl;
+
+    // 3. 使用共享内存块
+    while (true) {
+        printf("Please Enter $ ");
+        fflush(stdout);
+        ssize_t res = read(0, str, SHM_SIZE);       // 从标准输入读取数据写入到 共享内存(str) 中
+        if(res > 0) {
+            str[res] = '\0';
+        }
+
+        Signal(fd);     // 向命名管道写入信号
+    }
+    cout << "\nThe client has finished using shared memory. " << endl;
+
+    // 3. 分离共享内存块
+    int res = shmdt(str);
+    if(res == -1) {
+        cerr << "shmdt error" << endl;
+        exit(4);
+    }
+    cout << "Detach share memory success. " << endl;
+
+    return 0;
+}
+```
+
+`makefile:`
+
+```makefile
+.PHONY:all
+all:ipcShmClient ipcShmServer
+
+ipcShmClient:ipcShmClient.cpp
+	g++ $^ -o $@
+ipcShmServer:ipcShmServer.cpp
+	g++ $^ -o $@
+
+.PHONY:clean
+clean:
+	rm -f ipcShmClient ipcShmServer .fifo
+```
+
+make之后, 生成的可执行程序的执行结果是：
+
+![命名管道为共享内存提供访问限制](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/%E5%91%BD%E5%90%8D%E7%AE%A1%E9%81%93%E4%B8%BA%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98%E6%8F%90%E4%BE%9B%E8%AE%BF%E9%97%AE%E9%99%90%E5%88%B6.gif)
+
+此例中我们添加了几个函数接口：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230402152119892.png" alt="image-20230402152119892" style="zoom:80%;" />
+
+并且, 共享内存的创建、连接、删除都与之前例子中没有区别.
+
+只有使用有一点点区别:
+
+1. 服务端
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230402152334706.png" alt="image-20230402152334706" style="zoom:80%;" />
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230402152539511.png" alt="image-20230402152539511" style="zoom:80%;" />
+
+2. 客户端
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230402152805743.png" alt="image-20230402152805743" style="zoom:80%;" />
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230402152953351.png" alt="image-20230402152953351" style="zoom:80%;" />
+
+只有这两部分不同, 就可以通过管道实现使用共享内存的简单的访问控制.
+
