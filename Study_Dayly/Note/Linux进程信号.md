@@ -895,4 +895,302 @@ handler 是`存储进程信号处理方法的数组, 每位对应一个处理方
 
 block 是阻塞位图, 用来表示对应位置的信号是否阻塞. 当`指定位置为1时, 即表示此位置信号会被阻塞`. 上图中 则表示 SIGINT(2) 和 SIGQUIT(3) 被阻塞.
 
-即, 这两个位图和一个指针数组, 需要横着对比观察, 可以更好的分析, 进程内核有关信号的描述信息.
+即, 这两个位图和一个指针数组, 需要横着对比观察, 可以更好的分析 进程内核有关信号的描述信息.
+
+总的来说 **`pending 位图表示的是进程接收信号的情况, block 位图表示的是进程阻塞信号的情况, 而 handler 数组表示的是指定信号的对应处理方法`**
+
+那么, 按照对三个结构的分析. 上图展示的例子中:
+
+1. SIGHUP(1) 信号, 进程对此信号的处理方法是 SIG_DFL, 进程并没有收到此信号(pending为0), 也没有阻塞此信号递达(block为0).
+2. SIGINT(2) 信号, 进程对此信号的处理方法是 SIG_IGN, 进程收到了此信号(pending为1), 但是进程会阻塞此信号递达(block为1), 即 进程收到的信号会一直处于未决状态(pending一直为1). 除非阻塞解除
+3. SIGQUIT(3) 信号, 此进程对此信号的处理方法是自定义的 sighandler(), 进程没有收到此信号(pending为0), 但是进程会阻塞此信号递达(block为1), 也就是说 即使进程收到了此信号, 此信号也会一直处于未决状态, 除非阻塞解除
+
+#### sigset_t
+
+从上图以及分析来看, 实际上 pending位图 和 block位图 的每一位都只能用 0 or 1 表示, 即只能表示信号或阻塞的存在状态, 并不能表示 有多少信号产生并发送给了进程. 
+
+所以, 对普通信号来说, 如果 `进程阻塞了此信号`, 且此信号已经处于未决状态了, 即使 `再多次的向进程发送此信号`, 当`阻塞解除时 进程最终也只会处理一次此信号`(当然 如果不存在阻塞, 且一直向进程发送信号, 那么进程就会一直处理)
+
+不过, 在Linux操作系统中, pending 和 block 并不是以整型来表示位图的. 而是以一个结构体的形式：`sigset_t`
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406090112245.png" alt="image-20230406090112245" style="zoom:80%;" />
+
+`sigset_t` 是一个 typedef 出来的类型, 实际上是一个结构体`__sigset_t`, 不过这个结构体内部只有一个 `unsigned long int`类型的数组
+
+也就是说, 实际上 pending 和 block 位图的表现形式其实是以 **`数组`** 表现出来的
+
+而其中, 实际以 `sigset_t` 形式表现的 pending位图, 被称为 `未决信号集`; 同样以 `sigset_t` 形式表现的 block位图, 被称为 `阻塞信号集`, 也叫 `信号屏蔽字`
+
+### 信号集操作
+
+由于 信号集 实际是以数组来表示位图的, 而且此数组的大小是不固定的.
+
+> 为什么 sigset_t 结构体中的数组大小不固定？
+>
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406090824167.png" alt="image-20230406090824167" style="zoom:80%;" />
+>
+> 这是 此结构体的实际内容.
+>
+> 其中 __val数组的大小是  `_SIGSET_NWORDS`, 这是一个宏定义. 而 宏的内容是 `(1024 / (8 * sizeof (unsigned long int)))` 
+>
+> 而不同配置平台的 unsigned long int 类型的大小可能是不同的, 所以 数组的大小也可能不同.
+
+由于数组的大小可能不固定, 所以 我们并 **`不能直接访问此数组来对信号集进行操作`**. 所以 操作系统为我们提供了一些系统调用
+
+```c
+int sigpending(sigset_t *set);
+int sigemptyset(sigset_t *set);
+int sigfillset(sigset_t *set);
+int sigaddset (sigset_t *set, int signo);
+int sigdelset(sigset_t *set, int signo);
+int sigismember(const sigset_t *set, int signo);
+```
+
+这几个系统调用的使用方法都不困难, 下面来介绍一下：
+
+1. `int sigpending()`:
+
+  ![image-20230406094527802](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406094527802.png)
+
+  使用此接口, 可以获取进程的未决信号集内容, 传入的 sigset_t 指针是一个输出性参数, 获取的未决信号集内容会存储在传入的变量中
+
+  但是, 并不能通过 修改获取到的未决信号集内容 想要一次来修改进程当前的未决信号集.
+
+  成功返回0, 错误返回-1
+
+2. `int sigemptyset()`:
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406094934981.png" alt="image-20230406094934981" style="zoom:80%;" />
+
+	调用此函数, 会将传入的信号集初始化为空, 即所有信号、阻塞会被消除, 信号集的所有位设置为0
+
+	成功返回0, 错误返回-1
+
+3. `int sigfillset()`:
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406095213355.png" alt="image-20230406095213355" style="zoom:80%;" />
+
+	调用此函数, 会将传入的信号集所有位设置为1.
+
+	成功返回0, 错误返回-1
+
+4. `int sigaddset()` 和 `int sigdelset()`:
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406095638337.png" alt="image-20230406095638337" style="zoom:80%;" />
+
+	`sigaddset()` 的作用是, 给指定信号集中添加指定信号, 即 将指定信号集中的指定位置设置为1
+
+	`sigdelset()` 的作用是, 删除指定信号集中的指定信号, 即 将指定信号集中的指定位置设置为0
+
+	着两个函数, 都是成功返回0, 失败返回-1.
+
+5. `int sigismember()`:
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406100142578.png" alt="image-20230406100142578" style="zoom:80%;" />
+
+	调用此函数, 可以判断 信号集中是否有某信号. 即 判断信号集的某位是否为1
+
+	如果 信号在信号集中 返回1, 如果不在 返回0, 如果出现错误 则返回-1
+
+#### sigprocmask()
+
+上面介绍的5个信号集操作接口的功能和使用都很简单.
+
+而 `sigprocmask()` 的使用稍微复杂一些：
+
+![image-20230406142706779](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406142706779.png)
+
+`int sigprocmask(int how, const sigset_t *set, sigset_t *oldset)`, 从参数来看就比上面的接口要复杂的多.
+
+而这个接口的作用是: **`获取 和 修改 信号屏蔽字`**. 这个接口的使用相对来说比较复杂
+
+我们来分析一下, 这个接口的参数都有什么意义：
+
+> 假设, **`当前进程的 信号屏蔽字(阻塞信号集) 为 mask`**
+
+1. 首先介绍 `const sigset_t *set` 也就是第二个参数
+
+	第二个参数需要传入一个信号集, 此信号集是 **`修改进程的信号屏蔽字(mask)用的`**.
+
+	此参数`需要根据 how(第一个参数) 的不同, 来传入不同意义的信号集`
+
+2. 然后是 `sigset_t *oldset` 第三个参数
+
+	第三个参数也是需要传入一个信号集, 不过一般传入被全部置0的信号集.
+
+	此参数是一个输出型参数, 用于获取没做修改的 mask, 即函数执行结束后, **`此参数会获取没有执行此函数时的mask`**.
+
+3. 最后介绍 `int how` 第一个参数
+
+	how 是一个整型参数, 需要传入系统提供的宏. 不同宏的选择此函数会有不同的功能, 就需要传入不同意义的 set(第二个参数)
+
+	| how             | set的意义                               | 函数功能                                                     |
+	| --------------- | --------------------------------------- | ------------------------------------------------------------ |
+	| ==SIG_BLOCK==   | set的内容为 需要添加阻塞的信号的位置为1 | 在mask中 为set指定的信号 添加阻塞. 以位图的角度可以看作 mask \|= set |
+	| ==SIG_UNBLOCK== | set的内容为 需要解除阻塞的信号的位置为1 | 在mask中 为set指定的信号 解除阻塞. 以位图的角度可以看作 mask &= ~set |
+	| ==SIG_SETMASK== | set的内容为 需要指定设置的mask          | 将set设置为mask. 以位图的角度可以看作 mask = set             |
+
+只用文字的话, 这个函数的使用方法及功能很抽象. 下面我用图片的形式 解释一下.
+
+1. 如果需要为指定位置添加阻塞：
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406153613173.png" alt="image-20230406153613173" style="zoom: 67%;" />
+
+	其实就是 将传入的 set 与进程原来的信号屏蔽字 做 **`按位或操作`**, 最终结果 作为进程最新的信号屏蔽字
+
+2. 如果需要为指定信号解除阻塞：
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406153832047.png" alt="image-20230406153832047" style="zoom:67%;" />
+
+	其实就是 将传入的 `set先按位取反`, 再与进程原来的信号屏蔽字 做 `按位与操作`. 最终结果 作为进程的新的信号屏蔽字
+
+3. 如果需要直接设置信号屏蔽字：
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406154100984.png" alt="image-20230406154100984" style="zoom:67%;" />
+
+	其实就是, 直接将传入的 `set 覆盖进程原来的信号屏蔽字`, 即 **`将传入的set 作为进程新的信号屏蔽字`**
+
+### 信号集操作相关代码演示
+
+经过上面进程信号集相关操作的介绍, 相信大家一定对进程的未决信号集和信号屏蔽字 都已经有了一定程度的了解
+
+我们可以通过 sigpending() 接口来获取进程的未决信号集内容, 但是并不能修改进程当前的未决信号集
+
+我们可以使用 sigmeptyset()、sigfillset()、sigaddset()、sigdelset() 接口对一个信号集的内容做修改
+
+还可以使用 sigismember() 接口 判断某信号是否在此信号集中
+
+还可以使用 sigprocmask() 接口, 来对进程的信号屏蔽字做修改. 
+
+那么 我们就演示一下, **`对信号屏蔽字做修改, 并向进程发送信号 将进程的未决信号集打印出来查看`**：
+
+```cpp
+#include <iostream>
+#include <sys/types.h>
+#include <unistd.h>
+#include <signal.h>
+using std::cout;
+using std::cerr;
+using std::endl;
+
+int cnt = 0;
+void handler(int signo) {
+    cout << "我是进程, pid: " << getpid() << ", 我捕获到一个信号：" << signo << ", count: " << cnt++ << endl;
+}
+
+// 打印信号集的函数
+void showSignals(sigset_t *signals) {
+    // 使用 sigismember() 接口判断 31个普通信号是否在信号集中存在
+    // 存在的信号输出1, 否则输出0
+    for(int sig = 1; sig <= 31; sig++) {
+        if(sigismember(signals, sig)) {
+            cout << "1";
+        }
+        else {
+            cout << "0";
+        }
+    }
+    cout << endl;
+}
+
+int main() {
+    // 先输出进程的 pid
+    cout << "pid: " << getpid() << endl;
+
+    // 定义sigsetmask()需要使用的 set 和 oldset, 并初始化
+    sigset_t sigset, osigset;
+    sigemptyset(&sigset);
+    sigemptyset(&osigset);
+
+    // 将进程的 所有普通信号屏蔽
+    for(int sig = 1; sig <= 31; sig++) {
+        sigaddset(&sigset, sig);
+        signal(sig, handler);
+    }
+    sigprocmask(SIG_BLOCK, &sigset, &osigset);
+
+    // 获取并打印进程的未决信号集
+    sigset_t pendings;
+    while(true) {
+        sigemptyset(&pendings);
+        sigpending(&pendings);
+        showSignals(&pendings);
+        sleep(1);
+    }
+
+    return 0;
+}
+```
+
+这段代码的主要功能部分, 我们 *`先将进程的所有普通信号阻塞`*, 然后 *`再循环获取进程当前的未决信号集并打印出来`*
+
+这段代码的演示结果为：
+
+![blockshow_noUNBLOCK](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/blockshow_noUNBLOCK.gif)
+
+可以看到, 屏幕左侧一直打印进程当前的未决信号集, 而屏幕右侧则不停向进程发送不同的信号
+
+由于 进程阻塞(屏蔽)了所有普通信号, 所以向进程发送的所有普通信号都应该处于未决状态. 事实也确实如此
+
+但是最后我们向进程发送 9信号, 依旧可以终止进程的运行. 9信号是真的无敌
+
+我们还可以设置 30s 后解除某些信号的屏蔽, 然后再查看结果.
+
+我们将循环打印未决信号集的部分代码改为：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406164123322.png" alt="image-20230406164123322" style="zoom:80%;" />
+
+然后 代码的演示结果为：
+
+![blockshow_UNBLOCK_2023-4-6](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/blockshow_UNBLOCK_2023-4-6.gif)
+
+可以看到, 在解除指定信号阻塞之后, 进程处理了对应的未决信号, 即 **`解除信号阻塞之后, 对应信号递达了`**
+
+## 进程什么时候处理信号
+
+我们知道, 进程信号抵达 即为 进程处理信号了.
+
+而在信号抵达之前, 信号还存在一个状态: 信号未决.
+
+而且, 我们说 信号处于位居状态之后, 如果信号没有阻塞, 进程会在合适的时候处理信号. 即 `进程会在合适的时候将信号递达`
+
+那么 问题来了, **`什么时候才是合适的时候？`** **`进程究竟会在什么时候处理信号？`**
+
+这个答案就是：**`当 进程从内核态, 转换为用户态的时候, 进程会进行信号的检测与处理`**
+
+那么就又有问题出现了, **`什么是内核态？ 什么又是用户态？ 什么是内核态和用户态的转换？`**
+
+### 进程的内核态 和 用户态
+
+我们知道, 操作系统中 每个进程都有一个进程地址空间, 以32位环境举例大概长这样：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406165440060.png" alt="image-20230406165440060" style="zoom:67%;" />
+
+并且, 进程地址空间 与 物理内存之间是由 页表相互映射的.
+
+但是我们之间只介绍了一个页表, 即 *`用户空间部分 与 物理内存`* 之间的相互页表映射
+
+而实际上, 进程地址空间 与 物理内存之间并不只有一张页表, **`还存在一张页表 用于 内核空间 与 物理内存 之间相互映射, 被称为内核级页表`**
+
+并且, ==**`与用户级的页表不同, 进程地址空间的内核空间 与 物理内存之间的映射页表, 整个操作系统只有一张`**==, 也就是说操作系统中 **`所有进程共用一张 内核级页表`**. 即：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230406172142849.png" alt="image-20230406172142849" style="zoom:80%;" />
+
+整个操作系统只有一张内核级页表, 也就意味着 每个进程的 内核空间的内容是相同的, 同样意味着 **`物理内存中 只加载着一份有关进程内核空间内容的数据和代码`**
+
+**`如果`** 每个进程都可以随便访问内核空间, 那其实就是说 每个进程都可以随便修改 物理内存中只有着一份的、所有进程共享的数据和代码.
+
+但是这样做就太危险了. 物理内存中只有一份的、每个进程共享的数据和代码, 其实就可以看作是系统级数据和代码
+
+而为了保护这部分 数据和代码, **`进程会分为两种状态`**：**`内核态`** 和 **`用户态`**
+
+当进程 *`需要访问、调用、执行 内核数据 或 代码时`*, 就会 **`转化为内核态`**, 因为只有 `进程处于内核态时, 才有权限访问内核级页表, 即有权限访问内核数据与代码`
+
+当进程*`不需要访问、调用、执行 内核数据 或 代码时`*, 就会 **`转化为用户态`**, 此时 进程将不具备访问内核级页表的权限, `只能访问用户级页表`
+
+这样有利于**`保护 内核级数据和代码`**. 也就是 **`进程在发生从内核态转换为用户态的过程时, 会检测进程的信号并处理`**
+
+> CPU内部存在一个 状态寄存器CR3, 此寄存器内有比特标识位表示当前进程的状态:
+>
+> 1. 若标识位 表示0, 则表明进程此时处于内核态
+> 2. 若标识位 表示3, 则表明进程此时处于用户态
