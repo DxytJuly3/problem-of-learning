@@ -1,6 +1,9 @@
 # .PHONY:all
 # all:myproc mykill
 
+blockshow:blockshow.cc
+	g++ $^ -o $@
+
 mykill:mykill.cc
 	g++ $^ -o $@
 
@@ -9,4 +12,4 @@ myproc:myproc.cc
 
 .PHONY:clean
 clean:
-	rm -f mykill myproc
+	rm -f mykill myproc blockshow
