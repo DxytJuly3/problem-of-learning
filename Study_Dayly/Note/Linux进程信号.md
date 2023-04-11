@@ -1,3 +1,7 @@
+![image-20230408162547569](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230408162547569.png)
+
+---
+
 # 进程信号
 
 进程信号, 在Linux系统的学习中, 是一个非常重要的概念.
@@ -1313,3 +1317,743 @@ int main() {
 > 在进程处理信号时, 如果操作系统还向进程发送相同的信号, 进程时不会处理的. 因为pending信号集中 只能表示信号是否存在, 而不能记录信号被发送过来的次数. 也就是说, 信号未决时, 依旧有相同的信号发送过来, 进程不会处理后续的信号. 
 
 ### 深入理解信号捕捉
+
+在本篇文章的第二部分内容(进程信号的处理)中, 我们已经介绍了一个系统调用`signal()`用来捕捉信号, 并自定义处理.
+
+除了signal()之外, Linux操作系统还为我们提供了另一个系统调用, 来对信号进行捕捉.
+
+#### sigaction()
+
+不过, 这个接口的使用要`更复杂`一些, 但最终要实现的功能与 `signal()` 是一样的：
+
+`sigaction():`
+
+![image-20230408085255453](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230408085255453.png)
+
+从man手册中对sigaction()的描述以及参数可以看出, 此函数的使用比 signal() 要复杂的多：
+
+1. 第一个参数 `int signum`, 很明显 这个参数就需要传入指定的进程信号, 表示**`要捕捉的信号`**
+
+2. 第二个参数 `const struct sigaction *act`, 这个参数很奇怪, 它与此函数同名, 并且是一个结构体指针
+
+	这个结构体的内容是什么？
+
+	<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230408085547938.png" alt="image-20230408085547938" style="zoom:80%;" />
+
+	在man手册中, 可以看到 `struct sigaction` 的内容一共有5个：
+
+	1. `void (*sa_handler)(int);`, 此成员的含义其实就是 `自定义处理信号的函数指针`;
+	2. `void (*sa_sigcation)(int, siginfo_t *, void *);`, 此成员也是一个函数指针. 但是这个函数的意义是用来 处理实时信号的, 不考虑分析. (siginfo_t 是表示实时信号的结构体)
+	3. `sigset_t sa_mask;`, 此成员是一个信号集, 这个信号集有什么用呢？我们在使用时解释
+	4. `int sa_flags;`, 此成员包含着系统提供的一些选项, 本篇文章使用中都设置为0
+	5. `void (*sa_restorer)(void);`, 很明显 此成员也是一个函数指针. 但我们暂时不考虑他的意义.
+
+	也就是说, 我们暂时可以知道, `sigaction()`的第二个参数是一个结构体指针, 并且指向的结构体里 **`有一个成员是用来自定义处理信号`**的
+
+	此参数的作用就是, 将指定信号的处理动作改为传入的`struct sigaction` 的内容
+
+3. `struct sigaction *oldact`, 第三个参数看起来似曾相识, 好像我们在介绍 `sigprocmask()` 接口时的第三个参数
+
+	其实这两个函数的第三个参数的作用是相似的, 都是一个输出型参数.
+
+	在 `sigaction()` 这个函数中, 第三个参数的作用是获取 此次修改信号`struct sigaction`之前的原本的`struct sigaction`
+
+	如果传入为空指针, 则不获取
+
+那么, 我们就来简单的使用一下这个函数:
+
+```cpp
+#include <iostream>
+#include <unistd.h>
+#include <signal.h>
+using std::cout;
+using std::endl;
+
+void handler(int signo) {
+    cout << "获取到一个信号,信号的编号是: " << signo << endl;
+    sigset_t pending;
+    // 增加handler信号的时间,永远都会正在处理2号信号！
+    while (true) {
+        sigpending(&pending);
+        for (int i = 1; i <= 31; i++) {
+            if (sigismember(&pending, i))
+                cout << '1';
+            else
+                cout << '0';
+        }
+        cout << endl;
+        sleep(1);
+    }
+}
+
+int main() {
+    // 先定义两个 struct sigaction 用于传参
+    struct sigaction act, oact;
+    
+    // 初始化 act
+    act.sa_handler = handler;
+    act.sa_flags = 0;
+    sigemptyset(&act.sa_mask);
+    
+    // sigaction 捕捉 2信号
+    sigaction(2, &act, &oact);
+    
+    while (true) {
+        cout << "I am a process, pid: " << getpid() << endl;
+        sleep(1);
+    }
+
+    return 0;
+}
+```
+
+我们设置捕捉2信号, 并在处理时进入死循环打印pending信号集, 即 只要捕捉到2信号就不会再返回到main函数内了.
+
+这段代码的执行结果, 与 使用signal()捕捉信号相同, 但是使用要麻烦一些：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/while_sigaction(2)_2023-4-8.gif" alt="while_sigaction(2)_2023-4-8" style="zoom:80%;" />
+
+可以看到, 当进程受到 2信号时, 会执行我们自定义的处理方法. 表示我们使用 `sigaction()` 捕捉2信号成功
+
+不过 我们自定义的处理2信号的方法是不会结束的, 所以我们还可以看到, 处理2信号时 我们再次发送2信号给进程, 后面2信号会被拦下来 导致后边的2信号一直处于未决状态 
+
+但是, 我们当给进程发送 `3信号(Ctrl+\)` 时, 进程依旧会去处理3信号.
+
+如果我们想要在处理2信号的同时, 将其他信号也拦住呢？
+
+那么 就要用到 `sa_mask` 了：
+
+```cpp
+#include <iostream>
+#include <signal.h>
+#include <unistd.h>
+using std::cout;
+using std::endl;
+
+void handler(int signo) {
+    cout << "获取到一个信号,信号的编号是: " << signo << endl;
+    sigset_t pending;
+    // 增加handler信号的时间,永远都会正在处理2号信号！
+    while (true) {
+        sigpending(&pending);
+        for (int i = 1; i <= 31; i++) {
+            if (sigismember(&pending, i))
+                cout << '1';
+            else
+                cout << '0';
+        }
+        cout << endl;
+        sleep(1);
+    }
+}
+
+int main() {
+    // 先定义两个 struct sigaction 用于传参
+    struct sigaction act, oact;
+
+    // 初始化 act
+    act.sa_handler = handler;
+    act.sa_flags = 0;
+    sigemptyset(&act.sa_mask);
+    sigaddset(&act.sa_mask, 3);         // 在 act.sa_mask 中设置 3信号
+
+    // sigaction 捕捉 2信号
+    sigaction(2, &act, &oact);
+
+    while (true) {
+        cout << "I am a process, pid: " << getpid() << endl;
+        sleep(1);
+    }
+
+    return 0;
+}
+```
+
+我们在需要传入`sigaction()` 的第二个参数中的`sa_mask`信号集中, 添加 3信号.
+
+就可以做到 **`进程捕捉到指定信号并自定义处理的同时, 阻拦3信号的递达`**
+
+执行结果如下:
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/while_sigaction(2)_mask3_2023-4-8.gif" alt="while_sigaction(2)_mask3_2023-4-8" style="zoom:80%;" />
+
+即, `struct sigaction`结构体的`sa_mask` 成员的意义是, **`添加进程在处理捕捉到的信号时对其他信号的阻塞`**. 如果需要添加对其他信号的阻塞, 那么就可以继续在 `sa_mask` 中添加其他信号.
+
+不过, 这样做有什么意义呢？
+
+这样做可以 ==**`防止用户自定义处理信号时, 嵌套式的发送其他信号并捕捉处理`**==. 
+
+如果 用户的自定义处理信号方法内部, 还会发送其他信号, 并且用户还对其进行了捕捉. 那么 信号的处理就无止尽了. 这种情况是不允许发生的.
+
+所以 可以通过使用 `sa_mask` 来进行对其他信号的拦截阻塞.
+
+#### 信号捕捉技巧
+
+一般情况下, 我们如果要捕捉指定的信号, 并对信号进行不同的处理, 首先就是需要编写不同的处理函数.
+
+然后再通过 signal() 或 sigaction() 传入不同的信号以及对应的不同的处理方法进行对信号的捕捉.
+
+不过, 我们还可以通过一种方式使 调用signal() 或 sigaction() 捕捉信号时, 只传入相同的函数指针就可以实现 对不同信号不同处理：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230408102546919.png" alt="image-20230408102546919" style="zoom:80%;" />
+
+当我们定义完指定信号的处理函数之后, 我们可以再定义一个 `handlerAll(int signo)` 函数, 并使用 switch 语句, 将不同的 signo 分别处理.
+
+> 如果需要捕捉的信号过多, 也可以使用 一定的数据结构 将所有的信号自定义处理函数存到数组结构中, 然后再通过指定方法进行对信号的分别处理.
+
+此时, 我们在使用 `signal()` 或者 `sigaction()` 捕捉信号时, 就只需要统一传入 `handlerAll` 的函数指针就可以了.  
+
+这是一种 解耦技巧
+
+## 可重入函数
+
+关于可重入函数的解释, 可以从一个具体的例子进行分析：
+
+一个进程中, 存在一个==`全局的单链表`==结构. 并且此时需要执行一个节点的头插操作：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230408104659228.png" alt="image-20230408104659228" style="zoom:67%;" />
+
+那么此时, 头插的操作就是：
+
+```cpp
+node1->next = head;
+head = node1;
+```
+
+如果 `刚执行完第一步` 之后, 进程因为硬件中断或者其他原因 `陷入内核了`.
+
+陷入内核之后需要回到用户态继续执行, 切换回用户态时 进程会检测未决信号, 如果此时刚好存在一个信号未决, 且此信号自定义处理.
+
+并且, 自定义处理函数中 也存在一个新节点头插操作:
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230408110708978.png" alt="image-20230408110708978" style="zoom:67%;" />
+
+那么此时, 就会执行 `node2` 的头插操作, 执行完毕的结果就是：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230408110742582.png" alt="image-20230408110742582" style="zoom:67%;" />
+
+即, `node2 成为了链表的第一个节点 head`
+
+信号处理完毕之后, 需要返回用户继续执行代码, 用户刚执行完 `node1->next = head;`
+
+所以下面应该执行 `head = node1;`, 结果就成了这样:
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230408111301819.png" alt="image-20230408111301819" style="zoom:67%;" />
+
+结果就是, `node2` 无法被找到了.
+
+这个结果是：main函数和信号自定义处理函数, 先后向单链表中头插两个节点, 而最后只有一个节点真正插入链表中了  
+
+这个结果造成了什么问题？ **`内存泄漏`**, 这是一个很严重的问题
+
+那么造成这个结果的原因是什么？
+
+是因为 单链表的头插函数, 被不同的控制流程调用了, 并且是在第一次调用还没返回时就再次进入该函数, 这个行为称为 **`重入`**
+
+而 像例子中这个单链表头插函数, 访问的是一个全局链表, 所以`可能因为重入而造成数据错乱`, 这样的函数 被称为 `不可重入函数`, 即此函数不能重入, 重入可能会发生错误
+
+反之, 如果`一个函数即使重入`, 也`不会发生任何错误`(一般之访问函数自己的局部变量、参数), 这样的函数就可以被称为 `可重入函数`. 因为每个函数自己的局部变量是独立于此次函数调用的, 再多少次调用相同的函数, 也不会对之前调用函数的局部变量有什么影响.
+
+> 如果一个函数符合以下条件之一则是`不可重入`的:
+>
+> 1. 调用了`malloc`或`free`, 因为 `malloc` 也是用全局链表来管理堆的
+> 2. 调用了标准I/O库函数, 标准I/O库的很多实现都以不可重入的方式使用全局数据结构
+
+## volatile 关键字
+
+C语言有许多的关键字, `volatile` 也是其中之一. 下面分析一下这个关键字的作用
+
+要分析 volatile 的作用, 需要使用下面这个例子：
+
+`myproc.c(注意是C语言文件):`
+
+```c
+#include <stdio.h>
+#include <signal.h>
+
+int flags = 0;
+
+void handler(int signo) {
+    printf("获取到一个信号,信号的编号是: %d\n", signo);
+    flags = 1;
+    printf("我修改了flags: 0->1\n");
+}
+
+int main() {
+    signal(2, handler);
+
+    while (!flags)
+        ;
+    // 未接收到信号时, flags 为 0, !flags 恒为真, 所以会死循环
+    printf("此进程正常退出\n");
+
+    return 0;
+}
+```
+
+此代码, 通过处理2信号, 将全局变量 flags 从0改为1, 使进程正常退出. `正常编译` 运行的结果是:
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/novolatile_2023-4-8.gif" alt="novolatile_2023-4-8" style="zoom:80%;" />
+
+此代码的main函数中, 不会对 flags 做出修改. 
+
+虽然 2信号的自定义处理函数 会对flags作出修改, 但是这个函数的执行是未知的. 即 不确定进程是否会收到2信号 进而执行此函数.
+
+那么对编译器来说, 就有`可能对 flags 做出优化`.
+
+我们知道, 进程再判断数据时, 是CPU在访问数据, 而CPU访问数据时 会将数据从内存中拿到寄存器中. 然后再根据寄存器中的数据进行处理.
+
+在此例中, 就是 `while(!flags);` 判断时, CPU会从内存中拿出数据进行判断. 当flags从0变为1时, 是`内存中的数据发生了变化, CPU也会从内存中拿到新的数据进行判断`  
+
+而 此例中编译器可以确定一定会执行的代码中, flags是不会被修改的. 那么 编译器就可能针对flags做出优化：
+
+**由于编译器认为进程不会修改 flags, 那么在 `while(!flags);` 判断时, CPU读取到flags为0 并存放在寄存器中之后, 为了节省资源 在之后的判断中 CPU 不会再从内存中读取数据, 而是直接根据寄存器中存储的数据进行判断. **
+
+**这就会造成 即使处理信号时将 flags 改为了1, 在进行 `while(!flags);`判断时, CPU依旧会只根据寄存器中存储的0 来进程判断, 这就会造成 进程不会正常退出**
+
+还是相同的代码, 我们可以在`gcc` 编译时, 使用 `-O2` 选项 让编译器做出这样的优化：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/novolatile_O2_2023-4-8.gif" alt="novolatile_O2_2023-4-8" style="zoom:80%;" />
+
+优化之后, 在运行可执行程序. 可以看到 我们发送 2信号 即使将flags改为了1, 也已经不能让进程正常退出了.
+
+这就是编译器 对不一定做修改的数据的优化.
+
+而, 如果我们在 flags定义时 使用volatile关键字, 那么就会有不同的结果：
+
+```c
+volatile int flags = 0; 		// 全局变量
+```
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/volatile_O2_2023-4-8.gif" alt="volatile_O2_2023-4-8" style="zoom:80%;" />
+
+这就是 `volatile` 关键词的作用, 即 **`保持内存的可见性`**. 告知编译器，被该关键字修饰的变量, 不允许被优化, 对该变量的任何操作, 都`必须在真实的内存中进行操作` 
+
+## SIGCHLD 信号
+
+在介绍进程等待的时候, 文章中提到过：子进程不是默默的退出, 而是需要让父进程接收退出信息之后, 才退出的. 否则 子进程会进入僵尸状态.
+
+所以我们介绍了进程等待的函数, `让父进程主动去询问子进程是否退出是否需要接收退出信息`
+
+而, 实际上 子进程退出是会通知父进程的, 只不过父进程会忽略而已. 
+
+这个通知的方式是: ==**`子进程退出时, 会向父进程发送一个信号, 即 SIGCHLD 信号`**==
+
+怎么证明呢？
+
+很简答, 我们只需要在父进程中捕捉 `SIGCHLD信号` 就可以了:
+
+```cpp
+#include <cstdlib>
+#include <iostream>
+#include <signal.h>
+#include <unistd.h>
+using std::cout;
+using std::endl;
+
+int flags = 0;
+
+void handler(int signo) {
+    cout << "子进程退出, 我收到了信号: " << signo << "我是: " << getpid() << endl;
+}
+
+int main() {
+    signal(SIGCHLD, handler);
+    pid_t id = fork();
+    if (id == 0) {
+        // 子进程
+        while (true) {
+            cout << "我是子进程, pid: " << getpid() << endl;
+            sleep(1);
+        }
+        exit(0);
+    }
+
+    // 父进程
+    while (true) {
+        cout << "我是父进程, pid: " << getpid() << endl;
+    }
+
+    return 0;
+}
+```
+
+这段代码的执行结果是:
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/SIGCHLD_2023-4-8.gif" alt="SIGCHLD_2023-4-8" style="zoom:80%;" />
+
+可以看到, 子进程退出时 父进程确实收到了一个信号, 这个信号是 17.
+
+17 是 ==SIGCHLD== 吗？可以在man手册中查看：
+
+<img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230408122431671.png" alt="image-20230408122431671" style="zoom:80%;" />
+
+可以看到, ==SIGCHLD== 的值确实是17. 而 默认的处理是 `ignore` 忽略
+
+那么, 也就是说 子进程退出时子进程其实会给父进程发送一个 ==SIGCHLD== 信号. 还有其他情况吗？
+
+man手册中写了, 子进程暂停或终止时会发送 ==SIGCHLD== 信号, 我们来测试一下：
+
+> <img src="https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230404091257203.png" alt="image-20230404091257203" style="zoom:80%;" />
+>
+> 暂停信号是 19, 继续信号是 18
+
+![STOP_SIGCHLD_2023-4-8](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/STOP_SIGCHLD_2023-4-8.gif)
+
+可以看到, 其实子进程不仅退出时会向父进程发送 ==SIGCHLD== 信号, 暂停时 和 恢复时 都会向父进程发送 ==SIGCHLD== 信号
+
+子进程在退出时向父进程发送 ==SIGCHLD== 信号, 这个动作有什么作用呢？
+
+在介绍进程等待时 提到过, `waitpid()` 会等待子进程退出, 而等待的动作是主动去询问子进程是否退出.
+
+现在我们知道了, 子进程退出时会向父进程发送 ==SIGCHLD== 信号, 那么父进程是不是可以通过捕捉此信号 然后等待子进程呢？
+
+```cpp
+#include <cassert>
+#include <cstdlib>
+#include <iostream>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+using std::cout;
+using std::endl;
+
+void freeChild(int signo) {
+    assert(signo == SIGCHLD);
+
+    pid_t id = waitpid(-1, nullptr, 0);
+    if(id > 0) {
+        cout << "父进程等待子进程成功, child pid: " << id << endl;
+    }
+}
+
+int main() {
+    signal(SIGCHLD, freeChild);
+    pid_t id = fork();
+    if (id == 0) {
+        // 子进程
+        while (true) {
+            cout << "我是子进程, pid: " << getpid() << endl;
+            sleep(1);
+        }
+        exit(0);
+    }
+
+    // 父进程
+    while (true) {
+        cout << "我是父进程, pid: " << getpid() << endl;
+        sleep(1);
+    }
+
+    return 0;
+}
+```
+
+这段代码 捕捉 ==SIGCHLD== 信号 处理此信号为调用`waitpid()`回收子进程.
+
+> `waitpid()`, 第一个参数应该传入回收子进程的pid, 不过 **`-1 表示回收任意子进程`**
+>
+> 第三个参数传入 0 表示 **`阻塞等待`**.
+
+运行结果是：
+
+![signal_SIGCHLD_2023-4-8](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/signal_SIGCHLD_2023-4-8.gif)
+
+可以看到, 即使waitpid()设置为阻塞等待, 也还是可以随时回收一个子进程.
+
+但是目前这个回收子进程的方式, 还存在很大的BUG.
+
+如果我们 **`同时创建多个子进程, 并将这些子进程同时退出`**, 会出现什么状况:
+
+```cpp
+#include <cassert>
+#include <cstdlib>
+#include <iostream>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+using std::cout;
+using std::endl;
+
+void freeChild(int signo) {
+    assert(signo == SIGCHLD);
+
+    pid_t id = waitpid(-1, nullptr, 0);
+    if (id > 0) {
+        cout << "父进程等待子进程成功, child pid: " << id << endl;
+    }
+}
+
+int main() {
+    signal(SIGCHLD, freeChild);
+    for (int i = 0; i < 10; i++) {
+        pid_t id = fork();
+        if (id == 0) {
+            // 子进程
+            int cnt = 10;
+            while (cnt) {
+                cout << "我是子进程, pid: " << getpid() << ", cnt: " << cnt-- << endl;
+                sleep(1);
+            }
+            cout << "子进程退出, 进入僵尸状态" << endl;
+            exit(0);
+        }
+    }
+
+    // 父进程
+    while (true) {
+        cout << "我是父进程, pid: " << getpid() << endl;
+        sleep(1);
+    }
+
+    return 0;
+}    
+```
+
+![signal_SIGCHLD_BUG1_2023-4-8](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/signal_SIGCHLD_BUG1_2023-4-8.gif)
+
+在代码运行起来之后, 监控脚本可以非常清除的看到 `子进程从创建到退出的整个过程`.
+
+最终的结果是什么？子进程按理来说应该全部退出并被回收掉, 但实际上 会`有几个子进程以僵尸状态 残留下来`, 并没有被父进程回收掉. 
+
+造成这个结果的原因其实是, `太多子进程在同一时间退出了, 即太多相同的信号在同一时间被发送给父进程了`, 而进程处理信号是需要时间的, 当前信号没有被处理完毕时, 是不会记录后面有多少信号发送过来的. 
+
+也就是说, `有一部分子进程发送信号的时候 父进程还在处理其他子进程的信号, 父进程并没有接收到这一部分子进程的信号`. 所以没有回收这一部分子进程.
+
+那么, 改怎么修改处理信号的方式呢？
+
+```cpp
+void freeChild(int signo) {
+    assert(signo == SIGCHLD);
+
+    while(true) {
+        pid_t id = waitpid(-1, nullptr, 0);
+        if (id > 0) {
+            cout << "父进程等待子进程成功, child pid: " << id << endl;
+        }
+        else {
+            cout << "等待结束" << endl;
+            break;
+        }
+    }
+}
+```
+
+将信号处理方法内, 回收子进程的部分设置为 `死循环回收`, 没有子进程需要回收的时候跳出循环, 应该就可以把所有子进程都回收掉：![signal_SIGCHLD_BUG3_2023-4-8](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/signal_SIGCHLD_BUG3_2023-4-8.gif)
+
+这样确实可以将所有的子进程都回收掉, 但是又出现了新的问题：
+
+**`捕捉到信号之后, 如果有子进程一直不退出, 父进程代码不会再运行了. 因为调用的函数 会一直在死循环内, 回不到main函数中了`**
+
+```cpp
+#include <cassert>
+#include <cstdlib>
+#include <iostream>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+using std::cout;
+using std::endl;
+
+void freeChild(int signo) {
+    assert(signo == SIGCHLD);
+
+    while (true) {
+        pid_t id = waitpid(-1, nullptr, 0);
+        if (id > 0) {
+            cout << "父进程等待子进程成功, child pid: " << id << endl;
+        }
+        else {
+            cout << "等待结束" << endl;
+            break;
+        }
+    }
+}
+
+int main() {
+    signal(SIGCHLD, freeChild);
+    for (int i = 0; i < 10; i++) {
+        pid_t id = fork();
+        if (id == 0) {
+            // 子进程
+            int cnt = 0;
+            if(i < 6)
+                cnt = 5;        // 前6个子进程 5s就退出
+            else
+                cnt = 30;       // 后4个子进程 30s 退出
+            while (cnt) {
+                cout << "我是子进程, pid: " << getpid() << ", cnt: " << cnt-- << endl;
+                sleep(1);
+            }
+            cout << "子进程退出, 进入僵尸状态" << endl;
+            exit(0);
+        }
+    }
+
+    // 父进程
+    while (true) {
+        cout << "我是父进程, pid: " << getpid() << endl;
+        sleep(1);
+    }
+
+    return 0;
+}
+```
+
+我们将子进程设置为不同时间退出, 观察两个时间差内 进程的运行：
+
+![signal_SIGCHLD_BUG4_2023-4-8](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/signal_SIGCHLD_BUG4_2023-4-8.gif)
+
+可以看到, 5s后退出的子进程被回收之后, 30s后退出的进程退出之前, 父进程的代码一直没有运行.
+
+那么也就是说, `只要子进程一直在运行, 父进程就无法正常工作` 进程就不会从信号处理函数中跳出来.
+
+这个问题如何解决呢？
+
+我们只需要将 waitpid() 的第三个参数, 由 0改为 WNOHANG 就可以了.
+
+> waitpid()的第三个参数传入 `WNOHANG`, 表示非阻塞等待
+
+因为我们之前是阻塞式等待, 只要还有子进程存在 就会阻塞住. 
+
+而`非阻塞等待, 在子进程没有退出时, 会返回0`. 这样就可以退出死循环, 结束信号处理函数的运行. 从而回到main函数中.
+
+```cpp
+#include <cassert>
+#include <cstdlib>
+#include <iostream>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+using std::cout;
+using std::endl;
+
+void freeChild(int signo) {
+    assert(signo == SIGCHLD);
+
+    while (true) {
+        pid_t id = waitpid(-1, nullptr, WNOHANG);
+        if (id > 0) {
+            cout << "父进程等待子进程成功, child pid: " << id << endl;
+        }
+        else if(id == 0){
+            cout << "还有子进程在运行, 但是没有子进程退出, 父进程要去做自己的事了 " << endl;
+            break;
+        }
+        else {
+            cout << "父进程等待所有子进程结束" << endl;
+            break;
+        }
+    }
+}
+
+int main() {
+    signal(SIGCHLD, freeChild);
+    // 为方便演示, 我们只创建5个子进程
+    for (int i = 0; i < 5; i++) {
+        pid_t id = fork();
+        if (id == 0) {
+            // 子进程
+            int cnt = 0;
+            if(i < 2)
+                cnt = 5;        // 前2个子进程 5s 就退出
+            else
+                cnt = 30;       // 后3个子进程 30s 退出
+            while (cnt) {
+                cout << "我是子进程, pid: " << getpid() << ", cnt: " << cnt-- << endl;
+                sleep(1);
+            }
+            cout << "子进程退出, 进入僵尸状态" << endl;
+            exit(0);
+        }
+    }
+
+    // 父进程
+    while (true) {
+        cout << "我是父进程, pid: " << getpid() << endl;
+        sleep(1);
+    }
+
+    return 0;
+}
+```
+
+此时, 代码运行的结果就是：
+
+![signal_SIGCHLD_NOBUG_2023-4-8](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/signal_SIGCHLD_NOBUG_2023-4-8.gif)
+
+这才是父进程回收子进程的最终版本~
+
+### 回收子进程的其他方式
+
+经过演示, 了解到 SIGCHLD 信号实际上是子进程退出时向父进程发送的信号. 不过父进程对此信号的处理 默认是忽略的.
+
+我们可以通过捕捉此信号来让父进程回收子进程. 不过如果我们捕捉此信号并设置忽略处理呢？
+
+```cpp
+#include <cassert>
+#include <cstdlib>
+#include <iostream>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+using std::cout;
+using std::endl;
+
+int main() {
+    signal(SIGCHLD, SIG_IGN);
+    // 为方便演示, 我们只创建5个子进程
+    for (int i = 0; i < 5; i++) {
+        pid_t id = fork();
+        if (id == 0) {
+            // 子进程
+            int cnt = 0;
+            if(i < 2)
+                cnt = 5;        // 前2个子进程 5s 就退出
+            else
+                cnt = 30;       // 后3个子进程 30s 退出
+            while (cnt) {
+                cout << "我是子进程, pid: " << getpid() << ", cnt: " << cnt-- << endl;
+                sleep(1);
+            }
+            cout << "子进程退出, 进入僵尸状态" << endl;
+            exit(0);
+        }
+    }
+
+    // 父进程
+    while (true) {
+        cout << "我是父进程, pid: " << getpid() << endl;
+        sleep(1);
+    }
+
+    return 0;
+}
+```
+
+这段代码的执行结果是：
+
+![SIGCHLD_SETIGN](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/SIGCHLD_SETIGN.gif)
+
+可以看到, 我们没有自定义处理子进程, 知识通过signal()手动对 SIGCHLD 信号设置了 SIG_IGN 忽略处理, 但是最终子进程却自动被回收了.
+
+不捕捉此信号时, 父进程对此信号的默认处理方式也是 忽略, 但最终子进程退出会进入僵尸状态.
+
+而我们捕捉此信号, 只是又手动设置了一遍忽略处理, 子进程却被自动回收了.
+
+所以, 如果 `只是为了更加方便的回收子进程, 可以直接捕捉并设置忽略.`
+
+那么 同样是忽略, 最终的结果却不同的原因是什么呢？
+
+我们设置的处理方式, 都是忽略. 与默认不同的是, 我们是通过了系统调用来设置的, 即 玄机实际在这个系统调用中.
+
+系统调用是一个函数, 一定会做一些有关信号的其他处理, 所以可能会造成同样的处理方法 结果却不同的情况. 不过不需要太过关心
+
+---
+
+本篇文章到此结束, 感谢阅读~
