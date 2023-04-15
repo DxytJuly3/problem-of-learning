@@ -1,21 +1,20 @@
 ---
 layout: '../../layouts/MarkdownPost.astro'
-title: '[Linux] 多线程控制分析'
-pubDate: 2023-04-11
-description: ''
+title: '[Linux] 多线程控制分析：如何获取线程ID？如何自动回收线程？'
+pubDate: 2023-04-14
+description: '我们知道, 进程有自己相关控制接口, 等待、创建等
+而线程作为轻量级的进程, 其实也是有控制接口的.'
 author: '七月.cc'
 cover:
-    url: ''
-    square: ''
+    url: 'https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230415171503544.png'
+    square: 'https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230415171503544.png'
     alt: 'cover'
 tags: ["Linux", "线程", "系统"]
 theme: 'light'
 featured: false
 ---
 
-
-
-
+![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230415171503544.png)
 
 Linux系统中, 线程是轻量级的进程. 我们已经介绍过了线程的相关概念, 见过了线程再Linux操作系统中的存在形式.
 
@@ -385,7 +384,7 @@ int main() {
 }
 ```
 
-![Thread_Shared_SIG](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/Thread_Shared_SIG.gif)
+![线程和进程接收信号相同状态](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/Thread_Shared_SIG.gif)
 
 我们向进程发送19信号, 所有线程都会暂停运行.
 
@@ -444,9 +443,9 @@ int main() {
 }
 ```
 
-![thread_error_float](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/thread_error_float.gif)
+![线程浮点异常](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/thread_error_float.gif)
 
-![thread_error_segmentation](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/thread_error_segmentation.gif)
+![线程发生段错误](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/thread_error_segmentation.gif)
 
 当线程出现不同的异常, 会影响进程的终止.
 
@@ -528,7 +527,7 @@ int main() {
 }
 ```
 
-![pthread_exit](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/pthread_exit.gif)
+![线程退出](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/pthread_exit.gif)
 
 ### `pthread_cancel()`
 
@@ -555,7 +554,6 @@ void printTid(const char* threadName, const pthread_t &tid) {
 
 void* callBack1(void* args) {
     char* threadName = (char*)args;
-    //pthread_t tid = (pthread_t)args; 			// 这里如果想要向主线程发送取消请求, 则args需要是主线程的id
     int cnt = 5;
     while (true) {
         printTid(threadName, pthread_self());
@@ -563,8 +561,6 @@ void* callBack1(void* args) {
         sleep(1);
         cnt--;
         if(cnt == 0) {
-            // pthread_cancel(tid); 						// 新线程向主线程发送取消请求
-            // pthread_cancel(pthread_self());			// 新线程向自己发送取消请求
             pthread_exit((void*)123);
         }
      }
@@ -590,24 +586,73 @@ int main() {
 
 首先是, `主线程向新线程发送取消请求`：
 
-![thread_cancel_main2new](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/thread_cancel_main2new.gif)
+![主线程向新线程发送取消请求](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/thread_cancel_main2new.gif)
 
 新线程被取消 退出, 退出信息为-1. 即为 取消退出.
 
-即 主线程是可以向新线程发送取消信号的. 但是 有可能发生错误. 
+即 主线程是可以向新线程发送取消信号的. 但是 `有可能发生错误`. 
 
 我们上述代码中, 向新线程发送取消信号的动作 是在创建新线程2s之后执行的.
 
 如果将那2s的暂停取消(主线程中, cancel动作前的 sleep(2))：
 
-![thread_cancel_main2new_error](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/thread_cancel_main2new_error.gif)
+![主线程向新线程发送取消请求, 出现错误](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/thread_cancel_main2new_error.gif)
 
 可以发现, 线程、进程都不正常的退出了.
 
-然后是, `新线程向自己发送信号`：
+> 同一进程内的所有线程都可以调用`pthread_cancel()`像任意线程发送取消信号.
+>
+> 甚至可以向主线程发送取消信号. 线程自己也可以向自己发送取消信号. 
+>
+> 可以自己去测试一下.
+
+### 被取消的线程的退信息
+
+当`线程被成功的取消`, 我们用 `pthread_join()` 接收线程的退出信息. 结果得到的`退出信息是-1`
+
+那, 这个-1是从哪里来的呢？
+
+我们知道, Linux中线程是由PCB模拟实现的, PCB中维护的都有自己执行流的退出信息.
+
+我们`return`也好 或者 调用`pthread_exit()` 也好, 实际上都会修改PCB中维护的退出信息.
+
+而`pthread_cancel()` 也是如此, 如果取消线程成功了, 操作系统就会修改线程PCB中的退出信息.
+
+将退出信息改为 **PTHREAD_CANCELED** . 这是一个 pthread 库提供的宏, 其实就是 `((void*)-1)` 的宏定义：
+
+![|wide](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230415085216694.png)
+
+## 线程分离
+
+操作系统中的线程, 在默认情况下是 `joinable` 的.
+
+即, 线程退出之后 是需要调用 `pthread_join` 进行接收线程信息和资源回收的, 否则可能会造成内存泄漏问题.
+
+不过, 如果一个线程不需要关心返回值, 如果不是需要回收资源, 其实 join 的必要没有那么大.
+
+那么, 对于`不关心返回值的线程`, 可否不用 join回收资源, `可否让线程自动回收资源呢`？
+
+是可以的. 这样的操作叫 **`线程分离`**
+
+### `pthread_detach()`
+
+![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230415160811729.png)
+
+此接口的作用, 其实可以理解为 将线程与主线程分离. 即 主线程不在管这个线程, 主线程也就不关心退出信息, 不关心资源回收.
+
+这个接口一般线程自己调用或主线程调用.
+
+不过, `joinable 和 分离 是冲突的`. 毕竟 joinable 表示线程需要调用join回收, 分离线程 则表示此线程是自动回收的. 很明显是两个冲突的状态
+
+![线程join成功](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/thread_join_success.gif)
+
+这是线程被正常join的现象.
+
+如果我们设置分离：
 
 ```cpp
 #include <iostream>
+#include <cstring>
 #include <string>
 #include <pthread.h>
 #include <unistd.h>
@@ -615,44 +660,180 @@ using std::cout;
 using std::endl;
 using std::string;
 
-void printTid(const char* threadName, const pthread_t &tid) {
-    cout << threadName << " is runing, " << "tid: " << tid << ", pid: " << getpid() << endl;
+void printTid(const char* threadName, const pthread_t& tid) {
+    printf("%s is runing, tid: %lu, pid: %d\n", threadName, tid, getpid());
 }
 
-void* callBack1(void* args) {
-    char* threadName = (char*)args;
-    //pthread_t tid = (pthread_t)args; 			// 这里如果想要向主线程发送取消请求, 则args需要是主线程的id
-    int cnt = 5;
-    while (true) {
-        printTid(threadName, pthread_self());
-
+void* startRoutine(void* args) {
+    pthread_detach(pthread_self());			// 线程分离
+    string name = (char*)args;
+    int cnt = 1;
+    while (cnt--) {
+        printTid(name.c_str(), pthread_self());
         sleep(1);
-        cnt--;
-        if(cnt == 0) {
-            // pthread_cancel(tid); 						// 新线程向主线程发送取消请求
-            pthread_cancel(pthread_self());			// 新线程向自己发送取消请求
-            // pthread_exit((void*)123);
-        }
-     }
+    }
+    printf("%s is over\n", name.c_str());
+
+    return nullptr;
 }
 
 int main() {
-    pthread_t tid1;
+    pthread_t tid1, tid2, tid3, tid4;
 
-    pthread_create(&tid1, nullptr, callBack1, (void*)"thread_1");
-    //sleep(2);
-	 //pthread_cancel(tid1); 						// 主线程向新线程发送取消请求
-   	//cout << "main thread cancel thread_1" << endl;
-	 
-    sleep(10);
-    
-    void* ret = nullptr;
-    pthread_join(tid1, &ret);
-    cout << "main thread join thread_1 , ready to print thread_1 ret" << endl;
+    pthread_create(&tid1, nullptr, startRoutine, (void*)"thread_1");
+    pthread_create(&tid2, nullptr, startRoutine, (void*)"thread_2");
+    pthread_create(&tid3, nullptr, startRoutine, (void*)"thread_3");
+    pthread_create(&tid4, nullptr, startRoutine, (void*)"thread_4");
+
     sleep(2);
-    cout << "print thread_1 ret: " << (long long)ret << endl;
+
+    int joinRet = pthread_join(tid1, nullptr);
+    cout << strerror(joinRet) << endl;
+    joinRet = pthread_join(tid2, nullptr);
+    cout << strerror(joinRet) << endl;
+    joinRet = pthread_join(tid3, nullptr);
+    cout << strerror(joinRet) << endl;
+    joinRet = pthread_join(tid4, nullptr);
+    cout << strerror(joinRet) << endl;
 
     return 0;
 }
 ```
 
+上面的这段代码, 在线程需要执行的回调函数内 调用`pthread_detach(pthread_self());`将线程自己分离, 然后主线程内依旧使用 `pthread_join()` 回收. 不过接收返回值, 判断join执行的结果：
+
+![分离和joinable状态不可共存](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/detach_joinable_without.gif)
+
+可以看到, 主线程中的 `pthread_join()` 并没有成功的将4个线程回收掉. 而是报出了 `Invalid argument 无效参数` 的错误.
+
+这其实就意味着, 分离过的线程 在运行结束之后就自动被回收了, 无法再用 `pthread_join()` 回收.
+
+---
+
+上面举得例子是正确使用的情况. 
+
+如果, 我们将主线程中的 sleep(2); 语句删除了, 并且我们只创建、回收一个线程：
+
+```cpp
+#include <iostream>
+#include <cstring>
+#include <string>
+#include <pthread.h>
+#include <unistd.h>
+using std::cout;
+using std::endl;
+using std::string;
+
+void printTid(const char* threadName, const pthread_t& tid) {
+    printf("%s is runing, tid: %lu, pid: %d\n", threadName, tid, getpid());
+}
+
+void* startRoutine(void* args) {
+    pthread_detach(pthread_self());
+    string name = (char*)args;
+    int cnt = 1;
+    while (cnt--) {
+        printTid(name.c_str(), pthread_self());
+        sleep(1);
+    }
+    printf("%s is over\n", name.c_str());
+
+    return nullptr;
+}
+
+int main() {
+    pthread_t tid1;
+
+    pthread_create(&tid1, nullptr, startRoutine, (void*)"thread_1");
+
+    int joinRet = pthread_join(tid1, nullptr);
+    cout << strerror(joinRet) << endl;
+
+    return 0;
+}
+```
+
+我们依旧在 回调函数内将线程分离, 那么这段代码的执行结果是：
+
+![分离了, 但是join执行成功](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/detach_butjoinsucess.gif)
+
+惊奇的发现, 线程退出之后成功得被 join 回收了.
+
+这是什么原因？我们不是在线程内分离线程了吗？
+
+其实是因为, 在主线程内 我们创建了线程之后 没有使主线程暂停一会, 直接就继续执行了 `pthread_join()`. 线程还没来得及 将自己分离.
+
+所以线程退出时, 又会被主线程中的 `pthread_join()` 回收成功
+
+要避免这种情况, 可以在创建线程之后将主线程等一会, 让新线程执行完分离再让主线程继续执行.
+
+或者, 可以直接在主线程内将线程分离.
+```cpp
+#include <iostream>
+#include <cstring>
+#include <string>
+#include <pthread.h>
+#include <unistd.h>
+using std::cout;
+using std::endl;
+using std::string;
+
+void printTid(const char* threadName, const pthread_t& tid) {
+    printf("%s is runing, tid: %lu, pid: %d\n", threadName, tid, getpid());
+}
+
+void* startRoutine(void* args) {
+    string name = (char*)args;
+    int cnt = 1;
+    while (cnt--) {
+        printTid(name.c_str(), pthread_self());
+        sleep(1);
+    }
+    printf("%s is over\n", name.c_str());
+
+    return nullptr;
+}
+
+int main() {
+    pthread_t tid1;
+
+    pthread_create(&tid1, nullptr, startRoutine, (void*)"thread_1");
+    pthread_detach(tid1);
+    cout << "main thread detach thread_1" << endl;
+
+    int joinRet = pthread_join(tid1, nullptr);
+    cout << strerror(joinRet) << endl;
+	
+    sleep(5); 		// 防止主线程先退出
+    
+    return 0;
+}
+```
+
+![在主线程中分离线程](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/detach_inmain_joinable_without.gif)
+
+这样就可以解决 join 时, 新线程还未分离的问题.
+
+---
+
+线程分离之后, 主线程就不再管分离的线程了. 即使`主线程先退出了, 也不会管分离的线程`. 即主线程先退出, 被分离的线程可能还会运行.
+
+所以, **`存在线程被分离时, 我们的一般会将主线程不退出, 常驻内存`**
+
+线程分离, 就像是给线程设置了一下让线程如何退出. 等线程执行完毕之后, 自动退出回收.
+
+所以, 其实**`线程分离也可以看作是线程的第四种退出方式, 延迟退出`**
+
+> 第一种是, 回调函数返回
+>
+> 第二种是, pthread_exit()
+>
+> 第三种是, pthread_cancel()
+
+---
+
+到这里, 线程的概念和控制基本上介绍完了.
+
+但是还有一个问题, **`就是 如何理解线程id`**. 不过会是下一篇文章的内容.
+
+感谢阅读~
