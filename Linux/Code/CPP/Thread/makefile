@@ -1,6 +1,8 @@
 .PHONY:all
-all:myThread threadTest
+all:myThread threadTest myThreadID
 
+myThreadID:myThreadID.cc
+	g++ -o $@ $^ -lpthread
 myThread:myThread.cc
 	g++ -o $@ $^ -lpthread
 threadTest:threadTest.cc
@@ -8,4 +10,4 @@ threadTest:threadTest.cc
 
 .PHONY:clean
 clean:
-	rm -f myThread threadTest
+	rm -f myThread threadTest myThreadID
