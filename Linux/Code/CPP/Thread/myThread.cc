@@ -1,60 +1,131 @@
 #include <iostream>
-#include <cstring>
-#include <string>
-#include <pthread.h>
 #include <unistd.h>
+#include <pthread.h>
 using std::cout;
 using std::endl;
-using std::string;
 
-void printTid(const char* threadName, const pthread_t& tid) {
-    printf("%s is runing, tid: %lu, pid: %d\n", threadName, tid, getpid());
+int tickets = 10000;
+pthread_mutex_t mutex;
+
+void* inqureTicket(void* args) {
+    const char* name = static_cast<const char*>(args);
+
+    int cnt = 10;
+    while (cnt--) {
+        if (tickets > 0) {
+            usleep(100000);
+            printf("%s: %lu 查到剩余票了, 还有: %d\n",name, pthread_self(), tickets);
+            usleep(100000);
+        }
+        else {
+            printf("没有票了\n", name);
+            break;
+        }
+    }
+
+    return nullptr;
 }
 
-void* startRoutine(void* args) {
-    // pthread_detach(pthread_self());
-    string name = (char*)args;
-    int cnt = 1;
-    while (cnt--) {
-        printTid(name.c_str(), pthread_self());
-        sleep(1);
+void* grabTicket(void* args) {
+    const char* name = static_cast<const char*>(args);
+
+    while (true) {
+        pthread_mutex_lock(&mutex);     // 在即将进入临界区时加锁
+        if (tickets > 0) {
+            // usleep(100);
+            printf("%s: %lu 抢到票了, 编号为: %d\n", name, pthread_self(), tickets--);
+            // usleep(100);
+            pthread_mutex_unlock(&mutex);   // 在即将离开临界区时解锁
+        }
+        else {
+            printf("没有票了, %s: %lu 放弃抢票\n", name, pthread_self());
+            pthread_mutex_unlock(&mutex); // 在线程即将退出时解锁
+            break;
+        }
     }
-    printf("%s is over\n", name.c_str());
 
     return nullptr;
 }
 
 int main() {
+    pthread_mutex_init(&mutex, nullptr);
+
     pthread_t tid1, tid2, tid3, tid4;
 
-    pthread_create(&tid1, nullptr, startRoutine, (void*)"thread_1");
+    pthread_create(&tid1, nullptr, grabTicket, (void*)"thread_1");
+    pthread_create(&tid2, nullptr, grabTicket, (void*)"thread_2");
+    pthread_create(&tid3, nullptr, grabTicket, (void*)"thread_3");
+    pthread_create(&tid4, nullptr, grabTicket, (void*)"thread_4");
 
-    pthread_detach(tid1);
-    cout << "main thread detach thread_1" << endl;
-
-    // pthread_create(&tid2, nullptr, startRoutine, (void*)"thread_2");
-    // pthread_create(&tid3, nullptr, startRoutine, (void*)"thread_3");
-    // pthread_create(&tid4, nullptr, startRoutine, (void*)"thread_4");
-
-    // sleep(2);
-
-    // while (true) {
-    //     printTid("main thread", pthread_self());
-    //     sleep(1);
-    // }
-
-    int joinRet = pthread_join(tid1, nullptr);
-    cout << strerror(joinRet) << endl;
-    // joinRet = pthread_join(tid2, nullptr);
-    // cout << strerror(joinRet) << endl;
-    // joinRet = pthread_join(tid3, nullptr);
-    // cout << strerror(joinRet) << endl;
-    // joinRet = pthread_join(tid4, nullptr);
-    // cout << strerror(joinRet) << endl;
-    sleep(5);       // 防止主线程先退出
+    pthread_join(tid1, nullptr);
+    cout << "main thread join thread_1" << endl;
+    pthread_join(tid2, nullptr);
+    cout << "main thread join thread_2" << endl;
+    pthread_join(tid3, nullptr);
+    cout << "main thread join thread_3" << endl;
+    pthread_join(tid4, nullptr);
+    cout << "main thread join thread_4" << endl;
 
     return 0;
 }
+
+// #include <iostream>
+// #include <cstring>
+// #include <string>
+// #include <pthread.h>
+// #include <unistd.h>
+// using std::cout;
+// using std::endl;
+// using std::string;
+
+// void printTid(const char* threadName, const pthread_t& tid) {
+//     printf("%s is runing, tid: %lu, pid: %d\n", threadName, tid, getpid());
+// }
+
+// void* startRoutine(void* args) {
+//     // pthread_detach(pthread_self());
+//     string name = (char*)args;
+//     int cnt = 1;
+//     while (cnt--) {
+//         printTid(name.c_str(), pthread_self());
+//         sleep(1);
+//     }
+//     printf("%s is over\n", name.c_str());
+
+//     return nullptr;
+// }
+
+// int main() {
+//     pthread_t tid1, tid2, tid3, tid4;
+
+//     pthread_create(&tid1, nullptr, startRoutine, (void*)"thread_1");
+
+//     pthread_detach(tid1);
+//     cout << "main thread detach thread_1" << endl;
+
+//     // pthread_create(&tid2, nullptr, startRoutine, (void*)"thread_2");
+//     // pthread_create(&tid3, nullptr, startRoutine, (void*)"thread_3");
+//     // pthread_create(&tid4, nullptr, startRoutine, (void*)"thread_4");
+
+//     // sleep(2);
+
+//     // while (true) {
+//     //     printTid("main thread", pthread_self());
+//     //     sleep(1);
+//     // }
+
+//     int joinRet = pthread_join(tid1, nullptr);
+//     cout << strerror(joinRet) << endl;
+//     // joinRet = pthread_join(tid2, nullptr);
+//     // cout << strerror(joinRet) << endl;
+//     // joinRet = pthread_join(tid3, nullptr);
+//     // cout << strerror(joinRet) << endl;
+//     // joinRet = pthread_join(tid4, nullptr);
+//     // cout << strerror(joinRet) << endl;
+//     sleep(5);       // 防止主线程先退出
+
+//     return 0;
+// }
 
 // #include <iostream>
 // #include <string>

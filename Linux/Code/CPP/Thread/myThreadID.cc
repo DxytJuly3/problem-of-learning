@@ -21,15 +21,21 @@ void* startRoutine(void* args) {
 }
 
 int main() {
-    pthread_t tid1, tid2, tid3;
+    pthread_t tid1, tid2, tid3, tid4, tid5, tid6;
 
     pthread_create(&tid1, nullptr, startRoutine, (void*)"thread1");
     pthread_create(&tid2, nullptr, startRoutine, (void*)"thread2");
     pthread_create(&tid3, nullptr, startRoutine, (void*)"thread3");
+    pthread_create(&tid4, nullptr, startRoutine, (void*)"thread4");
+    pthread_create(&tid5, nullptr, startRoutine, (void*)"thread5");
+    pthread_create(&tid6, nullptr, startRoutine, (void*)"thread6");
 
     pthread_join(tid1, nullptr);
     pthread_join(tid2, nullptr);
     pthread_join(tid3, nullptr);
+    pthread_join(tid4, nullptr);
+    pthread_join(tid5, nullptr);
+    pthread_join(tid6, nullptr);
 
     return 0;
 }
