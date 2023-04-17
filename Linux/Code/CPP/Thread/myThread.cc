@@ -1,73 +1,194 @@
 #include <iostream>
 #include <unistd.h>
 #include <pthread.h>
-using std::cout;
-using std::endl;
+#include "threadLock.hpp"
 
-int tickets = 10000;
-pthread_mutex_t mutex;
+int cnt = 0;
+pthread_mutex_t mutexA = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutexB = PTHREAD_MUTEX_INITIALIZER;
 
-void* inqureTicket(void* args) {
-    const char* name = static_cast<const char*>(args);
-
-    int cnt = 10;
-    while (cnt--) {
-        if (tickets > 0) {
-            usleep(100000);
-            printf("%s: %lu 查到剩余票了, 还有: %d\n",name, pthread_self(), tickets);
-            usleep(100000);
-        }
-        else {
-            printf("没有票了\n", name);
-            break;
-        }
+void* startRoutineA(void* args) {
+    while (true) {
+        pthread_mutex_lock(&mutexA);
+        pthread_mutex_lock(&mutexB);
+        cnt++;
+        pthread_mutex_unlock(&mutexA);
+        pthread_mutex_unlock(&mutexB);
     }
 
     return nullptr;
 }
 
-void* grabTicket(void* args) {
-    const char* name = static_cast<const char*>(args);
-
+void* startRoutineB(void* args) {
     while (true) {
-        pthread_mutex_lock(&mutex);     // 在即将进入临界区时加锁
-        if (tickets > 0) {
-            // usleep(100);
-            printf("%s: %lu 抢到票了, 编号为: %d\n", name, pthread_self(), tickets--);
-            // usleep(100);
-            pthread_mutex_unlock(&mutex);   // 在即将离开临界区时解锁
-        }
-        else {
-            printf("没有票了, %s: %lu 放弃抢票\n", name, pthread_self());
-            pthread_mutex_unlock(&mutex); // 在线程即将退出时解锁
-            break;
-        }
+        pthread_mutex_lock(&mutexA);
+        pthread_mutex_lock(&mutexB);
+        cnt++;
+        pthread_mutex_unlock(&mutexA);
+        pthread_mutex_unlock(&mutexB);
     }
 
     return nullptr;
 }
 
 int main() {
-    pthread_mutex_init(&mutex, nullptr);
+    pthread_mutex_init(&mutexA, nullptr);
+    pthread_mutex_init(&mutexB, nullptr);
 
-    pthread_t tid1, tid2, tid3, tid4;
+    pthread_t tidA, tidB;
 
-    pthread_create(&tid1, nullptr, grabTicket, (void*)"thread_1");
-    pthread_create(&tid2, nullptr, grabTicket, (void*)"thread_2");
-    pthread_create(&tid3, nullptr, grabTicket, (void*)"thread_3");
-    pthread_create(&tid4, nullptr, grabTicket, (void*)"thread_4");
+    pthread_create(&tidA, nullptr, startRoutineA, (void*)"threadA");
+    pthread_create(&tidB, nullptr, startRoutineB, (void*)"threadB");
 
-    pthread_join(tid1, nullptr);
-    cout << "main thread join thread_1" << endl;
-    pthread_join(tid2, nullptr);
-    cout << "main thread join thread_2" << endl;
-    pthread_join(tid3, nullptr);
-    cout << "main thread join thread_3" << endl;
-    pthread_join(tid4, nullptr);
-    cout << "main thread join thread_4" << endl;
+    pthread_join(tidA, nullptr);
+    pthread_join(tidB, nullptr);
 
     return 0;
 }
+
+// int tickets = 10000;
+// myMutex mymutex; // 定义一个锁类
+
+// // 将抢票操作, 独立为一个函数实现
+// // 抢票函数内有临界区, 所以需要上锁
+// bool grabTickets() {
+//     bool ret = false; // 定义一个变量用于返回, 默认为false, 抢票成功改为 true
+
+//     lockGuard guard(&mymutex); // 上锁！
+//     if (tickets > 0) {
+//         printf("thread: %lu 抢到票了, 编号为: %d\n", pthread_self(), tickets--);
+//         ret = true;
+//         usleep(100);
+//     }
+
+//     return ret;
+// }
+
+// // 这个才是线程需要执行的函数
+// void* startRoutine(void* args) {
+//     const char* name = static_cast<const char*>(args); // 强转
+
+//     while (true) {
+//         if (!grabTickets()) {
+//             // 如果抢票失败, 就 退出循环
+//             break;
+//         }
+//         printf("%s, grab tickets success\n", name);
+//         sleep(1);
+//     }
+
+//     return nullptr;
+// }
+
+// int main() {
+//     pthread_t tid1, tid2, tid3, tid4;
+
+//     pthread_create(&tid1, nullptr, startRoutine, (void*)"thread_1");
+//     pthread_create(&tid2, nullptr, startRoutine, (void*)"thread_2");
+//     pthread_create(&tid3, nullptr, startRoutine, (void*)"thread_3");
+//     pthread_create(&tid4, nullptr, startRoutine, (void*)"thread_4");
+
+//     pthread_join(tid1, nullptr);
+//     printf("main thread join thread_1\n");
+//     pthread_join(tid2, nullptr);
+//     printf("main thread join thread_2\n");
+//     pthread_join(tid3, nullptr);
+//     printf("main thread join thread_3\n");
+//     pthread_join(tid4, nullptr);
+//     printf("main thread join thread_4\n");
+
+//     return 0;
+// }
+// #include <iostream>
+// #include <cstring>
+// #include <unistd.h>
+// #include <pthread.h>
+// using std::cout;
+// using std::endl;
+
+// int tickets = 10000;
+// // pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// typedef struct threadData {
+//     char _name[64];
+//     pthread_mutex_t* _mutex;
+// }threadData;
+
+// void* inqureTicket(void* args) {
+//     const char* name = static_cast<const char*>(args);
+
+//     int cnt = 10;
+//     while (cnt--) {
+//         if (tickets > 0) {
+//             usleep(100000);
+//             printf("%s: %lu 查到剩余票了, 还有: %d\n", name, pthread_self(), tickets);
+//             usleep(100000);
+//         }
+//         else {
+//             printf("没有票了\n", name);
+//             break;
+//         }
+//     }
+
+//     return nullptr;
+// }
+
+// void* grabTicket(void* args) {
+//     // const char* name = static_cast<const char*>(args);
+//     // pthread_mutex_t* pMutex = (pthread_mutex_t*)args;
+//     threadData* tD = (threadData*)args;
+
+//     while (true) {
+//         pthread_mutex_lock(tD->_mutex); // 在即将进入临界区时加锁
+//         if (tickets > 0) {
+//             printf("%s: %lu 抢到票了, 编号为: %d\n", tD->_name, pthread_self(), tickets--);
+//             pthread_mutex_unlock(tD->_mutex); // 在即将离开临界区时解锁
+//             usleep(10);
+//         }
+//         else {
+//             printf("没有票了, %s: %lu 放弃抢票\n", tD->_name, pthread_self());
+//             pthread_mutex_unlock(tD->_mutex); // 在线程即将退出时解锁
+//             break;
+//         }
+//     }
+
+//     return nullptr;
+// }
+
+// int main() {
+//     static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+//     pthread_t tid1, tid2, tid3, tid4;
+
+//     threadData* tD1 = new threadData();
+//     threadData* tD2 = new threadData();
+//     threadData* tD3 = new threadData();
+//     threadData* tD4 = new threadData();
+//     tD1->_mutex = &mutex;
+//     tD2->_mutex = &mutex;
+//     tD3->_mutex = &mutex;
+//     tD4->_mutex = &mutex;
+//     strcpy(tD1->_name, "thread_1");
+//     strcpy(tD2->_name, "thread_2");
+//     strcpy(tD3->_name, "thread_3");
+//     strcpy(tD4->_name, "thread_4");
+
+//     pthread_create(&tid1, nullptr, grabTicket, (void*)tD1);
+//     pthread_create(&tid2, nullptr, grabTicket, (void*)tD2);
+//     pthread_create(&tid3, nullptr, grabTicket, (void*)tD3);
+//     pthread_create(&tid4, nullptr, grabTicket, (void*)tD4);
+
+//     pthread_join(tid1, nullptr);
+//     cout << "main thread join thread_1" << endl;
+//     pthread_join(tid2, nullptr);
+//     cout << "main thread join thread_2" << endl;
+//     pthread_join(tid3, nullptr);
+//     cout << "main thread join thread_3" << endl;
+//     pthread_join(tid4, nullptr);
+//     cout << "main thread join thread_4" << endl;
+
+//     return 0;
+// }
 
 // #include <iostream>
 // #include <cstring>
