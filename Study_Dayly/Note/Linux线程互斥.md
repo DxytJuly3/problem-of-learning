@@ -260,7 +260,7 @@ int main() {
 
 那么, 如何给代码上锁和解锁呢？
 
-### 锁的接口
+### 锁的接口及使用 *
 
 pthread 库为我们提供了 "造锁/买锁"、"改锁"、"上锁"、"解锁"、"毁锁/卖锁" 的接口:
 
@@ -270,7 +270,7 @@ pthread 库为我们提供了 "造锁/买锁"、"改锁"、"上锁"、"解锁"�
 
 我们可以像定义变量一样, 使用 `pthread_mutex_t mutex;` 来定义一个互斥锁. 当然, 锁名可以随便设置.
 
-此锁, 即为`互斥量`
+此锁, 即为 **`互斥量`**
 
 > 互斥锁的类型 `pthread_mutex_t` 是一个联合体.
 
@@ -383,6 +383,8 @@ int main() {
 
 我们在回调函数即将进入临界区的时候上锁, 在即将出临界区的时候解锁. 
 
+> 上锁和解锁, 一定要合理!
+
 然后查看代码的执行结果：
 
 ![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/mutex_use_show.gif)
@@ -397,7 +399,7 @@ int main() {
 
 不过真的是这样吗？
 
-如果票被抢完了, 最后一次执行判断语句, 会进到 哪个控制块中呢？ 是 if后 还是else后？
+如果票被抢完了, `最后一次执行判断`语句, `会进到 哪个控制块中呢？` 是 if后 还是else后？
 
 我们`在if后的控制块中解锁`了, 但是并 **`没有在else后的控制块中解锁`**. 那么 `最后一次票数判断之后, 就会直接退出线程`.
 
@@ -406,6 +408,12 @@ int main() {
 而我们知道, 我们使用的 `pthread_mutex_lock()` 是阻塞式上锁的. 如果执行的时候, 指定的锁已经被锁上了, 那就会阻塞式等待, 线程就会暂停运行.
 
 而 对指定锁上锁的线程已经退出了, 并且没有解锁. 所以其他线程会因为阻塞时等待而一直暂停运行.
+
+> 上述现象是一种 `死锁` 现象.
+>
+> **`死锁是指在多线程的运行时, 每个线程都在等待其他线程释放资源, 导致所有线程都无法继续执行的一种状态`**
+>
+> (对进程也适用)
 
 所以, 是将我们还需要在else后的控制块中进行解锁：
 
@@ -417,4 +425,711 @@ int main() {
 
 可以看到, 票抢到很和谐, 而且线程退出的也很正常.
 
-但是, 也可以发现, 加了锁之后 整个进程的运行速度要满了许多. 因为要不停的上锁加解锁. 再加上 我们在 if后 的控制块中使用了 两个usleep(100). 
+但是, 也可以发现, 加了锁之后 整个进程的运行速度要满了许多. 因为要不停的上锁加解锁. 再加上 我们为了方便观察 在 if后 的控制块中使用了 两个usleep(100). 所以会很慢. 可以删除掉这两个语句.
+
+并且, 我们还发现, 为什么代码执行起来 好像并不是多线程一起执行的呢？而是排着队执行的？
+
+其实是因为, **`一个线程进入临界区加上锁之后, 其他进程就会进入阻塞状态. 在此线程的时间片内, 此线程就会一直进出临界区. 虽然此线程会在出临界区时解锁, 但是它又会马上进入下一个循环, 再次上锁. `**
+
+而 **`其他线程想要申请到锁, 是需要先被CPU调度的, 线程的调度的消耗 对比 上锁和解锁消耗, 其实是很大的. 所以 线程调度并没有 上锁和解锁快`**. 所以, 我们实现的代码 **`在申请到锁的线程的时间片内, 其他线程是很难抢到锁的`**.
+
+所以, 我们可以在`线程解锁之后, 让线程等一会` 不让他马上进入下一个循环. `让CPU有充足的时间调度其他线程`. 然后就可以看到 `"百线争鸣"` 啦
+
+![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230417003951566.png)
+
+修改之后, 再看运行结果:
+
+![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/mutex_success_opt.gif)
+
+可以看到, 抢票过程非常的均匀, 也没有发生错错误
+
+#### 锁的宏初始化
+
+`pthread` 库 为 锁的初始化提供了相应的接口`pthread_mutex_init()`.
+
+不过, 在man手册中还提到另一种初始化锁的方法. 不过此种方法只针对全局锁进行初始化.
+
+即 用宏初始化锁：`PTHREAD_MUTEX_INITIALIZER`.
+
+```cpp
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+或
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+```
+
+并且, 使用此宏初始化的锁, 不需要销毁. 即 不需要调用 `pthread_mutex_destroy()` 接口.
+
+这段代码可以演示一下：
+
+```cpp
+#include <iostream>
+#include <unistd.h>
+#include <pthread.h>
+using std::cout;
+using std::endl;
+
+int tickets = 10000;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;		// 定义全局锁, 并用宏来初始化
+
+void* grabTicket(void* args) {
+    const char* name = static_cast<const char*>(args);
+
+    while (true) {
+        pthread_mutex_lock(&mutex); // 在即将进入临界区时加锁
+        if (tickets > 0) {
+            printf("%s: %lu 抢到票了, 编号为: %d\n", name, pthread_self(), tickets--);
+            pthread_mutex_unlock(&mutex); // 在即将离开临界区时解锁
+            usleep(10);
+        }
+        else {
+            printf("没有票了, %s: %lu 放弃抢票\n", name, pthread_self());
+            pthread_mutex_unlock(&mutex); // 在线程即将退出时解锁
+            break;
+        }
+    }
+
+    return nullptr;
+}
+
+int main() {
+    pthread_t tid1, tid2, tid3, tid4;
+
+    pthread_create(&tid1, nullptr, grabTicket, (void*)"thread_1");
+    pthread_create(&tid2, nullptr, grabTicket, (void*)"thread_2");
+    pthread_create(&tid3, nullptr, grabTicket, (void*)"thread_3");
+    pthread_create(&tid4, nullptr, grabTicket, (void*)"thread_4");
+
+    pthread_join(tid1, nullptr);
+    cout << "main thread join thread_1" << endl;
+    pthread_join(tid2, nullptr);
+    cout << "main thread join thread_2" << endl;
+    pthread_join(tid3, nullptr);
+    cout << "main thread join thread_3" << endl;
+    pthread_join(tid4, nullptr);
+    cout << "main thread join thread_4" << endl;
+
+    return 0;
+}
+```
+
+这段代码的执行结果为：
+
+![define_init_mutex](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/define_init_mutex.gif)
+
+多线程可以和谐的抢票.
+
+我们定义全局锁, 可以使用宏初始化.
+
+而如果我们在主线程中定义一个 `static` 修饰的锁, 其实 线程执行的函数是看不到的.
+
+![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230417145745192.png)
+
+那么, 如何使其他线程看到呢？
+
+其实, 可以将主线程中定义的锁, 通过 `pthread_create()` 的第四个参数 传入线程执行的函数中.
+
+这样, 就可以让线程的函数看到锁.
+
+```cpp
+#include <iostream>
+#include <unistd.h>
+#include <pthread.h>
+using std::cout;
+using std::endl;
+
+int tickets = 10000;
+
+void* grabTicket(void* args) {
+    pthread_mutex_t* pMutex = (pthread_mutex_t*)args;    // 将传入的参数强转为 锁类型
+
+    while (true) {
+        pthread_mutex_lock(pMutex); // 在即将进入临界区时加锁
+        if (tickets > 0) {
+            printf("thread: %lu 抢到票了, 编号为: %d\n", pthread_self(), tickets--);
+            pthread_mutex_unlock(pMutex); // 在即将离开临界区时解锁
+            usleep(10);
+        }
+        else {
+            printf("没有票了, thread: %lu 放弃抢票\n", pthread_self());
+            pthread_mutex_unlock(pMutex); // 在线程即将退出时解锁
+            break;
+        }
+    }
+
+    return nullptr;
+}
+
+int main() {
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+    pthread_t tid1, tid2, tid3, tid4;
+
+    pthread_create(&tid1, nullptr, grabTicket, (void*)&mutex); 			// 将锁地址当参数传入
+    pthread_create(&tid2, nullptr, grabTicket, (void*)&mutex);
+    pthread_create(&tid3, nullptr, grabTicket, (void*)&mutex);
+    pthread_create(&tid4, nullptr, grabTicket, (void*)&mutex);
+
+    pthread_join(tid1, nullptr);
+    cout << "main thread join thread_1" << endl;
+    pthread_join(tid2, nullptr);
+    cout << "main thread join thread_2" << endl;
+    pthread_join(tid3, nullptr);
+    cout << "main thread join thread_3" << endl;
+    pthread_join(tid4, nullptr);
+    cout << "main thread join thread_4" << endl;
+
+    return 0;
+}
+```
+
+![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/define_init_mutex.gif)
+
+多线程也是可以很和谐的运行的.
+
+不过, 还有一个问题需要解决. 在之前, 我们是通过传入线程的序号来分辨线程的. 现在我们传入的是 锁的地址, 就不能确定线程的序号了.
+
+那么有没有一个方法, 既可以传入锁, 又可以传入线程的序号呢？
+
+当然, C语言可以使用结构体, C++ 可以使用类.
+
+下面我们使用结构体, 演示一下：
+
+```cpp
+#include <iostream>
+#include <cstring>
+#include <unistd.h>
+#include <pthread.h>
+using std::cout;
+using std::endl;
+
+int tickets = 10000;
+
+typedef struct threadData {
+    char _name[64];
+    pthread_mutex_t* _mutex; 
+}threadData;							// 定义struct 成员包括 name 和 锁
+
+void* grabTicket(void* args) {
+    threadData* tD = (threadData*)args;
+
+    while (true) {
+        pthread_mutex_lock(tD->_mutex); // 在即将进入临界区时加锁
+        if (tickets > 0) {
+            printf("%s: %lu 抢到票了, 编号为: %d\n", tD->_name, pthread_self(), tickets--);
+            pthread_mutex_unlock(tD->_mutex); // 在即将离开临界区时解锁
+            usleep(10);
+        }
+        else {
+            printf("没有票了, %s: %lu 放弃抢票\n", tD->_name, pthread_self());
+            pthread_mutex_unlock(tD->_mutex); // 在线程即将退出时解锁
+            break;
+        }
+    }
+
+    return nullptr;
+}
+
+int main() {
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+    pthread_t tid1, tid2, tid3, tid4;
+
+    threadData* tD1 = new threadData();
+    threadData* tD2 = new threadData();
+    threadData* tD3 = new threadData();
+    threadData* tD4 = new threadData();
+    tD1->_mutex = &mutex;
+    tD2->_mutex = &mutex;
+    tD3->_mutex = &mutex;
+    tD4->_mutex = &mutex;
+    strcpy(tD1->_name, "thread_1");
+    strcpy(tD2->_name, "thread_2");
+    strcpy(tD3->_name, "thread_3");
+    strcpy(tD4->_name, "thread_4");
+
+    pthread_create(&tid1, nullptr, grabTicket, (void*)tD1);
+    pthread_create(&tid2, nullptr, grabTicket, (void*)tD2);
+    pthread_create(&tid3, nullptr, grabTicket, (void*)tD3);
+    pthread_create(&tid4, nullptr, grabTicket, (void*)tD4);
+
+    pthread_join(tid1, nullptr);
+    cout << "main thread join thread_1" << endl;
+    pthread_join(tid2, nullptr);
+    cout << "main thread join thread_2" << endl;
+    pthread_join(tid3, nullptr);
+    cout << "main thread join thread_3" << endl;
+    pthread_join(tid4, nullptr);
+    cout << "main thread join thread_4" << endl;
+
+    return 0;
+}
+```
+
+也可以正常的执行:
+
+![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/define_init_static_mutex_struct.gif)
+
+### 锁的作用
+
+上面我们介绍了锁, 使用了锁. 但锁到底有什么作用呢？
+
+我们使用锁对临界区上了锁, 好像是让线程的执行得更加规范, 在一个线程进入临界区之后, 就不让其他线程进入临界区了.
+
+但是, 为什么上了锁其他线程就进不去临界区呢？如果线程对临界区上了锁, 还没有出临界区的时候, 需要调度其他线程了. 线程会被切走吗？如果被切走了, 还会出现 线程数据安全的问题吗？
+
+我们先来回答第二个问题: **`如果线程对临界区上了锁, 还没有出临界区, 但是此时需要调用其他线程了, 当前线程会被切走吗？ 其他线程可以进入临界区吗？还会不会对临界资源有一定的影响？`**
+
+答案是, 当前线程`会被切走`, 但是 其他线程`不可能再进入临界区`, 就`不可能再访问临界资源`.
+
+首先, 因为我们例子中的锁, 是一个 **`可以被其他所有线程看到的、只有一个的`**变量.
+
+并且, 我们让线程执行的代码中, 如果线程想要进入临界区, 就一定需要先申请锁. 而我们的锁只有一个, 如果锁已经被其他线程申请到了. 那么此时就不可能申请到锁, 只会进入阻塞状态.
+
+也就是说, 即使**`申请到锁、并且还没有解锁的线程当前并没有被调度, 其他线程也无法申请锁.`**
+
+可以理解为, 线程`申请到锁, 就是把锁拿走了`. `没有解锁`的时候, 就`一直拿着锁`. 即使没有被调度, 此线程也一直拿着锁. `其他线程就无法申请到锁`. 无法申请到锁, 就`无法继续执行代码`.
+
+> 所以, 尽量不要在加了锁的临界区内做非常耗时的事情. 
+
+这就是锁的作用. 
+
+而 锁是可以被多个线程看到的资源, 那 `锁` 不就`是一个临界资源`吗？
+
+多线程访问未被保护的临界资源, 不是可能会发生一定的错乱吗？那么上锁和解锁的过程, 有没有可能发生错乱, 导致多个线程一起申请到锁呢？
+
+互斥锁是临界资源没错, 但 **`互斥锁的上锁和解锁过程, 已经被设计为了原子的`**
+
+### 锁的大概原理
+
+互斥锁本身, 是一个结构体类型数据. 除了成员, 其他没有什么值得详析说的.
+
+但, 上锁(`pthread_mutex_lock()`) 和 解锁(`pthread_mutex_unlock()`) 这两个过程, 是值得介绍以下的.
+
+这两个操作, 是如何设置为原子的的？
+
+首先, 介绍一个操作：为了实现互斥性, 大多数的体系结构都提供有 `swap` 或 `exchange` 等指令. 此指令的作用是, 直接将寄存器中的数据与内存中的数据做交换. 只有一条指令, 此指令是原子的.
+
+那么, 以 lock 和 unlock 的伪代码, 分析以下 这两个操作的原子性是怎么实现的：
+
+![|inline](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230417113128941.png)
+
+![|inline](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230417113310347.png)
+
+我们针对 lock 修改过的伪代码分析.
+
+```c++
+// lock 伪代码
+movb $0, %al
+xchgb %al, mutex
+if(al > 0) {
+	return 0;
+}
+else 
+	阻塞等待;
+goto lock;
+```
+
+首先, `al` 表示寄存器, `mutex` 则表示在内存中的锁
+
+`movb $0, %al`, 把 0 存入 al 寄存器中
+
+`xchgb %al, mutex`, 交换 al寄存器 和 内存中mutex 的数据
+
+`if(al > 0) { return 0; }`, 如果 al 寄存器中的数据 大于 0, 则 申请锁成功, 返回 0.
+
+否则, 就阻塞等待.
+
+整个上锁函数执行的语句可以看作这几个过程.
+
+其中, `xchgb %al, mutex ` 操作 是实际上锁的操作.
+
+我们用图来描述, 如果线程1 在执行上锁的操作:
+
+![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230417115715808.png)
+
+如果 没有上锁时, 锁的值是1. 
+
+那么 执行 `xchgb %al, mutex` 将 al 中的0 与 mutex 的值交换, 其实就是 **`将 锁给了执行此语句的线程`**
+
+为什么这样说呢.
+
+首先, **`线程的属性中是有维护寄存器的数据的, 即 线程的上下文数据`**.
+
+也就是说 `al寄存器中的数据`, 其实`就是 线程的上下文数据`. 如果`没有解锁`, 那么 此`线程从CPU 切走`时, `会将 寄存器数据(上下文数据)维护好, 一起切走`. 而此时`寄存器中的数据可能没有被清除`, 因为可能只是将寄存器数据存储到线程上下文数据中
+
+那么可能就有人觉得会有问题：`既然寄存器中数据还有`, 那么`下一个线程被调度`的时候, `不会直接读取寄存器中的数据吗？`
+
+`不会`, 新的线程被调度的时候, `首先`要做的就是`将线程自己的有关寄存器上下文数据恢复到寄存器中`. 也就是说, 当新线程被调度之后, CPU寄存器中会变为此线程的上下文数据.
+
+所以, 寄存器只是一个工具, 每个线程被调度时, 都会将自己上次维护的上下文数据恢复到寄存器中. 
+
+那么, 就可以说如果在mutrex为1时(即锁没有被申请), 执行 `xchgb %al, mutex` 就是将锁给了执行此语句的线程.
+
+如果锁被带走了, 就意味着内存中 mutex 的值为0. 那么, 如果其他线程被调度, 再次执行上面的伪代码的类似逻辑, 那么 此线程的al上下文数据就会是0. 就代表着申请锁失败.
+
+那么也就是说, **`将内存中的数据换入寄存器中, 本质上就是 将内存中的数据 从共享状态 变为了线程私有`**. 因为 换入寄存器的数据, 基本当前线程的上下文数据.
+
+## C++封装互斥锁及相关使用 *
+
+`threadLock.hpp:`
+
+```cpp
+#pragma once
+#include <iostream>
+#include <pthread.h>
+using std::cout;
+using std::endl;
+
+class myMutex {
+public:
+    myMutex() {
+        pthread_mutex_init(&_lock, nullptr);
+    }
+    void lock() {
+        pthread_mutex_lock(&_lock);
+    }
+    void unlock() {
+        pthread_mutex_unlock(&_lock);
+    }
+    ~myMutex() {
+        pthread_mutex_destroy(&_lock);
+    }
+
+private:
+    pthread_mutex_t _lock;
+};
+
+// 锁—警卫
+class lockGuard {
+public:
+    lockGuard(myMutex* myMutex)
+        : _myMutex(myMutex) {
+        _myMutex->lock();
+        printf("上锁成功……\n");
+    }
+    ~lockGuard() {
+        _myMutex->unlock();
+        printf("解锁成功……\n");
+    }
+
+private:
+    myMutex* _myMutex;
+};
+```
+
+`myThread.cpp:`
+
+```cpp
+#include <iostream>
+#include <unistd.h>
+#include <pthread.h>
+#include "threadLock.hpp"
+
+int tickets = 10000;
+myMutex mymutex; // 定义一个锁类
+
+// 将抢票操作, 独立为一个函数实现
+// 抢票函数内有临界区, 所以需要上锁
+bool grabTickets() {
+    bool ret = false; // 定义一个变量用于返回, 默认为false, 抢票成功改为 true
+
+    lockGuard guard(&mymutex); // 上锁！
+    if (tickets > 0) {
+        printf("thread: %lu 抢到票了, 编号为: %d\n", pthread_self(), tickets--);
+        ret = true;
+        usleep(100);
+    }
+
+    return ret;
+}
+
+// 这个才是线程需要执行的函数
+void* startRoutine(void* args) {
+    const char* name = static_cast<const char*>(args); // 强转
+
+    while (true) {
+        if (!grabTickets()) {
+            // 如果抢票失败, 就 退出循环
+            break;
+        }
+        printf("%s, grab tickets success\n", name);
+        sleep(1);			// 为了方便观察, 设置为1s
+    }
+
+    return nullptr;
+}
+
+int main() {
+    pthread_t tid1, tid2, tid3, tid4;
+
+    pthread_create(&tid1, nullptr, startRoutine, (void*)"thread_1");
+    pthread_create(&tid2, nullptr, startRoutine, (void*)"thread_2");
+    pthread_create(&tid3, nullptr, startRoutine, (void*)"thread_3");
+    pthread_create(&tid4, nullptr, startRoutine, (void*)"thread_4");
+
+    pthread_join(tid1, nullptr);
+    printf("main thread join thread_1\n");
+    pthread_join(tid2, nullptr);
+    printf("main thread join thread_2\n");
+    pthread_join(tid3, nullptr);
+    printf("main thread join thread_3\n");
+    pthread_join(tid4, nullptr);
+    printf("main thread join thread_4\n");
+
+    return 0;
+}
+```
+
+这两个代码文件编译运行的执行结果是：
+
+![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/class_package_mutex.gif)
+
+在 `threadLock.hpp` 的这段代码中, 我们封装了两个类:
+
+1. `myMutex互斥量类`, 即 `锁类`.
+
+	构造函数的内容就是 锁的初始化. 析构函数的内容就是 锁的摧毁.
+
+	还有两个成员函数就是 上锁和解锁.
+
+2. `lockGuard类`, 此类其实是为了更加简单的使用上锁和解锁而封装的.
+
+	此类中, 定义了一个成员变量 是我们封装的 myMutex类.
+
+	而 此类的构造函数, 首先通过初始化列表初始化成员变量. 然后通过成员变量来调用我们封装过的上锁函数. 就可以达到一个 实例化 `lockGuard` 对象自动上锁的功能
+
+	然后是 此类的析构函数, 析构函数的内容就是通过成员变量调用我们封装过的解锁函数. 就可以达到 在 `lockGuard`对象析构的时候, 自动解锁的功能
+
+那么, 在 `myThread.cpp` 的这段使用我们封装的类的代码中, 我们是怎么上锁和解锁的？
+
+我们先实例化了一个 全局的 `myMutex 对象`, 以便于线程可以看到.
+
+然后, 将抢票的操作单独实现了一个函数, 抢票成功返回true, 失败返回 flase:
+
+![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230417172111322.png)
+
+并在此函数中, 即将进入临界区时, 使用我们实例化的 `myMutex 对象 ` 实例化了一个 `lockGuard 对象`. 因为, 实例化 对象会自动执行构造函数, 而 lockGuard 类的构造函数内容就是 `上锁`. 所以 实例化 `lockGuard 对象` 就是自动上锁了.
+
+并没有手动去解锁, 因为此函数执行结束的时候, 临时对象的生命周期就要到了, 就会自动调用析构函数来释放自己. 而 `lockGuard` 类的析构函数内容就是 `解锁`. 所以 `lockGuard 对象` 生命结束, 就是自动解锁了.
+
+而我们 将 抢票逻辑的代码 单独实现了一个函数, 所以开始抢票就会自动上锁, 抢票失败或成功就会自动解锁
+
+> 我们实现的上锁和解锁功能, 是基于C++类的特性来实现的.
+>
+> 并且, 一个类的生命周期是在其所在的控制块内. 所以还可以这样使用:
+>
+> ```cpp
+> #include <iostream>
+> #include "threadLock.hpp"
+> 
+> int cnt = 0;
+> myMutex mymutex;
+> 
+> void* startRoutine(void* args) {
+>     // 如果我们需要统计线程执行此函数了多少次, 我们只需要使用下面这段代码块
+>     {
+>         lockGuard myLock(&mymutex);
+>         cnt++;
+>     }
+>     // 这也是一个控制块, myLock对象 出此控制块会自动调用析构函数, 即出此控制块会自动解锁.
+>     
+>     // …… 其他代码
+> }
+> ```
+
+## 可重入 VS 线程安全
+
+要对比可重入和线程安全. 就需要先了解这两个名词的概念
+
+### 概念
+
+- **`线程安全：`** **`多线程并发运行同一段代码时, 单一线程不会影响到其他线程或整个进程的运行结果, 就叫做线程安全`**
+
+	如果会影响线程或进程, 就被称为 `线程不安全`
+
+- **`可重入：`** 同一个函数被不同执行流调用, 在一个执行流执行没结束时, 有其他执行流再次执行此函数, 这个现象叫 `重入`.
+
+	如果, **`函数被重入执行结果等不会发生错误, 则成此函数为可重入的函数`**. 否则 为不可重入的函数
+
+	> 函数被重入会出现错误, 其实是因为代码编写错误出现了BUG. 其实是编写者的问题, 而不是函数的问题.
+	>
+	> 重入是一种特性, 而不是一种错误.
+
+
+![](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230417174216154.png)
+
+### 常见的线程不安全的情况
+- 不保护共享变量的函数
+
+- 函数状态随着被调用 会发生变化的函数
+
+	比如, 我们在函数内部定义了一个静态变量, 然后不加锁的++, 用来统计线程调用此函数的次数
+
+- 返回指向静态变量指针的函数
+
+- 调用线程不安全函数的函数
+
+### 常见的线程安全的情况
+
+- 每个线程对全局变量或者静态变量 **`只有读取权限，没有写入权限`**，一般来说这些线程是 `安全` 的
+- 类或接口对于线程来说都是 `原子操作`
+- 多个线程之间的切换`不会导致`该接口的`执行结果存在二义性`
+
+### 常见不可重入的情况 **
+
+- `调用了malloc/free`函数，因为 `malloc函数是用全局链表来管理堆的`
+
+	如何理解 `malloc` 使用全局链表管理堆的呢？
+
+	其实, malloc 在堆区动态开辟空间, 实际是调用了 系统调用brk. 并且 并不只是简单的开辟一块空间. 还需要将开辟出的空间以 全局链表的形式管理起来.
+
+	进程地址空间是由PCB维护的, 在源码中即 task_struct 的成员 mm_struct 类型的变量.
+
+	而在mm_struct 结构体中, 存在着一个成员是用来描述 虚拟内存列表：
+
+	![|wide](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230417182249763.png)
+
+	此变量就是用来维护开辟出来的堆的:
+
+	![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/image-20230417182435387.png)
+
+	我们使用 malloc 开辟出10块空间, 就会以 vm 的形式组成一个 10个节点的链表. 释放一块空间, 就会删除一个节点.
+
+	这就是管理堆的形式. 此链表是全局的. 
+
+- 调用了标准I/O库函数，标准I/O库的很多实现都以不可重入的方式使用全局数据结构
+
+- 可重入函数体内使用了静态的数据结构
+
+### 常见可重入的情况
+
+- 不使用全局变量或静态变量
+- 不使用用malloc或者new开辟出的空间
+- 不调用不可重入函数
+- 不返回静态或全局数据，所有数据都有函数的调用者提供
+- 使用本地数据，或者通过制作全局数据的本地拷贝来保护全局数据
+
+### 可重入与线程安全联系
+
+- 函数是可重入的，那就是线程安全的
+- 函数是不可重入的，那就不能由多个线程使用，有可能引发线程安全问题
+- 如果一个函数中有全局变量，那么这个函数既不是线程安全也不是可重入的
+
+### 可重入与线程安全区别
+
+- 重入函数是线程安全函数的一种
+- 线程安全不一定是可重入的，而可重入函数则一定是线程安全的。
+- 如果将对临界资源的访问加上锁，则这个函数是线程安全的. 但如果这个重入函数 若锁还未释放则可能会产生死锁，因此是不可重入的
+
+这里提到一个名称, `死锁`. 那什么是死锁？
+
+## 死锁
+
+`死锁`是什么？
+
+**`死锁`**：在一组进程、线程中的各个进程、线程 `均占有不会释放的资源`，但 **`因互相申请被其他进程、线程所占用不会释放的资源而处于的一种永久等待状态`**.
+
+这是死锁的概念. 我们可以使用下面这段代码实现死锁：
+
+```cpp
+#include <iostream>
+#include <unistd.h>
+#include <pthread.h>
+
+int cnt = 0;
+pthread_mutex_t mutexA = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutexB = PTHREAD_MUTEX_INITIALIZER;
+
+void* startRoutineA(void* args) {
+    while (true) {
+        pthread_mutex_lock(&mutexA);
+        sleep(1);
+        pthread_mutex_lock(&mutexB);
+        cnt++;
+        printf("cnt: %d", cnt);
+        pthread_mutex_unlock(&mutexA);
+        pthread_mutex_unlock(&mutexB);
+    }
+
+    return nullptr;
+}
+
+void* startRoutineB(void* args) {
+    while (true) {
+        pthread_mutex_lock(&mutexB);
+        sleep(1);
+        pthread_mutex_lock(&mutexA);
+        cnt++;
+        printf("cnt: %d", cnt);
+        pthread_mutex_unlock(&mutexB);
+        pthread_mutex_unlock(&mutexA);
+    }
+
+    return nullptr;
+}
+
+int main() {
+    pthread_mutex_init(&mutexA, nullptr);
+    pthread_mutex_init(&mutexB, nullptr);
+
+    pthread_t tidA, tidB;
+
+    pthread_create(&tidA, nullptr, startRoutineA, (void*)"threadA");
+    pthread_create(&tidB, nullptr, startRoutineB, (void*)"threadB");
+
+    pthread_join(tidA, nullptr);
+    pthread_join(tidB, nullptr);
+
+    return 0;
+}
+```
+
+执行这段代码：
+
+![ ](https://dxyt-july-image.oss-cn-beijing.aliyuncs.com/CSDN/thread_deadlock.gif)
+
+这段代码的执行结果就是, 卡住. 没有代码在真正运行.
+
+这是为什么呢？
+
+首先我们定义了两个锁, 使用了两个线程.
+
+线程A, 先申请 锁A, 等1s, 再申请 锁B.
+
+线程B, 先申请 锁B, 等1s, 再申请 锁A.
+
+而 线程A和B 几乎是同时运行代码的. 也就是说 线程A 申请到锁A 和 线程B 申请到 锁B, `几乎`是同时的. 
+
+再加上让他俩等了1s, 就导致, `线程A 拿着锁A, 在申请锁B`, `线程B 拿着锁B, 在申请锁A`. 他俩`都申请不到`, `直接造成死锁`.
+
+### 死锁产生的必要条件
+
+1. 互斥条件：: 一个资源每次只能被一个执行流使用
+2. 请求与保持条件: 一个执行流因请求资源而阻塞时，对已获得的资源保持不放
+3. 不剥夺条件: 一个执行流已获得的资源，在末使用完之前，不能强行剥夺
+4. 循环等待条件: 若干执行流之间形成一种头尾相接的循环等待资源的关系
+
+这是死锁产生的四个必要条件 
+
+有产生条件, 就有避免方法
+
+### 死锁的避免方法
+
+最直接有效的避免方法是 **`不使用锁`**. 虽然锁可以解决一些多线程的问题, 但是可能会造成死锁, 而且 上锁和解锁的过程是需要消耗资源的. 如果不停的上锁和解锁, 一定会托慢进程的运行速度.
+
+所以, 在需要使用锁的场景, **`最好先不要考虑如何设置锁, 可以先考虑一下是否可以不用锁`**
+
+如果非要使用锁, 那就得考虑避免死锁: 
+
+1. 破坏死锁的四个必要条件
+2. 加锁顺序一致
+3. 避免锁未释放的场景
+4. 资源一次性分配
+
+可以通过这四种手段, 来尽量避免死锁.
+
+---
+
+文章介绍到这里, 就要结束啦~
+
+感谢阅读~
