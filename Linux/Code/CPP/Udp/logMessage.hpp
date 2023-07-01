@@ -17,7 +17,6 @@
 const char* log_level[] = {"DEBUG", "NOTICE", "WARINING", "FATAL"};
 
 // 实现一个 可以输出: 日志等级、日志时间、用户、以及相关日志内容的 日志消息打印接口
-
 void logMessage(int level, const char* format, ...) {
     // 通过可变参数实现, 传入日志等级, 日志内容格式, 日志内容相关参数
 
@@ -48,10 +47,14 @@ void logMessage(int level, const char* format, ...) {
 	// 获取本地时间
 	time_t tm = time(nullptr);
 	struct tm* localTm = localtime(&tm);
-
+	char* localTmStr = asctime(localTm);
+	char* nC = strstr(localTmStr, "\n");
+	if(nC) {
+		*nC = '\0';
+	}
     fprintf( out, "%s | %s | %s | %s\n", 
             log_level[level],
-			asctime(localTm),
+			localTmStr,
             name == nullptr ? "unknow" : name, 
             logInfo );
 }
