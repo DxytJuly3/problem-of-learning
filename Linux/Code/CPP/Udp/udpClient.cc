@@ -4,12 +4,13 @@
 #include <string>
 #include <cstdlib>
 #include <cassert>
-#include <strings.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <pthread.h>
+
 #include "logMessage.hpp"
 
 using std::cin;
@@ -18,19 +19,35 @@ using std::endl;
 using std::getline;
 using std::string;
 
+void* recverAndPrint(void *args) {
+    while (true)
+    {
+        int sockFd = *(int*)args;
+        char buffer[1024];
+        struct sockaddr_in temp;
+        socklen_t len = sizeof(temp);
+        ssize_t s = recvfrom(sockFd, buffer, sizeof(buffer), 0, (struct sockaddr*)&temp, &len);
+        if (s > 0) {
+            buffer[s] = 0;
+            std::cout << nick_Name << "-" << buffer << std::endl;
+        }
+    }
+}
+
 static void Usage(const string porc) {
-    cout << "Usage::\n\t" << porc << " server_IP server_Port" << endl;
+    cout << "Usage::\n\t" << porc << " server_IP server_Port nick_Name" << endl;
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
+    if (argc != 4) {
         Usage(argv[0]);
         exit(1);
     }
 
-    // 先获取server_IP 和 server_Port
+    // 先获取server_IP 和 server_Port 以及用户的昵称
     string server_IP = argv[1];
     uint16_t server_Port = atoi(argv[2]);
+	static string nick_Name = argv[3];
 
     // 创建客户端套接字
     int sockFd = socket(AF_INET, SOCK_DGRAM, 0);

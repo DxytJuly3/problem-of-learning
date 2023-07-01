@@ -1,5 +1,8 @@
+#include <cstdint>
 #include <iostream>
+#include <netinet/in.h>
 #include <string>
+#include <unordered_map>
 #include <cassert>
 #include <cstring>
 #include <cstdlib>
@@ -7,7 +10,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 
 #include "logMessage.hpp"
@@ -15,6 +17,7 @@
 using std::cout;
 using std::endl;
 using std::string;
+using std::unordered_map;
 
 // 封装UDP服务
 class udpServer {
@@ -30,7 +33,6 @@ public:
     void init() {
         // 1. 首先就是创建套接字, 并获取套接字文件描述符
         _sockFd = socket(AF_INET, SOCK_DGRAM, 0);
-        // AF_INET 表示ipv4网络通信, SOCK_DGRAM 表示数据报格式报文, 0 表示默认协议
 
         if (_sockFd < 0) {
             // 套接字文件描述符创建失败
@@ -112,11 +114,44 @@ public:
             string peerIp = inet_ntoa(peer.sin_addr); //拿到了对方的IP
             uint32_t peerPort = ntohs(peer.sin_port); // 拿到了对方的port
 
+			// 检查用户是否在服务器中, 不在则添加用户
+			checkOnlineUser(peerIp, peerPort, peer);
+
             // 打印出来对方给服务器发送过来的消息
             logMessage(NOTICE, "[%s:%d]# %s", peerIp.c_str(), 
 					   peerPort, inBuffer);
+
+			// 然后将消息转发到所有用户的客户端上, 实现多人聊天
+			string infoUser(inBuffer);
+			messageRoute(peerIp, peerPort, infoUser);
         }
     }
+
+	void checkOnlineUser(string &ip, uint32_t port, struct sockaddr_in &peer) {
+		string key = ip;
+		key += ":";
+		key += std::to_string(port);
+		auto itUser = _users.find(key);
+
+		// 判断用户是否已经存在, 不存在则添加
+		if(itUser != _users.end()) {
+			_users.insert({key, peer});
+		}
+	}
+
+	void messageRoute(string &ip, uint32_t port, string info) {
+		string message = "[";
+        message += ip;
+        message += ":";
+        message += std::to_string(port);
+        message += "]# ";
+        message += info;
+
+		// 遍历 服务器用户列表, 将message 发送给每一个在服务器内的用户网络进程
+        for(auto &user : _users) {
+            sendto(_sockFd, message.c_str(), message.size(), 0, (struct sockaddr*)&(user.second), sizeof(user.second));
+        }
+	}
 
 private:
     // 服务器 端口号
@@ -125,6 +160,8 @@ private:
     string _ip;
     // 服务器 套接字文件描述符
     int _sockFd;
+	// 服务器用户   key: ip:port, T:主机网络进程信息
+	unordered_map<string, struct sockaddr_in> _users;
 };
 
 static void Usage(const string porc) {
