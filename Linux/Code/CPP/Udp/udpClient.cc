@@ -1,6 +1,4 @@
-#include <cstdint>
 #include <iostream>
-#include <ostream>
 #include <string>
 #include <cstdlib>
 #include <cassert>
@@ -19,23 +17,28 @@ using std::endl;
 using std::getline;
 using std::string;
 
-void* recverAndPrint(void *args) {
-    while (true)
-    {
+// 多线程 接收来自服务器的消息
+void* recverAndPrint(void* args) {
+    while (true) {
         int sockFd = *(int*)args;
+
         char buffer[1024];
+		
+		// recvfrom 需要两个输出型参数, 来接收来自服务器的网络进程信息
+		// 所以需要两个临时变量
         struct sockaddr_in temp;
         socklen_t len = sizeof(temp);
+
         ssize_t s = recvfrom(sockFd, buffer, sizeof(buffer), 0, (struct sockaddr*)&temp, &len);
         if (s > 0) {
             buffer[s] = 0;
-            std::cout << nick_Name << "-" << buffer << std::endl;
+            cout << buffer << endl;
         }
     }
 }
 
 static void Usage(const string porc) {
-    cout << "Usage::\n\t" << porc << " server_IP server_Port nick_Name" << endl;
+	std::cerr << "Usage::\n\t" << porc << " server_IP server_Port nick_Name" << endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -47,7 +50,7 @@ int main(int argc, char* argv[]) {
     // 先获取server_IP 和 server_Port 以及用户的昵称
     string server_IP = argv[1];
     uint16_t server_Port = atoi(argv[2]);
-	static string nick_Name = argv[3];
+	string nick_Name = argv[3];
 
     // 创建客户端套接字
     int sockFd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -76,11 +79,20 @@ int main(int argc, char* argv[]) {
     server.sin_port = htons(server_Port);
     server.sin_addr.s_addr = inet_addr(server_IP.c_str());
 
+	pthread_t t;
+	pthread_create(&t, nullptr, recverAndPrint, &sockFd);
+
     // 通信
-    string inBuffer;
     while (true) {
-        cout << "Please Enter >> ";
-        getline(cin, inBuffer);
+		// 这里改为 使用 cerr, 是为了不将此语句, 重定向到命名管道
+        std::cerr << "Please Enter >> ";
+		string inBuffer;
+		inBuffer += "[";
+		inBuffer += nick_Name;
+		inBuffer += "]# ";
+		string tempS;
+        getline(cin, tempS);
+		inBuffer += tempS;
 
         // 向 server 发送消息
         sendto(sockFd, inBuffer.c_str(), inBuffer.size(), 0,

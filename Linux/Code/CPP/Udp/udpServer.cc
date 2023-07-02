@@ -1,6 +1,4 @@
-#include <cstdint>
 #include <iostream>
-#include <netinet/in.h>
 #include <string>
 #include <unordered_map>
 #include <cassert>
@@ -8,6 +6,7 @@
 #include <cstdlib>
 #include <cerrno>
 #include <unistd.h>
+#include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -24,7 +23,7 @@ class udpServer {
 public:
     // 构造函数, 需要传入 port 和 ip
     // ip 可以缺省, 因为 ip可以默认为空, 后面解释理由
-    udpServer(uint16_t port, string ip = "") : _port(port), _ip(ip) {}
+    udpServer(uint16_t port, string ip = "") : _port(port), _ip(ip), _sockFd(-1) {}
     // 析构函数
     ~udpServer() {}
 
@@ -118,7 +117,7 @@ public:
 			checkOnlineUser(peerIp, peerPort, peer);
 
             // 打印出来对方给服务器发送过来的消息
-            logMessage(NOTICE, "[%s:%d]# %s", peerIp.c_str(), 
+            logMessage(NOTICE, "[%s:%d]%s", peerIp.c_str(), 
 					   peerPort, inBuffer);
 
 			// 然后将消息转发到所有用户的客户端上, 实现多人聊天
@@ -134,7 +133,7 @@ public:
 		auto itUser = _users.find(key);
 
 		// 判断用户是否已经存在, 不存在则添加
-		if(itUser != _users.end()) {
+		if(itUser == _users.end()) {
 			_users.insert({key, peer});
 		}
 	}
@@ -144,7 +143,7 @@ public:
         message += ip;
         message += ":";
         message += std::to_string(port);
-        message += "]# ";
+        message += "]";
         message += info;
 
 		// 遍历 服务器用户列表, 将message 发送给每一个在服务器内的用户网络进程
