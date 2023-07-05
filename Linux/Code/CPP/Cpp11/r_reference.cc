@@ -22,7 +22,7 @@ int main() {
 	const int &g = 10;
 	
     int m = 1;
-   	int &&n = m;
+   //	int &&n = m;
 
 	return 0;
 }
