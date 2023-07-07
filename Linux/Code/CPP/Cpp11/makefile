@@ -1,5 +1,5 @@
 .PHONY:all
-all: initializer_list r_reference perfectForward temp_var_para emplace_back lambda_test
+all: initializer_list r_reference perfectForward temp_var_para emplace_back lambda_test function
 
 initializer_list: intializer_list_Test.cc 
 	g++ -o $@ $^
@@ -13,7 +13,9 @@ emplace_back: emplace_back.cc
 	g++ -o $@ $^
 lambda_test: lambda_test.cc
 	g++ -o $@ $^
+function: function.cc
+	g++ -o $@ $^
 
 .PHONY:clean
 clean:
-	rm -rf initializer_list r_reference perfectForward temp_var_para emplace_back lambda_test
+	rm -rf initializer_list r_reference perfectForward temp_var_para emplace_back lambda_test function
