@@ -307,10 +307,10 @@ void HttpServer() {
 }
 
 void SeedMsg(const string& str) {
-    if (rand() % 3 == 0) {
+    if (rand() % 2 == 0) {
         throw HttpServerException("SeedMsg::网络错误", 105, "put");
     }
-    else if (rand() % 5 == 0) {
+    else if (rand() % 4 == 0) {
         throw HttpServerException("SeedMsg::你已经不是对方好友", 106, "post");
     }
     else {
