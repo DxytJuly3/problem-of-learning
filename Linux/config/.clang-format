@@ -1,0 +1,66 @@
+---
+BasedOnStyle:   LLVM
+BreakBeforeBraces:  Custom
+# 大括号换行，只有当BreakBeforeBraces设置为Custom时才有效
+BraceWrapping:   
+  # class定义后面
+  AfterClass:	false
+  # 控制语句后面
+  AfterControlStatement:	false
+  # enum定义后面
+  AfterEnum:	false
+  # 函数定义后面
+  AfterFunction:	false
+  # 命名空间定义后面
+  AfterNamespace:	false
+  # ObjC定义后面
+  AfterObjCDeclaration:	false
+  # struct定义后面
+  AfterStruct:	false
+  # union定义后面
+  AfterUnion:	false
+  # catch之前
+  BeforeCatch:	true
+  # else之前
+  BeforeElse:	true
+  # 缩进大括号
+  IndentBraces:	false
+# 指针和引用的对齐: Left, Right, Middle
+PointerAlignment:   Left
+# 连续空行的最大数量
+MaxEmptyLinesToKeep:    1
+# 允许重新排版注释
+ReflowComments:    false
+# 允许排序#include
+SortIncludes:   false
+# 允许短的块放在同一行
+AllowShortBlocksOnASingleLine:  false
+# 允许短的case标签放在同一行
+AllowShortCaseLabelsOnASingleLine:  false
+# 允许短的函数放在同一行: None, InlineOnly(定义在类中), Empty(空函数), Inline(定义在类中，空函数), All
+AllowShortFunctionsOnASingleLine:	Empty
+# 允许短的if语句保持在同一行
+AllowShortIfStatementsOnASingleLine:	false
+# 允许短的循环保持在同一行
+AllowShortLoopsOnASingleLine:	false
+# 总是在template声明后换行
+AlwaysBreakTemplateDeclarations: true
+# 在构造函数的初始化列表的逗号前换行
+BreakConstructorInitializersBeforeComma:	true
+# 构造函数的初始化列表要么都在同一行，要么都各自一行
+ConstructorInitializerAllOnOneLineOrOnePerLine:    false
+# 构造函数的初始化列表的缩进宽度
+ConstructorInitializerIndentWidth:	4
+# 延续的行的缩进宽度
+ContinuationIndentWidth:	4
+# 访问说明符(public、private等)的偏移
+AccessModifierOffset:	-4
+# 缩进case标签
+IndentCaseLabels: false
+# 使用tab字符: Never, ForIndentation, ForContinuationAndIndentation, Always
+UseTab: Always
+# 缩进宽度
+IndentWidth: 4
+# Tab宽度
+TabWidth: 4
+...

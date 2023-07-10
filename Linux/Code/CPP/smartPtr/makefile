@@ -1,9 +1,11 @@
 .PHONY:all
-all: smartPtr
+all: smartPtr smartPtrDebug
 
 smartPtr: smartPtr.cc
 	g++ -o $@ $^
+smartPtrDebug: smartPtr.cc
+	g++ -o $@ $^ -g
 
 .PHONY:clean
 clean:
-	rm -rf smartPtr
+	rm -rf smartPtr smartPtrDebug

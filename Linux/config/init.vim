@@ -118,7 +118,7 @@ let g:vista#renderer#icons = {
 \  }
 
 "= = = = = = = = = = = tagbar = = = = = = = = = = = =
-let g:tagbar_width=30
+let g:tagbar_width=40
 " 将tagbar的开关按键设置为 F4
 nnoremap <silent> <F4> :TagbarToggle<CR>
 " 启动 时自动focus
@@ -129,33 +129,10 @@ nmap <C-p> :Files<CR>
 let g:fzf_layout = { 'down': '46%' }
 
 "= = = = = = = = = clang-format = = = = = = = = =
-autocmd FileType c,cpp,objc setlocal formatoptions-=cro
-let g:clang_format_fallback_style = 'LLVM'
-let g:clang_format_style_options = {
-    \ 'BreakBeforeBraces': 'Custom',
-    \ 'BraceWrapping': {
-        \ 'AfterClass': v:false,
-        \ 'AfterControlStatement': v:false,
-        \ 'AfterEnum': v:false,
-        \ 'AfterFunction': v:false,
-        \ 'AfterNamespace': v:false,
-        \ 'AfterObjCDeclaration': v:false,
-        \ 'AfterStruct': v:false,
-        \ 'AfterUnion': v:false,
-        \ 'BeforeCatch': v:true,
-        \ 'BeforeElse': v:true,
-        \ 'IndentBraces': v:false,
-    \ },
-    \ 'PointerAlignment': 'Left',
-    \ 'MaxEmptyLinesToKeep': 1,
-    \ 'ReflowComments': v:false,
-    \ 'SortIncludes': v:false,
-    \ 'UseTab': 'Never',
-    \ 'IndentWidth': 4,
-    \ 'TabWidth': 4,
-    \ 'AllowShortIfStatementsOnASingleLine': v:false,
-    \ 'IndentCaseLabels': v:false,
-    \ 'AccessModifierOffset': -4,
-    \ }
+autocmd FileType c,cpp,objc,cc,hpp,h setlocal formatoptions-=cro
+" 快捷 Ctrl-k 格式化
 autocmd FileType c,cpp,cc,hpp,h nnoremap <silent> <C-k> :ClangFormat<CR>
-autocmd FileType c,cpp,cc,hpp,h nnoremap <silent> <M-/> :execute "normal! I//\e"<CR>
+" 快捷 Ctrl-/ 选中注释
+autocmd FileType c,cpp,cc,hpp,h xnoremap <silent> <C-_> I//<Esc> 
+" 快捷 Ctrl-/ 注释单行
+autocmd FileType c,cpp,cc,hpp,h nnoremap <silent> <C-_> I//<Esc> 
