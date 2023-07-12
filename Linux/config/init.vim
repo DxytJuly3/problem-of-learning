@@ -129,6 +129,9 @@ nmap <C-p> :Files<CR>
 let g:fzf_layout = { 'down': '46%' }
 
 "= = = = = = = = = clang-format = = = = = = = = =
+" 离开插入模式 就自动格式化 : 会影响回车按键效果
+let g:clang_format#auto_format_on_insert_leave = 0 
+
 autocmd FileType c,cpp,objc,cc,hpp,h setlocal formatoptions-=cro
 " 快捷 Ctrl-k 格式化
 autocmd FileType c,cpp,cc,hpp,h nnoremap <silent> <C-k> :ClangFormat<CR>
