@@ -1,24 +1,30 @@
 #pragma once
 
+#include <cstddef>
 #include <iostream>
 #include <ostream>
 #include <queue>
 #include <cassert>
 #include <pthread.h>
 #include <unistd.h>
+#include "lock.hpp"
 
-size_t gThreadNum = 5;
+#define THREADNUM 5
 
 template <class T>
 class threadPool {
 public:
-	threadPool(size_t threadNum = gThreadNum)
-		: _threadNum(threadNum)
-		, _isStart(false) {
-		assert(_threadNum > 0);
+	static threadPool<T>* getInstance() {
+		// RAII锁
+		static Mutex mutex;
+		if (_instance == nullptr) {
+			LockGuard lockG(&mutex);
+			if (_instance == nullptr) {
+				_instance = new threadPool<T>();
+			}
+		}
 
-		pthread_mutex_init(&_mutex, nullptr); // 初始化 锁
-		pthread_cond_init(&_cond, nullptr);	  // 初始化 条件变量
+		return _instance;
 	}
 	// 线程回调函数
 	// static 修饰, 是因为需要让函数参数 取消this指针, 只留一个void*
@@ -63,7 +69,9 @@ public:
 
 		for (int i = 0; i < _threadNum; i++) {
 			pthread_t temp;
-			pthread_create(&temp, nullptr, threadRoutine, this); // 回调函数的参数传入this指针, 用于类访问内成员
+			pthread_create(
+				&temp, nullptr, threadRoutine,
+				this); // 回调函数的参数传入this指针, 用于类访问内成员
 		}
 		// 开启线程池之后, 要把 _isStart 属性设置为 true
 		_isStart = true;
@@ -85,7 +93,18 @@ public:
 		pthread_cond_destroy(&_cond);
 	}
 
+	threadPool(const threadPool<T>&) = delete;
+	threadPool<T>& operator=(const threadPool<T>&) = delete;
+
 private:
+	threadPool(size_t threadNum = THREADNUM)
+		: _threadNum(threadNum)
+		, _isStart(false) {
+		assert(_threadNum > 0);
+
+		pthread_mutex_init(&_mutex, nullptr); // 初始化 锁
+		pthread_cond_init(&_cond, nullptr);	  // 初始化 条件变量
+	}
 	// 线程调度 即为从任务队列中给各线程分配任务
 	// 所以 任务队列是临界资源需要上锁
 	void lockQueue() {
@@ -125,4 +144,9 @@ private:
 	std::queue<T> _taskQueue; // 任务队列
 	pthread_mutex_t _mutex; // 锁 给临界资源使用 即任务队列 保证线程调度互斥
 	pthread_cond_t _cond; // 条件变量 保证线程调度同步
+
+	static threadPool<T>* _instance;
 };
+
+template <class T>
+threadPool<T>* threadPool<T>::_instance = nullptr;

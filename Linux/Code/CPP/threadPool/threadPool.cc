@@ -12,7 +12,8 @@
 const std::string operators = {"+-*/\%"};
 
 int main() {
-	std::unique_ptr<threadPool<Task>> tP(new threadPool<Task>);
+	//std::unique_ptr<threadPool<Task>> tP(new threadPool<Task>);
+	std::unique_ptr<threadPool<Task>> tP(threadPool<Task>::getInstance());
 	// 开启线程池
 	tP->start();
 
@@ -26,7 +27,7 @@ int main() {
 		Task taskTmp(elemOne, elemTwo, oper);
 		tP->pushTask(taskTmp);
 
-		sleep(1);
+		usleep(100000);
 	}
 	
 	return 0;
