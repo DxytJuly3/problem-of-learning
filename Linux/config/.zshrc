@@ -111,6 +111,7 @@ export CLANG_FORMAT_CONFIG='/home/July/.clang-format'
 alias cas='cat $1 | expand -t 4'
 alias sys="neofetch"
 alias ra="ranger"
-alias vi="nvim"
-alias vim='nvim'
+alias nvim="nvim -p"
+alias vi="nvim -p"
+alias vim='nvim -p'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
