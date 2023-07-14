@@ -1,0 +1,4 @@
+{
+  "snippets.ultisnips.pythonPrompt": false,
+  "clangd.arguments": ["--header-insertion=never"]	// 取消自动添加头文件
+}

@@ -1,6 +1,7 @@
 ---
 BasedOnStyle:   LLVM
-
+# 允许函数调用的所有参数放在下一行
+AllowAllArgumentsOnNextLine:	false
 # 允许函数声明的所有参数在放在下一行
 AllowAllParametersOfDeclarationOnNextLine:	false
 # 允许短的块放在同一行
@@ -17,7 +18,10 @@ AllowShortLoopsOnASingleLine:	false
 AlwaysBreakTemplateDeclarations: true
 # 在构造函数的初始化列表的逗号前换行
 BreakConstructorInitializersBeforeComma:	true
-
+# 函数传参自动换行, false 则要么在同一行 要么一个一行
+BinPackArguments:	true
+# 函数声明形参自动换行, false 则要么在同一行 要么一个一行
+BinPackParameters: true	
 # 在大括号前换行: 
 #	Attach(始终将大括号附加到周围的上下文)
 #	Linux(除函数、命名空间和类定义, 与Attach类似)
@@ -79,4 +83,6 @@ UseTab: Always
 IndentWidth: 4
 # Tab宽度
 TabWidth: 4
+# 行长度限制  一般决定着当前行是否自动换行
+ColumnLimit: 0
 ...

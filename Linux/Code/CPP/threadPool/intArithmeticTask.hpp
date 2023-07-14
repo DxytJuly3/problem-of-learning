@@ -12,8 +12,7 @@ std::map<char, std::function<int(int, int)>> opFunctions{
 	{'+', [](int elemOne, int elemTwo) { return elemOne + elemTwo; }},
 	{'-', [](int elemOne, int elemTwo) { return elemOne - elemTwo; }},
 	{'*', [](int elemOne, int elemTwo) { return elemOne * elemTwo; }},
-	{'/',
-	 [](int elemOne, int elemTwo) {
+	{'/', [](int elemOne, int elemTwo) {
 		 if (elemTwo == 0) {
 			 std::cout << "div zero, abort" << std::endl;
 			 return -1;
@@ -43,10 +42,9 @@ public:
 		int result = 0;
 		if (opFunctions.find(_operator) != opFunctions.end()) {
 			result = opFunctions[_operator](_elemOne, _elemTwo);
-			if ((_elemTwo == 0 && _operator == '/') ||(_elemTwo == 0 && _operator == '%')) 
+			if ((_elemTwo == 0 && _operator == '/') || (_elemTwo == 0 && _operator == '%'))
 				return;
-			logMessage(NOTICE, "新线程[%lu] 完成算术任务: %d %c %d = %d",
-					   pthread_self(), _elemOne, _operator, _elemTwo, result);
+			logMessage(NOTICE, "新线程[%lu] 完成算术任务: %d %c %d = %d", pthread_self(), _elemOne, _operator, _elemTwo, result);
 		}
 		else {
 			std::cout << "非法操作: " << _operator << std::endl;

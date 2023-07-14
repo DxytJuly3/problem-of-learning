@@ -16,8 +16,9 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 call plug#end()
 
-set noshowmode
+syntax on
 set relativenumber " 相对行号
+set cursorline
 set helplang=cn
 set ambiwidth=double                                        
 " 设置UTF-8编码
@@ -30,12 +31,18 @@ set softtabstop=4
 set tabstop=4   "tab长度
 set shiftwidth=4   " 缩进长度
 set termguicolors
-
+"set mouse=a
+set scrolloff=999
+set tabpagemax=10
 nmap <C-z> <Cmd>:bn<CR>
+nmap <C-l> <C-w>>
+nmap <C-h> <C-w><
+" 自动保存文件
+autocmd InsertLeave *.* silent! write
 
 " = = = = = = = = = airline = = = = = = = = =
 let g:airline_powerline_fonts = 1
-let g:airline#extensions#tabline#enabled = 0
+let g:airline#extensions#tabline#enabled = 1 
 let g:airline#extensions#tabline#buffer_nr_show = 1
 " 关闭状态显示空白符号计数
 let g:airline#extensions#whitespace#enabled = 0
@@ -66,29 +73,45 @@ let g:airline_theme="dracula"
 "= = = = = = = = = = coc.nvim = = = = = = = = = = = 
 " Tab 补全
 inoremap <silent><expr> <TAB>
-\ coc#pum#visible() ? coc#_select_confirm() :
-\ coc#expandableOrJumpable() ?
-\ "<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])<CR>" :
-\ CheckBackspace() ? "<TAB>" :
-\ coc#refresh()
+    \ coc#pum#visible() ? coc#_select_confirm() :
+    \ coc#expandableOrJumpable() ?
+    \ "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
+    \ CheckBackspace() ? "\<TAB>" :
+    \ coc#refresh()
 
-function! CheckBackspace() abort
-let col = col('.') - 1
-return !col || getline('.')[col - 1] =~# '\s'
-endfunction
+  function! CheckBackspace() abort
+    let col = col('.') - 1
+    return !col || getline('.')[col - 1]  =~# '\s'
+  endfunction
 
-let g:coc_snippet_next = '<tab>'
+  let g:coc_snippet_next = '<tab>'
+
 " coc加载
 set updatetime=100
+" coc 补全配色
+autocmd ColorScheme * hi CocFloating ctermbg=237 guibg=#faf4ed guifg=#5f5959 gui=italic,bold
+" coc 候选配色
+autocmd ColorScheme * hi CocMenuSel ctermbg=237 guibg=#6674a2 guifg=#5fff87 gui=bold
+" 取消头文件的自动添加
+let g:coc_config = {
+\   'clang': {
+\       'filetypes': ['c', 'cpp', 'hpp', 'cc', 'h']
+\   }
+\}
 
 "= = = = = = = = = = = xtabline = = = = = = = = = = = =
+" 启用 xtabline 插件
+set tabline=%!Xtabline()
 let g:xtabline_settings = {}
+let g:xtabline_settings.style = 'box'
 let g:xtabline_settings.enable_mappings = 0
 let g:xtabline_settings.tabline_modes = ['tabs', 'buffers']
 let g:xtabline_settings.enable_persistance = 0
 let g:xtabline_settings.last_open_first = 1
 let g:xtabline_settings.theme = "dracula"
 noremap \p :echo expand('%:p')<CR>
+noremap <M-f> gt
+noremap F gT
 " 自定义tabline
 set showtabline=2
 
@@ -139,3 +162,4 @@ autocmd FileType c,cpp,cc,hpp,h nnoremap <silent> <C-k> :ClangFormat<CR>
 autocmd FileType c,cpp,cc,hpp,h xnoremap <silent> <C-_> I//<Esc> 
 " 快捷 Ctrl-/ 注释单行
 autocmd FileType c,cpp,cc,hpp,h nnoremap <silent> <C-_> I//<Esc> 
+
