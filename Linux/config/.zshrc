@@ -8,7 +8,9 @@ export ZSH="$HOME/.oh-my-zsh"
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="ys"
+# ZSH_THEME="cloud"
+# ZSH_THEME="agnoster-short"
+ZSH_THEME="agnoster"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -109,9 +111,10 @@ export FZF_COMPLETION_TRIGGER='\'
 export CLANG_FORMAT_CONFIG='/home/July/.clang-format'
 
 alias cas='cat $1 | expand -t 4'
-alias sys="neofetch"
-alias ra="ranger"
+alias cl='clear'
 alias nvim="nvim -p"
+alias ra="ranger"
+alias sys="neofetch"
 alias vi="nvim -p"
 alias vim='nvim -p'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
