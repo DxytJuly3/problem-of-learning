@@ -1,6 +1,7 @@
 #include "util.hpp"
 #include "threadPool.hpp"
 #include "task.hpp"
+#include "daemonize.hpp"
 
 // 线程池版本, tcpServer无需创建线程
 //class tcpServer;
@@ -262,6 +263,10 @@ int main(int argc, char* argv[]) {
 		ip = argv[2];
 	}
 
+	daemonize(); // 守护进程
+
+	log log;
+	log.enable();
 	tcpServer svr(port, ip);
 
 	svr.init();
