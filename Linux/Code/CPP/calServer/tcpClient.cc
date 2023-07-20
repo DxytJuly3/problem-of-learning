@@ -1,4 +1,5 @@
 #include "util.hpp"
+#include "protocol.hpp"
 
 volatile bool quit = false;
 
@@ -6,6 +7,7 @@ void Usage(std::string proc) {
 	std::cerr << "Usage:: \n\t" << proc << " serverIP serverPort" << std::endl;
 	std::cerr << "example:: \n\t" << proc << " 127.0.0.1 8080" << std::endl;
 }
+
 
 int main(int argc, char* argv[]) {
 	if (argc != 3) {
@@ -57,6 +59,12 @@ int main(int argc, char* argv[]) {
 			// 所以, 在输入 quit 这个单词时, 表示 需要退出
 			// 就要将 客户端的退出状态设置为 true, 让客户端不进入下一次循环
 			quit = true;
+			continue;
+		}
+
+		request req;
+		if (!makeRequest(message, &req)) {
+			continue; // 初始化请求失败
 		}
 
 		ssize_t sW = write(sockFd, message.c_str(), message.size()); // 向客户端套接字文件描述符写入消息

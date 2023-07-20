@@ -1,7 +1,6 @@
 #pragma once
 
 #include <iostream>
-#include <map>
 #include <string>
 #include <functional>
 #include <pthread.h>

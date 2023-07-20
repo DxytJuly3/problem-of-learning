@@ -4,18 +4,49 @@
 #include "daemonize.hpp"
 #include "protocol.hpp"
 
-// 线程需要执行的回调函数
-// 网络 整型计算器
+// 保证不会出现除零和摸零的情况
+std::map<char, std::function<int(int, int)>> opFunctions{
+	{'+', [](int elemOne, int elemTwo) { return elemOne + elemTwo; }},
+	{'-', [](int elemOne, int elemTwo) { return elemOne - elemTwo; }},
+	{'*', [](int elemOne, int elemTwo) { return elemOne * elemTwo; }},
+	{'/', [](int elemOne, int elemTwo) { return elemOne / elemTwo; }},
+	{'%', [](int elemOne, int elemTwo) { return elemOne % elemTwo; }}};
+
+static response calculator(const request& req) {
+	response resp;
+
+	int x = req.get_x();
+	int y = req.get_y();
+	int op = req.get_op();
+
+	if (opFunctions.find(req.get_op()) == opFunctions.end()) {
+		resp.set_exitCode(-3); // 非法操作符
+	}
+	else {
+		if (y == 0 && op == '/') {
+			resp.set_exitCode(-1); // 除零错误
+		}
+		else if (y == 0 && op == '%') {
+			resp.set_exitCode(-2); // 模零错误
+		}
+		else {
+			resp.set_result(opFunctions[op](x, y));
+		}
+	}
+
+	return resp;
+}
 
 // 指定协议, 传输的数据 单个完整的结构化数据 转换成传输格式为: "strLen\r\n_x _op _y\r\n"
 // strLen, 即用字符串表示有效载荷的实际长度; _x _op _y, 即为实际的有效载荷, 单个完整的传输数据 我们这里成为 strPackage
-void netCal(int sock, std::string& clientIp, uint16_t clientPort) {
+void netCal(int sock, const std::string& clientIp, uint16_t clientPort) {
 	assert(sock >= 0);
 	assert(!clientIp.empty());
 	assert(clientPort >= 1024);
 
 	std::string inBuffer;
 	while (true) {
+		request req;
 		char buffer[128];
 		ssize_t s = read(sock, buffer, sizeof(buffer) - 1);
 		if (s == 0) {
@@ -36,7 +67,27 @@ void netCal(int sock, std::string& clientIp, uint16_t clientPort) {
 		inBuffer += buffer; // 将读取到的内容 += 在inBuffer后
 		// 然后 根据inBuffer的内容, 检查是否已经接收到了一个完整的 strPackage
 		uint32_t strPackageLen = 0;
-		std::string package = decode(inBuffer, &strPackageLen); // TODO
+		std::string package = decode(inBuffer, &strPackageLen);
+		// TODO 这里decode 需要实现一些功能
+		// 检验inBuffer中是否存在至少一个完整的strPackage, 如果存在则decode并返回decode之后的string, 并获取strPackage有效载荷长度 存储在strPackageLen中
+		if (strPackageLen == 0)
+			continue; // 说明 没有一个完整的strPackage
+
+		// 走到这里 就获取了一个完整的strPackage并进行了decode, 获取了有效载荷存储到了 package 中
+		// 就可以进行反序列化了
+		if (req.deserialize(package)) {
+			// 反序列化成功, 则进入
+			// 处理计算
+			response resp = calculator(req);
+
+			std::string respPackage;
+			resp.serialize(&respPackage); // 对响应resp序列化
+			// 对报文 encode
+			respPackage = encode(respPackage, respPackage.size());
+			// TODO encode需要实现获取报文有效载荷长度, 并以字符串形式添加报头, 并将添加了抱头的字符串返回
+			// 最后就可以响应写入
+			write(sock, respPackage.c_str(), respPackage.size());
+		}
 	}
 }
 
@@ -116,6 +167,9 @@ public:
 			uint16_t peerPort = ntohs(peer.sin_port);
 			std::string peerIP = inet_ntoa(peer.sin_addr);
 			logMessage(DEBUG, "accept success: [%s: %d] | %d ", peerIP.c_str(), peerPort, serviceSock);
+
+			Task t(serviceSock, peerIP, peerPort, netCal);
+			_tP->pushTask(t);
 		}
 	}
 
