@@ -16,9 +16,9 @@
 
 std::string encode(const std::string& inS, uint32_t len) {
 	std::string encodeIn = std::to_string(len); // len
-	encodeIn += CRLF; // len\r\n 
-	encodeIn += inS; // len\r\ninS
-	encodeIn += CRLF; // len\r\n\inS\r\n
+	encodeIn += CRLF;							// len\r\n
+	encodeIn += inS;							// len\r\ninS
+	encodeIn += CRLF;							// len\r\n\inS\r\n
 
 	return encodeIn;
 }
@@ -67,7 +67,17 @@ public:
 	request() {}
 	~request() {}
 
+	// 序列化 -- 结构化的数据 -> 字符串
+	// 我们序列化的结构是 : "_x _op _y", 即 空格分割
 	void serialize(std::string* out) {
+		std::string xStr = std::to_string(get_x());
+		std::string yStr = std::to_string(get_y());
+
+		*out += xStr;
+		*out += SPACE;
+		*out += get_op();
+		*out += SPACE;
+		*out += yStr;
 	}
 
 	// 反序列化 -- 字符串 -> 结构化的数据
@@ -85,8 +95,8 @@ public:
 		std::string dataOne = in.substr(0, posSpaceOne);
 		std::string dataTwo = in.substr(posSpaceTwo + SPACE_LEN, std::string::npos);
 		std::string oper = in.substr(posSpaceOne + SPACE_LEN, posSpaceTwo - (posSpaceOne + SPACE_LEN));
-		if(oper.size() != 1)
-			return false;	// 操作符不是一位
+		if (oper.size() != 1)
+			return false; // 操作符不是一位
 
 		_x = atoi(dataOne.c_str());
 		_y = atoi(dataTwo.c_str());
@@ -114,6 +124,10 @@ public:
 		_op = op;
 	}
 
+	void debug() {
+		std::cout << _x << " " << _op << " " << _y << std::endl;
+	}
+
 private:
 	int _x;
 	int _y;
@@ -137,7 +151,19 @@ public:
 		*out += result;
 	}
 
+	// 反序列化
 	bool deserialize(const std::string& in) {
+		size_t posSpace = in.find(SPACE);
+		if (posSpace == std::string::npos) {
+			return false;
+		}
+
+		std::string exitCodeStr = in.substr(0, posSpace);
+		std::string resultStr = in.substr(posSpace + SPACE_LEN, std::string::npos);
+
+		set_exitCode(atoi(exitCodeStr.c_str()));
+		set_result(atoi(resultStr.c_str()));
+
 		return true;
 	}
 	void set_exitCode(int exitCode) {
@@ -153,25 +179,42 @@ public:
 		return _result;
 	}
 
+	void debug() {
+		std::cout << _exitCode << " " << _result << std::endl;
+	}
+
 private:
 	int _exitCode;
 	int _result;
 };
 
 bool makeRequest(const std::string& message, request* req) {
+	// 首先消除指令消息中的空格
+	std::string tmpMsg;
+	std::string opStr = OPS;
+	for (auto e : message) {
+		if ((e <= '9' && e >= '0') || (opStr.find(e) != std::string::npos)) {
+			tmpMsg += e;
+		}
+		else if(e != ' ') {
+			return false;
+		}
+	}
+
 	char strtmp[BUFFER_SIZE];
-    snprintf(strtmp, sizeof strtmp, "%s", message.c_str());
-    char *left = strtok(strtmp, OPS);
-    if (!left)
-        return false;
-    char *right = strtok(nullptr, OPS);
-    if (!right)
-        return false;
-    char mid = message[strlen(left)];
+	snprintf(strtmp, sizeof strtmp, "%s", tmpMsg.c_str());
+
+	char* left = strtok(strtmp, OPS);
+	if (!left)
+		return false;
+	char* right = strtok(nullptr, OPS);
+	if (!right)
+		return false;
+	char mid = tmpMsg[strlen(left)];
 
 	req->set_x(atoi(left));
 	req->set_y(atoi(right));
 	req->set_op(mid);
 
-    return true;
+	return true;
 }

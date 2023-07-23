@@ -8,7 +8,6 @@ void Usage(std::string proc) {
 	std::cerr << "example:: \n\t" << proc << " 127.0.0.1 8080" << std::endl;
 }
 
-
 int main(int argc, char* argv[]) {
 	if (argc != 3) {
 		Usage(argv[0]);
@@ -52,7 +51,7 @@ int main(int argc, char* argv[]) {
 	std::string message;
 	while (!quit) { // 根据退出状态 识别客户端是否退出
 		message.clear();
-		std::cout << "请输入消息 >> ";
+		std::cout << "请输入表达式 >> ";
 		std::getline(std::cin, message); // 从命令行获取消息 到 message中
 		if (strcasecmp(message.c_str(), "quit") == 0) {
 			// 我们实现了 输入 quit 这个单词就向服务器请求退出 的功能
@@ -67,16 +66,33 @@ int main(int argc, char* argv[]) {
 			continue; // 初始化请求失败
 		}
 
-		ssize_t sW = write(sockFd, message.c_str(), message.size()); // 向客户端套接字文件描述符写入消息
+		// 请求创建并初始化成功之后, 就可以序列化 encode 然后发送了
+		std::string package;
+		req.serialize(&package);
+
+		package = encode(package, package.size());
+
+		ssize_t sW = write(sockFd, package.c_str(), package.size()); // 向客户端套接字文件描述符写入消息
 		if (sW > 0) {
 			// 写入成功, 就准备接收服务器的回复
-			message.resize(BUFFER_SIZE); // 需要与服务器inbuffer大小一致
-			ssize_t sR = read(sockFd, (char*)message.c_str(), BUFFER_SIZE);
+			char buff[BUFFER_SIZE]; // 需要与服务器inbuffer大小一致
+			ssize_t sR = read(sockFd, buff, sizeof(buff) - 1);
 			if (sR > 0) {
 				message[sR] = '\0';
 			}
-			if (strcasecmp(message.c_str(), "quit")) {
-				std::cout << "Server Echo>>> " << message << std::endl;
+			std::string echoPackage = buff;
+
+			// 接收成功服务器的回复, 就需要对接收到的数据 decode 和 反序列化
+			response resp;
+			uint32_t packageLen = 0;
+
+			echoPackage = decode(echoPackage, &packageLen);
+
+			if (packageLen) {
+				// 解码成功, 并获取解码成功的字符串
+				resp.deserialize(echoPackage);
+
+				printf("[exitcode: %d] %d\n", resp.get_exitCode(), resp.get_result());
 			}
 		}
 		else if (sW <= 0) {
