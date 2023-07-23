@@ -4,15 +4,21 @@
 #include <string>
 #include <cassert>
 #include <cstring>
+#include <jsoncpp/json/json.h>
+#include <jsoncpp/json/value.h>
+#include <jsoncpp/json/reader.h>
+#include <jsoncpp/json/writer.h>
 
 #define CRLF "\r\n"
-#define CRLF_LEN strlen(CRLF)
+const int CRLF_LEN = strlen(CRLF); // coc-clangd 会尝试解析并展开宏定义, 如果在宏中使用 strlen() coc-clangd会崩溃失效 所以使用 const
 #define SPACE " "
-#define SPACE_LEN strlen(SPACE)
+const int SPACE_LEN = strlen(SPACE);
 
 #define OPS "+-*/%"
 
 #define BUFFER_SIZE 1024
+
+//#define MY_SELF 1
 
 std::string encode(const std::string& inS, uint32_t len) {
 	std::string encodeIn = std::to_string(len); // len
@@ -70,6 +76,7 @@ public:
 	// 序列化 -- 结构化的数据 -> 字符串
 	// 我们序列化的结构是 : "_x _op _y", 即 空格分割
 	void serialize(std::string* out) {
+#ifdef MY_SELF
 		std::string xStr = std::to_string(get_x());
 		std::string yStr = std::to_string(get_y());
 
@@ -78,10 +85,20 @@ public:
 		*out += get_op();
 		*out += SPACE;
 		*out += yStr;
+#else
+		Json::Value root;
+		root["x"] = _x;	  // Json::Value 是key:value类型的结构, 这里相当于 在root中添加 key: "x" 对应 value: _x的值
+		root["y"] = _y;	  // 同上
+		root["op"] = _op; // 同上
+
+		Json::FastWriter fw;
+		*out = fw.write(root);
+#endif
 	}
 
 	// 反序列化 -- 字符串 -> 结构化的数据
 	bool deserialize(const std::string& in) {
+#ifdef MY_SELF
 		// in 的格式 1 + 1
 		// 先查找两个空格的位置
 		size_t posSpaceOne = in.find(SPACE);
@@ -103,6 +120,15 @@ public:
 		_op = oper[0];
 
 		return true;
+#else
+		Json::Value root;
+		Json::Reader rd;
+		rd.parse(in, root); // 将使用Json序列化过的字符串, 再转换存储到 Json::Value root 中
+
+		return (_x = root["x"].asInt()) && // 将 root中 key:"x" 的 value, 以int类型 赋于_x, 失败_x会是0, 会直接返回false 表示反序列化失败
+			   (_y = root["y"].asInt()) &&
+			   (_op = root["op"].asInt());
+#endif
 	}
 
 	int get_x() const {
@@ -143,16 +169,26 @@ public:
 	~response() {}
 
 	void serialize(std::string* out) {
+#ifdef MY_SELF
 		std::string exitCode = std::to_string(_exitCode);
 		std::string result = std::to_string(_result);
 
 		*out = exitCode;
 		*out += SPACE;
 		*out += result;
+#else
+		Json::Value root;
+		root["exitCode"] = _exitCode;
+		root["result"] = _result;
+
+		Json::FastWriter fw;
+		*out = fw.write(root);
+#endif
 	}
 
 	// 反序列化
 	bool deserialize(const std::string& in) {
+#ifdef MY_SELF
 		size_t posSpace = in.find(SPACE);
 		if (posSpace == std::string::npos) {
 			return false;
@@ -161,10 +197,19 @@ public:
 		std::string exitCodeStr = in.substr(0, posSpace);
 		std::string resultStr = in.substr(posSpace + SPACE_LEN, std::string::npos);
 
-		set_exitCode(atoi(exitCodeStr.c_str()));
-		set_result(atoi(resultStr.c_str()));
+		_exitCode = atoi(exitCodeStr.c_str());
+		_result = atoi(resultStr.c_str());
 
 		return true;
+#else
+		Json::Value root;
+		Json::Reader rd;
+		rd.parse(in, root);
+
+		return (_exitCode = root["exitCode"].asInt()) &&
+			   (_result = root["result"].asInt());
+
+#endif
 	}
 	void set_exitCode(int exitCode) {
 		_exitCode = exitCode;
@@ -196,7 +241,7 @@ bool makeRequest(const std::string& message, request* req) {
 		if ((e <= '9' && e >= '0') || (opStr.find(e) != std::string::npos)) {
 			tmpMsg += e;
 		}
-		else if(e != ' ') {
+		else if (e != ' ') {
 			return false;
 		}
 	}
