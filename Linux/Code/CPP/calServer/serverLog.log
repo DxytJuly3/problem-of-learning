@@ -198,3 +198,51 @@ DEBUG | Sun Jul 23 16:37:45 2023 | July | accept success: [92.118.39.81: 38028] 
 DEBUG | Sun Jul 23 16:37:45 2023 | July | 线程[0x7f58ca6d1700] 处理 92.118.39.81:38028 请求 ---开始
 NOTICE | Sun Jul 23 16:37:49 2023 | July | client[92.118.39.81:38028] close socket, service done ...
 DEBUG | Sun Jul 23 16:37:49 2023 | July | 线程[0x7f58ca6d1700] 处理 92.118.39.81:38028 请求 ---结束
+DEBUG | Tue Jul 25 19:00:45 2023 | July | socket create success: 4
+DEBUG | Tue Jul 25 19:00:45 2023 | July | socket bind success : 4
+DEBUG | Tue Jul 25 19:00:45 2023 | July | listen success : 4
+DEBUG | Tue Jul 25 19:00:45 2023 | July | threadPool start success, thread num: 5
+DEBUG | Tue Jul 25 19:00:54 2023 | July | accept success: [127.0.0.1: 51786] | 5 
+DEBUG | Tue Jul 25 19:00:54 2023 | July | 线程[0x7f2a803746c0] 处理 127.0.0.1:51786 请求 ---开始
+NOTICE | Tue Jul 25 19:00:57 2023 | July | client[127.0.0.1:51786] close socket, service done ...
+DEBUG | Tue Jul 25 19:00:57 2023 | July | 线程[0x7f2a803746c0] 处理 127.0.0.1:51786 请求 ---结束
+DEBUG | Tue Jul 25 19:02:05 2023 | July | accept success: [127.0.0.1: 46886] | 6 
+DEBUG | Tue Jul 25 19:02:05 2023 | July | 线程[0x7f2a7fb736c0] 处理 127.0.0.1:46886 请求 ---开始
+NOTICE | Tue Jul 25 19:02:08 2023 | July | client[127.0.0.1:46886] close socket, service done ...
+DEBUG | Tue Jul 25 19:02:08 2023 | July | 线程[0x7f2a7fb736c0] 处理 127.0.0.1:46886 请求 ---结束
+DEBUG | Tue Jul 25 19:02:10 2023 | July | accept success: [127.0.0.1: 46898] | 7 
+DEBUG | Tue Jul 25 19:02:10 2023 | July | 线程[0x7f2a7f3726c0] 处理 127.0.0.1:46898 请求 ---开始
+NOTICE | Tue Jul 25 19:02:11 2023 | July | client[127.0.0.1:46898] close socket, service done ...
+DEBUG | Tue Jul 25 19:02:11 2023 | July | 线程[0x7f2a7f3726c0] 处理 127.0.0.1:46898 请求 ---结束
+DEBUG | Tue Jul 25 19:02:12 2023 | July | accept success: [127.0.0.1: 41828] | 8 
+DEBUG | Tue Jul 25 19:02:12 2023 | July | 线程[0x7f2a7eb716c0] 处理 127.0.0.1:41828 请求 ---开始
+NOTICE | Tue Jul 25 19:02:15 2023 | July | client[127.0.0.1:41828] close socket, service done ...
+DEBUG | Tue Jul 25 19:02:15 2023 | July | 线程[0x7f2a7eb716c0] 处理 127.0.0.1:41828 请求 ---结束
+DEBUG | Tue Jul 25 19:02:15 2023 | July | accept success: [127.0.0.1: 41832] | 9 
+DEBUG | Tue Jul 25 19:02:15 2023 | July | 线程[0x7f2a7e3706c0] 处理 127.0.0.1:41832 请求 ---开始
+NOTICE | Tue Jul 25 19:02:27 2023 | July | client[127.0.0.1:41832] close socket, service done ...
+DEBUG | Tue Jul 25 19:02:27 2023 | July | 线程[0x7f2a7e3706c0] 处理 127.0.0.1:41832 请求 ---结束
+DEBUG | Tue Jul 25 19:03:10 2023 | July | accept success: [127.0.0.1: 33698] | 10 
+DEBUG | Tue Jul 25 19:03:10 2023 | July | 线程[0x7f2a803746c0] 处理 127.0.0.1:33698 请求 ---开始
+NOTICE | Tue Jul 25 19:03:11 2023 | July | client[127.0.0.1:33698] close socket, service done ...
+DEBUG | Tue Jul 25 19:03:11 2023 | July | 线程[0x7f2a803746c0] 处理 127.0.0.1:33698 请求 ---结束
+DEBUG | Tue Jul 25 20:08:55 2023 | July | accept success: [127.0.0.1: 34936] | 11 
+DEBUG | Tue Jul 25 20:08:55 2023 | July | 线程[0x7f2a7fb736c0] 处理 127.0.0.1:34936 请求 ---开始
+NOTICE | Tue Jul 25 20:08:57 2023 | July | client[127.0.0.1:34936] close socket, service done ...
+DEBUG | Tue Jul 25 20:08:57 2023 | July | 线程[0x7f2a7fb736c0] 处理 127.0.0.1:34936 请求 ---结束
+DEBUG | Tue Jul 25 22:09:42 2023 | July | socket create success: 4
+DEBUG | Tue Jul 25 22:09:42 2023 | July | socket bind success : 4
+DEBUG | Tue Jul 25 22:09:42 2023 | July | listen success : 4
+DEBUG | Tue Jul 25 22:09:42 2023 | July | threadPool start success, thread num: 5
+DEBUG | Tue Jul 25 22:09:46 2023 | July | accept success: [127.0.0.1: 35234] | 5 
+DEBUG | Tue Jul 25 22:09:46 2023 | July | 线程[0x7fac4889d6c0] 处理 127.0.0.1:35234 请求 ---开始
+NOTICE | Tue Jul 25 22:09:48 2023 | July | client[127.0.0.1:35234] close socket, service done ...
+DEBUG | Tue Jul 25 22:09:48 2023 | July | 线程[0x7fac4889d6c0] 处理 127.0.0.1:35234 请求 ---结束
+DEBUG | Tue Jul 25 22:13:34 2023 | July | accept success: [127.0.0.1: 36082] | 6 
+DEBUG | Tue Jul 25 22:13:34 2023 | July | 线程[0x7fac4809c6c0] 处理 127.0.0.1:36082 请求 ---开始
+NOTICE | Tue Jul 25 22:13:35 2023 | July | client[127.0.0.1:36082] close socket, service done ...
+DEBUG | Tue Jul 25 22:13:35 2023 | July | 线程[0x7fac4809c6c0] 处理 127.0.0.1:36082 请求 ---结束
+DEBUG | Tue Jul 25 22:13:46 2023 | July | accept success: [127.0.0.1: 43256] | 7 
+DEBUG | Tue Jul 25 22:13:46 2023 | July | 线程[0x7fac4789b6c0] 处理 127.0.0.1:43256 请求 ---开始
+NOTICE | Tue Jul 25 22:13:47 2023 | July | client[127.0.0.1:43256] close socket, service done ...
+DEBUG | Tue Jul 25 22:13:47 2023 | July | 线程[0x7fac4789b6c0] 处理 127.0.0.1:43256 请求 ---结束
