@@ -3,6 +3,7 @@
 #include "task.hpp"
 #include "daemonize.hpp"
 #include "protocol.hpp"
+#include <ostream>
 
 // 保证不会出现除零和摸零的情况
 std::map<char, std::function<int(int, int)>> opFunctions{
@@ -66,6 +67,7 @@ void netCal(int sock, const std::string& clientIp, uint16_t clientPort) {
 		buffer[s] = '\0';
 		inBuffer += buffer; // 将读取到的内容 += 在inBuffer后
 		// 然后 根据inBuffer的内容, 检查是否已经接收到了一个完整的 strPackage
+
 		uint32_t strPackageLen = 0;
 		std::string package = decode(inBuffer, &strPackageLen);
 		// TODO 这里decode 需要实现一些功能
