@@ -123,9 +123,11 @@ public:
         Json::Reader rd;
         rd.parse(in, root); // 将使用Json序列化过的字符串, 再转换存储到 Json::Value root 中
 
-        return (_x = root["x"].asInt()) && // 将 root中 key:"x" 的 value, 以int类型 赋于_x, 失败_x会是0, 会直接返回false 表示反序列化失败
-               (_y = root["y"].asInt()) &&
-               (_op = root["op"].asInt());
+        _x = root["x"].asInt();
+        _y = root["y"].asInt();
+        _op = root["op"].asInt();
+
+        return true;
 #endif
     }
 
@@ -205,8 +207,9 @@ public:
         Json::Reader rd;
         rd.parse(in, root);
 
-        return (_exitCode = root["exitCode"].asInt()) &&
-               (_result = root["result"].asInt());
+        _exitCode = root["exitCode"].asInt();
+        _result = root["result"].asInt();
+        return true;
 
 #endif
     }

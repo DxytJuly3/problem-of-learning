@@ -246,3 +246,7 @@ DEBUG | Tue Jul 25 22:13:46 2023 | July | accept success: [127.0.0.1: 43256] | 7
 DEBUG | Tue Jul 25 22:13:46 2023 | July | 线程[0x7fac4789b6c0] 处理 127.0.0.1:43256 请求 ---开始
 NOTICE | Tue Jul 25 22:13:47 2023 | July | client[127.0.0.1:43256] close socket, service done ...
 DEBUG | Tue Jul 25 22:13:47 2023 | July | 线程[0x7fac4789b6c0] 处理 127.0.0.1:43256 请求 ---结束
+DEBUG | Tue Jul 25 22:22:41 2023 | July | accept success: [127.0.0.1: 34002] | 8 
+DEBUG | Tue Jul 25 22:22:41 2023 | July | 线程[0x7fac4709a6c0] 处理 127.0.0.1:34002 请求 ---开始
+NOTICE | Tue Jul 25 22:22:43 2023 | July | client[127.0.0.1:34002] close socket, service done ...
+DEBUG | Tue Jul 25 22:22:43 2023 | July | 线程[0x7fac4709a6c0] 处理 127.0.0.1:34002 请求 ---结束
