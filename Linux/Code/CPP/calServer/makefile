@@ -2,9 +2,9 @@
 all:tcpServerd tcpClient
 
 tcpServerd: tcpServer.cc
-	g++ -o $@ $^ -ljsoncpp  -lpthread
+	g++ -o $@ $^ -std=c++11 -ljsoncpp  -lpthread
 tcpClient: tcpClient.cc
-	g++ -o $@ $^ -ljsoncpp
+	g++ -o $@ $^ -std=c++11 -ljsoncpp
 
 .PHONY:clean
 clean:

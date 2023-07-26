@@ -263,5 +263,7 @@ bool makeRequest(const std::string &message, request *req) {
     req->set_y(atoi(right));
     req->set_op(mid);
 
+    req->debug();
+
     return true;
 }
