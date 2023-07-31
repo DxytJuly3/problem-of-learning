@@ -16,6 +16,7 @@ void daemonize() {
     // 2. 改变工作路径
     // chdir(const char *__path);
     // 3. 不要成为进程组组长
+
     if (fork() > 0) {
         exit(0);
     }

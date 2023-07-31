@@ -18,37 +18,8 @@
 #define WARINING 2
 #define FATAL 3
 
-#define LOGFILEPATH "serverLog.log"
-
 const char* log_level[] = {"DEBUG", "NOTICE", "WARINING", "FATAL"};
 
-class log {
-public:
-	log()
-		: _logFd(-1) {}
-
-	void enable() {
-		umask(0);
-
-		_logFd = open(LOGFILEPATH, O_WRONLY | O_CREAT | O_APPEND, 0666);
-		assert(_logFd != -1);
-		dup2(_logFd, STDOUT_FILENO);
-		dup2(_logFd, STDERR_FILENO);
-	}
-
-	~log() {
-		if (_logFd != -1) {
-			// 将系统缓冲区内容刷入文件
-			fsync(_logFd);
-			close(_logFd);
-		}
-	}
-
-private:
-	int _logFd;
-};
-
-// 实现一个 可以输出: 日志等级、日志时间、用户、以及相关日志内容的
 // 日志消息打印接口
 void logMessage(int level, const char* format, ...) {
 	// 通过可变参数实现, 传入日志等级, 日志内容格式, 日志内容相关参数
