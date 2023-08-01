@@ -93,22 +93,9 @@ void handlerHttpRequest(int sock) {
 	std::string response;
 	// 响应行
 	response += "HTTP/1.1 200 OK\r\n";
-	// 可以根据文件文件的后缀来判断正文内容的类型是什么
-	std::size_t dosPos = path.find_last_of('.');
-	std::string fileType = path.substr(dosPos);
-
-	if (fileType == ".html")
-		response += "Content-Type: text/html\r\n";
-
-	if (fileType == ".png")
-		response += "Content-Type: image/png\r\n";
-
-	if (fileType == ".jpg")
-		response += "Content-Type: image/jpeg\r\n";
-
-	if (fileType == ".ico")
-		response += "Content-Type: image/x-icon\r\n";
-
+	// response += "HTTP/1.1 302 Moved Temporarily\r\n";
+	// response += "Location: https://www.baidu.com\r\n";
+	response += "Set-Cookie: This is a cookie\r\n";
 	response += ("Content-Length: " + std::to_string(fileContent.size()) + "\r\n");
 	response += "\r\n";
 
